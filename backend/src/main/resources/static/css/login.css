@@ -1,0 +1,66 @@
+/* Pantalla de inicio de sesión */
+
+body.login {
+  min-height: 100%;
+  background-color: #E9EEF6;
+  /* cuadrícula sutil */
+  background-image:
+    linear-gradient(rgba(18, 63, 134, .06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(18, 63, 134, .06) 1px, transparent 1px);
+  background-size: 32px 32px;
+  position: relative;
+}
+
+/* banda decorativa de degradado azul arriba */
+body.login::before {
+  content: "";
+  position: absolute; inset: 0 0 auto 0; height: 210px;
+  background:
+    radial-gradient(600px 220px at 85% 0%, rgba(127, 167, 221, .55), transparent 70%),
+    linear-gradient(105deg, var(--azul-900) 0%, var(--azul-700) 55%, var(--azul-500) 100%);
+  border-bottom: 4px solid var(--dorado);
+}
+
+.login-pagina {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 1.5rem 1rem 1rem;
+}
+
+.login-logo-caja {
+  background: var(--blanco); border-radius: 20px; box-shadow: var(--sombra);
+  padding: .9rem 1.6rem .6rem; margin-bottom: 1.25rem;
+}
+.login-logo { display: block; width: clamp(150px, 26vw, 210px); height: auto; }
+
+.login-sistema {
+  margin: 0 0 1rem; text-align: center; font-size: 1.05rem; font-weight: 600; letter-spacing: .04em;
+  color: var(--azul-900); text-transform: uppercase;
+}
+
+.login-tarjeta {
+  width: min(430px, 100%); padding: 1.75rem 1.75rem 1.4rem; border-radius: 18px; box-shadow: var(--sombra);
+}
+.login-tarjeta h2 { text-align: center; font-size: 1.2rem; margin-bottom: 1.2rem; }
+
+.entrada-icono { position: relative; display: block; }
+.entrada-icono > .ico {
+  position: absolute; left: .8em; top: 50%; transform: translateY(-50%); color: var(--azul-500); display: flex; pointer-events: none;
+}
+.entrada-icono input { padding-left: 2.6em; }
+.entrada-icono input[type="password"], .entrada-icono input.con-toggle { padding-right: 3em; }
+.entrada-icono .toggle-clave {
+  position: absolute; right: .3em; top: 50%; transform: translateY(-50%);
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  color: var(--texto-suave); background: transparent; border: 0; border-radius: 8px; cursor: pointer;
+}
+.entrada-icono .toggle-clave:hover { background: var(--azul-50); color: var(--azul-700); }
+
+.login-aviso { margin: 1.1rem 0 0; text-align: center; font-size: .88rem; color: var(--texto-suave); }
+.login-pie { margin-top: auto; padding-top: 1.5rem; text-align: center; font-size: .82rem; color: var(--texto-suave); }
+
+@media (max-width: 480px) {
+  body.login::before { height: 170px; }
+  .login-tarjeta { padding: 1.4rem 1.1rem 1.2rem; }
+}

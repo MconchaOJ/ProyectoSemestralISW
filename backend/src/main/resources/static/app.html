@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema de Prácticas PEM</title>
+  <meta name="description" content="Sistema de Prácticas PEM: evaluación y monitoreo de las prácticas de Pedagogía en Educación Matemática.">
+  <link rel="icon" type="image/png" href="img/EscudoUBB.png">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/vistas.css">
+</head>
+<body class="app">
+
+  <!-- ZONA 1: cabecera fija. El escudo va SIEMPRE en la esquina superior izquierda. -->
+  <header class="cabecera-app">
+    <a class="marca" href="#/inicio" aria-label="Sistema de Prácticas PEM, ir al inicio">
+      <span class="escudo-marco">
+        <img src="img/EscudoUBB.png" alt="Escudo de la Universidad del Bío-Bío" onerror="this.parentNode.classList.add('sin-imagen')">
+      </span>
+      <span class="marca-texto">
+        <strong>Sistema de Prácticas PEM</strong>
+        <small>Universidad del Bío-Bío</small>
+      </span>
+    </a>
+
+    <button type="button" class="btn-cabecera" id="btn-lateral" aria-label="Mostrar u ocultar el menú" aria-controls="lateral" aria-expanded="true"></button>
+
+    <div class="cabecera-usuario">
+      <span class="avatar" id="avatar" aria-hidden="true"></span>
+      <div class="usuario-datos">
+        <strong id="usuario-nombre">…</strong>
+        <small id="usuario-rol"></small>
+      </div>
+      <button type="button" class="btn-salir" id="btn-salir"><span id="ico-salir"></span><span class="texto-salir">Cerrar sesión</span></button>
+    </div>
+  </header>
+
+  <div class="cuerpo-app">
+    <!-- ZONA 2: barra lateral (colapsable) -->
+    <aside class="lateral" id="lateral" aria-label="Menú principal">
+      <nav id="menu" aria-label="Funciones del sistema"></nav>
+    </aside>
+    <div class="velo" id="velo" hidden></div>
+
+    <!-- ZONA 3: zona principal (cambia según la ruta #/...) -->
+    <main class="principal" id="principal" tabindex="-1">
+      <div id="vista" class="vista"></div>
+    </main>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

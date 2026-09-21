@@ -1,0 +1,193 @@
+/* Estructura de la aplicación: cabecera fija, barra lateral y zona principal + pantalla de inicio */
+
+:root { --alto-cabecera: 64px; --ancho-lateral: 300px; --ancho-lateral-chico: 68px; }
+
+body.app { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ================= CABECERA ================= */
+.cabecera-app {
+  flex: none; height: var(--alto-cabecera); position: relative; z-index: 30;
+  display: flex; align-items: center; gap: .75rem; padding: 0 1rem 0 .75rem;
+  color: #fff;
+  background: linear-gradient(95deg, var(--azul-900) 0%, var(--azul-700) 65%, #17509f 100%);
+  border-bottom: 3px solid var(--dorado);
+  box-shadow: 0 2px 10px rgba(10, 42, 94, .25);
+}
+
+.marca { display: flex; align-items: center; gap: .7rem; color: inherit; text-decoration: none; min-width: 0; }
+.marca-texto { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.marca-texto strong { font-size: 1.05rem; letter-spacing: .01em; white-space: nowrap; }
+.marca-texto small { font-size: .74rem; color: var(--azul-300); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+
+/* Escudo: recorte del PNG (tiene mucho margen transparente) dentro de un marco blanco redondeado. */
+.escudo-marco {
+  position: relative; flex: none; width: 40px; height: 48px; overflow: hidden;
+  background: #fff; border-radius: 10px;
+  box-shadow: 0 0 0 2px rgba(127, 167, 221, .55), 0 2px 8px rgba(0, 0, 0, .3);
+}
+.escudo-marco img { position: absolute; width: 90px; max-width: none; height: auto; left: -25px; top: 0; }
+/* Si falta el archivo: degradado con las siglas */
+.escudo-marco.sin-imagen { background: linear-gradient(160deg, var(--azul-300), var(--azul-500) 60%, var(--azul-900)); }
+.escudo-marco.sin-imagen img { display: none; }
+.escudo-marco.sin-imagen::after { content: "UBB"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .8rem; color: #fff; }
+
+.btn-cabecera {
+  display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; margin-left: .5rem;
+  color: #fff; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .25); border-radius: 10px; cursor: pointer;
+}
+.btn-cabecera:hover { background: rgba(255, 255, 255, .2); }
+
+.cabecera-usuario { margin-left: auto; display: flex; align-items: center; gap: .7rem; min-width: 0; }
+.avatar {
+  flex: none; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .85rem; color: var(--azul-900); background: var(--dorado-suave); border: 2px solid var(--dorado);
+}
+.usuario-datos { display: flex; flex-direction: column; line-height: 1.2; text-align: right; min-width: 0; }
+.usuario-datos strong { font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+.usuario-datos small { font-size: .76rem; color: var(--azul-300); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+.btn-salir {
+  display: inline-flex; align-items: center; gap: .45em; padding: .45em .9em; min-height: 38px;
+  font: inherit; font-weight: 600; font-size: .88rem; color: #fff; background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .35); border-radius: 8px; cursor: pointer; white-space: nowrap;
+}
+.btn-salir:hover { background: rgba(255, 255, 255, .24); }
+
+/* ================= CUERPO ================= */
+.cuerpo-app { flex: 1; display: flex; min-height: 0; position: relative; }
+
+/* ================= BARRA LATERAL ================= */
+.lateral {
+  flex: none; width: var(--ancho-lateral); overflow-y: auto; overflow-x: hidden;
+  background: var(--blanco); border-right: 1px solid var(--borde);
+  transition: width .2s ease; padding: .75rem .6rem 1rem;
+}
+.lateral::-webkit-scrollbar { width: 8px; }
+.lateral::-webkit-scrollbar-thumb { background: var(--borde); border-radius: 8px; }
+
+.grupo { margin-top: .9rem; }
+.grupo:first-child { margin-top: 0; }
+.grupo-titulo {
+  display: flex; align-items: center; justify-content: space-between; width: 100%; gap: .5rem;
+  padding: .3rem .7rem; margin-bottom: .2rem; font: inherit; font-size: .72rem; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--texto-suave); background: none; border: 0; border-radius: 6px; cursor: pointer; text-align: left;
+}
+.grupo-titulo:hover { color: var(--azul-700); background: var(--azul-50); }
+.grupo-titulo .icono { width: 1em; height: 1em; transition: transform .15s; }
+.grupo.plegado .grupo-titulo .icono { transform: rotate(-90deg); }
+.grupo.plegado .grupo-items { display: none; }
+
+.item {
+  position: relative; display: flex; align-items: center; gap: .75rem; padding: .55rem .7rem; margin: 2px 0;
+  color: var(--texto); text-decoration: none; border-radius: 10px; border-left: 4px solid transparent;
+  font-size: .9rem; line-height: 1.3; cursor: pointer;
+}
+.item:hover { background: var(--azul-50); color: var(--azul-900); }
+.item.activo { background: var(--azul-50); color: var(--azul-900); font-weight: 700; border-left-color: var(--azul-500); box-shadow: inset 0 0 0 1px var(--borde); }
+.item-ico { flex: none; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 9px; color: var(--azul-500); background: #F1F6FD; }
+.item.activo .item-ico { color: #fff; background: var(--azul-500); }
+.item-texto { display: flex; flex-direction: column; min-width: 0; }
+.item-hu { font-size: .68rem; font-weight: 700; letter-spacing: .06em; color: #7a5c0c; }
+.item.deshabilitado { cursor: not-allowed; color: #8a97ac; }
+.item.deshabilitado:hover { background: none; color: #8a97ac; }
+.item.deshabilitado .item-ico { color: #9aa8bf; background: #F3F5F9; }
+.etiqueta-prox {
+  margin-left: auto; flex: none; padding: .1em .55em; font-size: .64rem; font-weight: 700; letter-spacing: .03em;
+  color: #7a5c0c; background: var(--dorado-suave); border: 1px solid #E7D391; border-radius: 999px; white-space: nowrap;
+}
+
+/* Barra lateral contraída (solo íconos) */
+body.lateral-chico .lateral { width: var(--ancho-lateral-chico); padding-left: .5rem; padding-right: .5rem; }
+body.lateral-chico .item { justify-content: center; padding: .4rem; border-left-width: 0; }
+body.lateral-chico .item-texto, body.lateral-chico .etiqueta-prox { display: none; }
+body.lateral-chico .grupo-titulo { font-size: 0; padding: 0; height: 1px; background: var(--borde); margin: .8rem .5rem; width: auto; cursor: default; pointer-events: none; }
+body.lateral-chico .grupo-titulo .icono { display: none; }
+body.lateral-chico .grupo.plegado .grupo-items { display: block; }
+
+.velo { display: none; }
+
+/* ================= ZONA PRINCIPAL ================= */
+.principal { flex: 1; min-width: 0; overflow-y: auto; padding: 1.5rem 1.75rem 2.5rem; scroll-behavior: smooth; }
+.principal:focus { outline: none; }
+.vista { max-width: 1280px; margin: 0 auto; min-height: 100%; }
+
+/* ================= PANTALLA DE INICIO (#/inicio) ================= */
+.principal.es-inicio { padding: 1.25rem; }
+.principal.es-inicio .vista { max-width: none; }
+
+.inicio {
+  display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 1.25rem;
+  height: calc(100vh - var(--alto-cabecera) - 2.5rem - 3px); min-height: 460px;
+}
+.inicio-col-izq { display: flex; flex-direction: column; gap: 1rem; min-height: 0; overflow-y: auto; padding-right: .15rem; }
+
+.inicio-saludo { padding: 1.25rem 1.25rem 1.1rem; border-radius: var(--radio-grande); color: #fff; background: linear-gradient(135deg, var(--azul-900), var(--azul-700)); box-shadow: var(--sombra); border-bottom: 4px solid var(--dorado); }
+.inicio-saludo small { display: block; margin-bottom: .2rem; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--azul-300); font-weight: 600; }
+.inicio-saludo h1 { margin: 0 0 .5rem; color: #fff; font-size: 1.4rem; }
+.inicio-saludo p { margin: 0; font-size: .86rem; line-height: 1.5; color: #dbe6f7; }
+.inicio-saludo .badge { margin-top: .7rem; color: #fff; background: rgba(255, 255, 255, .15); border-color: rgba(255, 255, 255, .35); }
+
+.accesos-titulo { margin: .2rem 0 -.3rem; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--texto-suave); font-weight: 700; }
+.acceso {
+  display: flex; align-items: center; gap: .9rem; padding: .85rem 1rem; color: inherit; text-decoration: none;
+  background: var(--blanco); border: 1px solid var(--borde); border-radius: 14px; box-shadow: var(--sombra-sm);
+  transition: transform .12s, box-shadow .12s, border-color .12s;
+}
+.acceso:hover { transform: translateY(-2px); box-shadow: var(--sombra); border-color: var(--azul-300); }
+.acceso-ico { flex: none; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: #fff; background: linear-gradient(135deg, var(--azul-500), var(--azul-700)); }
+.acceso-ico .icono { width: 1.35em; height: 1.35em; }
+.acceso strong { display: block; color: var(--azul-900); font-size: .95rem; }
+.acceso small { color: var(--texto-suave); font-size: .82rem; }
+.acceso .cuenta { margin-left: auto; flex: none; min-width: 1.8em; padding: .1em .6em; text-align: center; font-weight: 800; font-size: .85rem; color: #fff; background: var(--dorado); border-radius: 999px; }
+
+.hero {
+  position: relative; min-height: 420px; overflow: hidden; border-radius: 20px; box-shadow: var(--sombra);
+  background: linear-gradient(140deg, var(--azul-500), var(--azul-900)); /* fallback si falta la imagen */
+}
+.hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 50%; }
+.hero::after { /* degradado azul que disimula el pixelado y da unidad visual */
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(10, 42, 94, .05) 0%, rgba(10, 42, 94, .25) 55%, rgba(10, 42, 94, .78) 100%),
+    linear-gradient(90deg, rgba(18, 63, 134, .35), transparent 45%);
+}
+.hero-franja {
+  position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: .9rem;
+  padding: 1.1rem 1.6rem; color: #fff; background: rgba(10, 42, 94, .62); backdrop-filter: blur(6px);
+  border-top: 3px solid var(--dorado);
+}
+.hero-franja strong { font-size: clamp(1.15rem, 2.4vw, 1.75rem); letter-spacing: .01em; }
+.hero-franja small { display: block; font-size: .82rem; color: #cfe0f7; letter-spacing: .04em; }
+
+@media (max-width: 1000px) {
+  .inicio { grid-template-columns: 1fr; height: auto; min-height: 0; }
+  .hero { order: -1; min-height: 300px; }
+  .inicio-col-izq { overflow: visible; }
+}
+
+/* ================= RESPONSIVO ================= */
+@media (max-width: 900px) {
+  .principal { padding: 1rem 1rem 2rem; }
+  .lateral {
+    position: fixed; z-index: 40; top: var(--alto-cabecera); bottom: 0; left: 0; width: min(320px, 86vw);
+    transform: translateX(-100%); transition: transform .2s ease; box-shadow: var(--sombra);
+  }
+  body.lateral-abierto .lateral { transform: none; }
+  body.lateral-abierto .velo { display: block; position: fixed; z-index: 35; inset: var(--alto-cabecera) 0 0 0; background: rgba(10, 42, 94, .45); }
+  /* en pantallas angostas la barra siempre muestra texto: "contraída" solo aplica a escritorio */
+  body.lateral-chico .lateral { width: min(320px, 86vw); }
+  body.lateral-chico .item { justify-content: flex-start; padding: .55rem .7rem; border-left-width: 4px; }
+  body.lateral-chico .item-texto { display: flex; }
+  body.lateral-chico .etiqueta-prox { display: inline-block; }
+  body.lateral-chico .grupo-titulo { font-size: .72rem; height: auto; padding: .3rem .7rem; background: none; margin: 0 0 .2rem; pointer-events: auto; cursor: pointer; }
+  body.lateral-chico .grupo-titulo .icono { display: block; }
+}
+@media (max-width: 640px) {
+  .marca-texto small, .usuario-datos strong, .texto-salir { display: none; }
+  .usuario-datos small { font-size: .7rem; }
+  .cabecera-app { gap: .5rem; padding-right: .6rem; }
+  .btn-cabecera { margin-left: .2rem; }
+}
+@media (max-width: 420px) {
+  .marca-texto strong { font-size: .92rem; }
+  .usuario-datos { display: none; }
+}

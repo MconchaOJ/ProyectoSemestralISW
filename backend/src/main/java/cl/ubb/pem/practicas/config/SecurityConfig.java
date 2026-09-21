@@ -23,8 +23,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
- * Seguridad sin estado: cada petición trae su token JWT. Solo el login y Swagger son públicos;
- * todo lo demás exige token, y cada endpoint restringe su rol con @PreAuthorize.
+ * Seguridad sin estado: cada petición trae su token JWT. Son públicos solo el login, Swagger y los recursos
+ * estáticos del front-end; todo lo demás exige token, y cada endpoint restringe su rol con @PreAuthorize.
  */
 @Configuration
 @EnableMethodSecurity
@@ -46,6 +46,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
+                        // Front-end estático (HTML, CSS, JS e imágenes): no contiene datos; los datos salen de /api/**, que sigue protegida
+                        .requestMatchers("/", "/index.html", "/app.html", "/css/**", "/js/**", "/img/**", "/favicon.ico").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService, usuarios), UsernamePasswordAuthenticationFilter.class);

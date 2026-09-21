@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ingresar · Sistema de Prácticas PEM</title>
+  <meta name="description" content="Sistema de Prácticas PEM: evaluación y monitoreo de las prácticas de Pedagogía en Educación Matemática.">
+  <link rel="icon" type="image/png" href="img/EscudoUBB.png">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="login">
+  <main class="login-pagina">
+    <div class="login-logo-caja">
+      <img class="login-logo" src="img/LogoInstitucionalPNG.png" alt="Universidad del Bío-Bío">
+    </div>
+    <p class="login-sistema">Sistema de Prácticas PEM</p>
+
+    <section class="tarjeta login-tarjeta" aria-labelledby="titulo-login">
+      <h2 id="titulo-login">Por favor ingrese su información</h2>
+
+      <div id="alerta" hidden></div>
+
+      <form id="form-login" novalidate autocomplete="on">
+        <div class="campo">
+          <label for="email">Correo electrónico</label>
+          <span class="entrada-icono">
+            <span class="ico" data-icono="mail"></span>
+            <input id="email" name="email" type="email" autocomplete="username" placeholder="nombre@dominio.cl" autofocus>
+          </span>
+          <span class="error-campo" id="error-email" role="alert" hidden></span>
+        </div>
+
+        <div class="campo">
+          <label for="password">Contraseña</label>
+          <span class="entrada-icono">
+            <span class="ico" data-icono="lock"></span>
+            <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Su contraseña">
+            <button type="button" class="toggle-clave" id="toggle-clave" aria-label="Mostrar contraseña" aria-pressed="false"></button>
+          </span>
+          <span class="error-campo" id="error-password" role="alert" hidden></span>
+        </div>
+
+        <button type="submit" class="btn btn-primario btn-bloque" id="btn-ingresar">Ingresar</button>
+      </form>
+
+      <p class="login-aviso">¿Olvidó su clave? Contacte al coordinador de la carrera.</p>
+    </section>
+
+    <footer class="login-pie">
+      Pedagogía en Educación Matemática · Facultad de Educación y Humanidades · Universidad del Bío-Bío
+    </footer>
+  </main>
+
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>
