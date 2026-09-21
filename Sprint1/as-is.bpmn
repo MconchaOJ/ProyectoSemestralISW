@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Definitions_AsIs" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Equipo ISW PEM-UBB" exporterVersion="2.0">
+  <bpmn:collaboration id="Collaboration_AsIs">
+    <bpmn:participant id="Participant_AsIs" name="Proceso actual (AS-IS): pautas en papel y notas en Adecca" processRef="Process_AsIs" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_AsIs" isExecutable="false">
+    <bpmn:documentation>Proceso actual (AS-IS) de una práctica con clases en el aula (Trabajo Colaborativo, Investigación en el Aula, Práctica Pedagógica y Práctica Profesional). Fuente: entrevista con el cliente y documentos de la carrera. Un estudiante de PEM (2026-09-20, pendiente de confirmar) dice que la retroalimentación del guía es por correo y que la planificación se manda al profesor del ramo y al colaborador, posiblemente a la vez (S-37): aquí se dibuja en secuencia, como lo contó el cliente. Ambientes de Aprendizaje no va a un colegio, así que no hay guía. Simplificación: el tutor de Práctica Profesional se dibuja dentro de la calle Profesor guía.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_AsIs">
+      <bpmn:lane id="Lane_AsIs_0" name="Estudiante">
+        <bpmn:documentation>Practicante de Pedagogía en Educación Matemática (PEM).</bpmn:documentation>
+        <bpmn:flowNodeRef>Start_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Planificar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PresentarCurso</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Clase</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AsIs_1" name="Profesor guía">
+        <bpmn:documentation>Profesor colaborador del colegio que recibe y evalúa al estudiante. En Práctica Profesional el tutor de la UBB cumple un rol parecido (supuesto S-12).</bpmn:documentation>
+        <bpmn:flowNodeRef>Task_RevisarGuia</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Mejoras</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PautaPapel</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Firmar</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AsIs_2" name="Profesor del curso">
+        <bpmn:documentation>Académico de la UBB a cargo de la asignatura de práctica (supuesto S-05). Autoriza la clase y pasa las pautas a Adecca.</bpmn:documentation>
+        <bpmn:flowNodeRef>Task_Autorizar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Autoriza</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Transcribir</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Quedan</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AsIs_3" name="Coordinador">
+        <bpmn:documentation>Coordinador de prácticas de la carrera (Dr. Víctor Parra).</bpmn:documentation>
+        <bpmn:flowNodeRef>Task_Consolidar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AsIs_4" name="Plataforma Adecca">
+        <bpmn:documentation>Plataforma de la universidad donde hoy se suben las notas y se calcula el promedio final.</bpmn:documentation>
+        <bpmn:flowNodeRef>Task_Adecca</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_1" name="Empieza la práctica">
+      <bpmn:outgoing>Flow_Start_1_Task_Planificar</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_Planificar" name="Escribir la planificación de la clase">
+      <bpmn:documentation>Hoy no hay un formato digital único ni un registro central de las planificaciones.</bpmn:documentation>
+      <bpmn:incoming>Flow_Start_1_Task_Planificar</bpmn:incoming>
+      <bpmn:incoming>Flow_Gw_Mejoras_Task_Planificar</bpmn:incoming>
+      <bpmn:incoming>Flow_Gw_Autoriza_Task_Planificar</bpmn:incoming>
+      <bpmn:incoming>Flow_Gw_Quedan_Task_Planificar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_Planificar_Task_RevisarGuia</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_RevisarGuia" name="Revisar la planificación y responder por correo">
+      <bpmn:documentation>Según un estudiante, la retroalimentación va por correo para que quede respaldo (pendiente de confirmar).</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_Planificar_Task_RevisarGuia</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_RevisarGuia_Gw_Mejoras</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gw_Mejoras" name="¿Hay que mejorarla?">
+      <bpmn:incoming>Flow_Task_RevisarGuia_Gw_Mejoras</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gw_Mejoras_Task_Planificar</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gw_Mejoras_Task_PresentarCurso</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_PresentarCurso" name="Enviar la planificación al profesor del curso">
+      <bpmn:incoming>Flow_Gw_Mejoras_Task_PresentarCurso</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PresentarCurso_Task_Autorizar</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Autorizar" name="Revisar y autorizar la clase">
+      <bpmn:incoming>Flow_Task_PresentarCurso_Task_Autorizar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_Autorizar_Gw_Autoriza</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gw_Autoriza" name="¿Autoriza la clase?">
+      <bpmn:incoming>Flow_Task_Autorizar_Gw_Autoriza</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gw_Autoriza_Task_Planificar</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gw_Autoriza_Task_Clase</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Clase" name="Hacer la clase">
+      <bpmn:incoming>Flow_Gw_Autoriza_Task_Clase</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_Clase_Task_PautaPapel</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Task_PautaPapel" name="Observar la clase y llenar la pauta a mano">
+      <bpmn:documentation>Pauta de 20 indicadores en escala 1 a 7. Práctica Pedagógica: 4 pautas por estudiante. Práctica Profesional: 8 (4 del colaborador y 4 del tutor).</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_Clase_Task_PautaPapel</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PautaPapel_Task_Firmar</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_Firmar" name="Comentar la clase, firmar y timbrar la pauta">
+      <bpmn:incoming>Flow_Task_PautaPapel_Task_Firmar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_Firmar_Task_Transcribir</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_Transcribir" name="Recibir la pauta en papel y pasarla a Adecca">
+      <bpmn:documentation>Supuesto S-05: la pasa el profesor del curso.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_Firmar_Task_Transcribir</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_Transcribir_Task_Adecca</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:serviceTask id="Task_Adecca" name="Guardar las notas y calcular el promedio final">
+      <bpmn:incoming>Flow_Task_Transcribir_Task_Adecca</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_Adecca_Gw_Quedan</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_Quedan" name="¿Quedan clases por evaluar?">
+      <bpmn:incoming>Flow_Task_Adecca_Gw_Quedan</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gw_Quedan_Task_Planificar</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gw_Quedan_Task_Consolidar</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Consolidar" name="Juntar planillas y correos para armar informes">
+      <bpmn:incoming>Flow_Gw_Quedan_Task_Consolidar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_Consolidar_End_1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_1" name="Informes listos, sin recorrido completo">
+      <bpmn:incoming>Flow_Task_Consolidar_End_1</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Start_1_Task_Planificar" sourceRef="Start_1" targetRef="Task_Planificar" />
+    <bpmn:sequenceFlow id="Flow_Task_Planificar_Task_RevisarGuia" sourceRef="Task_Planificar" targetRef="Task_RevisarGuia" />
+    <bpmn:sequenceFlow id="Flow_Task_RevisarGuia_Gw_Mejoras" sourceRef="Task_RevisarGuia" targetRef="Gw_Mejoras" />
+    <bpmn:sequenceFlow id="Flow_Gw_Mejoras_Task_Planificar" sourceRef="Gw_Mejoras" targetRef="Task_Planificar" name="Sí: corregir" />
+    <bpmn:sequenceFlow id="Flow_Gw_Mejoras_Task_PresentarCurso" sourceRef="Gw_Mejoras" targetRef="Task_PresentarCurso" name="No" />
+    <bpmn:sequenceFlow id="Flow_Task_PresentarCurso_Task_Autorizar" sourceRef="Task_PresentarCurso" targetRef="Task_Autorizar" />
+    <bpmn:sequenceFlow id="Flow_Task_Autorizar_Gw_Autoriza" sourceRef="Task_Autorizar" targetRef="Gw_Autoriza" />
+    <bpmn:sequenceFlow id="Flow_Gw_Autoriza_Task_Planificar" sourceRef="Gw_Autoriza" targetRef="Task_Planificar" name="No: volver a planificar" />
+    <bpmn:sequenceFlow id="Flow_Gw_Autoriza_Task_Clase" sourceRef="Gw_Autoriza" targetRef="Task_Clase" name="Sí" />
+    <bpmn:sequenceFlow id="Flow_Task_Clase_Task_PautaPapel" sourceRef="Task_Clase" targetRef="Task_PautaPapel" />
+    <bpmn:sequenceFlow id="Flow_Task_PautaPapel_Task_Firmar" sourceRef="Task_PautaPapel" targetRef="Task_Firmar" />
+    <bpmn:sequenceFlow id="Flow_Task_Firmar_Task_Transcribir" sourceRef="Task_Firmar" targetRef="Task_Transcribir" />
+    <bpmn:sequenceFlow id="Flow_Task_Transcribir_Task_Adecca" sourceRef="Task_Transcribir" targetRef="Task_Adecca" />
+    <bpmn:sequenceFlow id="Flow_Task_Adecca_Gw_Quedan" sourceRef="Task_Adecca" targetRef="Gw_Quedan" />
+    <bpmn:sequenceFlow id="Flow_Gw_Quedan_Task_Planificar" sourceRef="Gw_Quedan" targetRef="Task_Planificar" name="Sí: siguiente clase" />
+    <bpmn:sequenceFlow id="Flow_Gw_Quedan_Task_Consolidar" sourceRef="Gw_Quedan" targetRef="Task_Consolidar" name="No" />
+    <bpmn:sequenceFlow id="Flow_Task_Consolidar_End_1" sourceRef="Task_Consolidar" targetRef="End_1" />
+    <bpmn:textAnnotation id="Ann_1"><bpmn:text>Todo por correo: la retroalimentación no queda en un solo lugar</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Ann_1" sourceRef="Task_RevisarGuia" targetRef="Ann_1" />
+    <bpmn:textAnnotation id="Ann_2"><bpmn:text>Pauta a mano: 4 por estudiante en Pedagógica y 8 en Profesional</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Ann_2" sourceRef="Task_PautaPapel" targetRef="Ann_2" />
+    <bpmn:textAnnotation id="Ann_3"><bpmn:text>Doble digitación: se escribe dos veces y en Adecca solo queda la nota final</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Ann_3" sourceRef="Task_Transcribir" targetRef="Ann_3" />
+    <bpmn:textAnnotation id="Ann_4"><bpmn:text>Información dispersa: nadie ve el recorrido de las 6 prácticas</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Ann_4" sourceRef="Task_Consolidar" targetRef="Ann_4" />
+    <bpmn:textAnnotation id="Leg_1"><bpmn:text>Rojo: lo que hoy duele. Si algo no se entiende, mira la nota roja más cercana.</bpmn:text></bpmn:textAnnotation>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_AsIs">
+    <bpmndi:BPMNPlane id="BPMNPlane_AsIs" bpmnElement="Collaboration_AsIs">
+      <bpmndi:BPMNShape id="Participant_AsIs_di" bpmnElement="Participant_AsIs" isHorizontal="true"><dc:Bounds x="160" y="40" width="1990" height="750" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIs_0_di" bpmnElement="Lane_AsIs_0" isHorizontal="true"><dc:Bounds x="190" y="40" width="1960" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIs_1_di" bpmnElement="Lane_AsIs_1" isHorizontal="true"><dc:Bounds x="190" y="190" width="1960" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIs_2_di" bpmnElement="Lane_AsIs_2" isHorizontal="true"><dc:Bounds x="190" y="340" width="1960" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIs_3_di" bpmnElement="Lane_AsIs_3" isHorizontal="true"><dc:Bounds x="190" y="490" width="1960" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIs_4_di" bpmnElement="Lane_AsIs_4" isHorizontal="true"><dc:Bounds x="190" y="640" width="1960" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_1_di" bpmnElement="Start_1"><dc:Bounds x="252" y="97" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="215" y="137" width="110" height="28" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Planificar_di" bpmnElement="Task_Planificar"><dc:Bounds x="380" y="75" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RevisarGuia_di" bpmnElement="Task_RevisarGuia"><dc:Bounds x="380" y="225" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Mejoras_di" bpmnElement="Gw_Mejoras" isMarkerVisible="true"><dc:Bounds x="595" y="240" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="565" y="294" width="110" height="28" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PresentarCurso_di" bpmnElement="Task_PresentarCurso"><dc:Bounds x="730" y="75" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Autorizar_di" bpmnElement="Task_Autorizar"><dc:Bounds x="730" y="375" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Autoriza_di" bpmnElement="Gw_Autoriza" isMarkerVisible="true"><dc:Bounds x="945" y="390" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="915" y="444" width="110" height="28" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Clase_di" bpmnElement="Task_Clase"><dc:Bounds x="1080" y="75" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PautaPapel_di" bpmnElement="Task_PautaPapel"><dc:Bounds x="1080" y="225" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Firmar_di" bpmnElement="Task_Firmar"><dc:Bounds x="1255" y="225" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Transcribir_di" bpmnElement="Task_Transcribir"><dc:Bounds x="1255" y="375" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Adecca_di" bpmnElement="Task_Adecca"><dc:Bounds x="1430" y="675" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Quedan_di" bpmnElement="Gw_Quedan" isMarkerVisible="true"><dc:Bounds x="1645" y="390" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1615" y="444" width="110" height="28" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Consolidar_di" bpmnElement="Task_Consolidar"><dc:Bounds x="1780" y="525" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_1_di" bpmnElement="End_1"><dc:Bounds x="2002" y="547" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1965" y="587" width="110" height="42" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Ann_1_di" bpmnElement="Ann_1" bioc:stroke="#c62828"><dc:Bounds x="360" y="385" width="180" height="58" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Ann_2_di" bpmnElement="Ann_2" bioc:stroke="#c62828"><dc:Bounds x="1050" y="385" width="190" height="58" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Ann_3_di" bpmnElement="Ann_3" bioc:stroke="#c62828"><dc:Bounds x="1130" y="537" width="200" height="58" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Ann_4_di" bpmnElement="Ann_4" bioc:stroke="#c62828"><dc:Bounds x="1750" y="385" width="190" height="58" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Leg_1_di" bpmnElement="Leg_1"><dc:Bounds x="240" y="530" width="250" height="58" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Start_1_Task_Planificar_di" bpmnElement="Flow_Start_1_Task_Planificar"><di:waypoint x="288" y="115" /><di:waypoint x="380" y="115" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Task_Planificar_Task_RevisarGuia_di" bpmnElement="Flow_Task_Planificar_Task_RevisarGuia"><di:waypoint x="445" y="155" /><di:waypoint x="445" y="225" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Task_RevisarGuia_Gw_Mejoras_di" bpmnElement="Flow_Task_RevisarGuia_Gw_Mejoras"><di:waypoint x="510" y="265" /><di:waypoint x="595" y="265" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Gw_Mejoras_Task_Planificar_di" bpmnElement="Flow_Gw_Mejoras_Task_Planificar"><di:waypoint x="620" y="240" /><di:waypoint x="620" y="48" /><di:waypoint x="405" y="48" /><di:waypoint x="405" y="75" /><bpmndi:BPMNLabel><dc:Bounds x="525" y="196" width="90" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Gw_Mejoras_Task_PresentarCurso_di" bpmnElement="Flow_Gw_Mejoras_Task_PresentarCurso"><di:waypoint x="645" y="265" /><di:waypoint x="688" y="265" /><di:waypoint x="688" y="115" /><di:waypoint x="730" y="115" /><bpmndi:BPMNLabel><dc:Bounds x="650" y="246" width="28" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Task_PresentarCurso_Task_Autorizar_di" bpmnElement="Flow_Task_PresentarCurso_Task_Autorizar"><di:waypoint x="795" y="155" /><di:waypoint x="795" y="375" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Task_Autorizar_Gw_Autoriza_di" bpmnElement="Flow_Task_Autorizar_Gw_Autoriza"><di:waypoint x="860" y="415" /><di:waypoint x="945" y="415" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Gw_Autoriza_Task_Planificar_di" bpmnElement="Flow_Gw_Autoriza_Task_Planificar"><di:waypoint x="970" y="390" /><di:waypoint x="970" y="56" /><di:waypoint x="445" y="56" /><di:waypoint x="445" y="75" /><bpmndi:BPMNLabel><dc:Bounds x="866" y="196" width="100" height="28" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Gw_Autoriza_Task_Clase_di" bpmnElement="Flow_Gw_Autoriza_Task_Clase"><di:waypoint x="995" y="415" /><di:waypoint x="1038" y="415" /><di:waypoint x="1038" y="115" /><di:waypoint x="1080" y="115" /><bpmndi:BPMNLabel><dc:Bounds x="1000" y="396" width="28" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Task_Clase_Task_PautaPapel_di" bpmnElement="Flow_Task_Clase_Task_PautaPapel"><di:waypoint x="1145" y="155" /><di:waypoint x="1145" y="225" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Task_PautaPapel_Task_Firmar_di" bpmnElement="Flow_Task_PautaPapel_Task_Firmar"><di:waypoint x="1210" y="265" /><di:waypoint x="1255" y="265" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Task_Firmar_Task_Transcribir_di" bpmnElement="Flow_Task_Firmar_Task_Transcribir"><di:waypoint x="1320" y="305" /><di:waypoint x="1320" y="375" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Task_Transcribir_Task_Adecca_di" bpmnElement="Flow_Task_Transcribir_Task_Adecca"><di:waypoint x="1385" y="415" /><di:waypoint x="1408" y="415" /><di:waypoint x="1408" y="715" /><di:waypoint x="1430" y="715" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Task_Adecca_Gw_Quedan_di" bpmnElement="Flow_Task_Adecca_Gw_Quedan"><di:waypoint x="1560" y="715" /><di:waypoint x="1602" y="715" /><di:waypoint x="1602" y="415" /><di:waypoint x="1645" y="415" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Gw_Quedan_Task_Planificar_di" bpmnElement="Flow_Gw_Quedan_Task_Planificar"><di:waypoint x="1670" y="390" /><di:waypoint x="1670" y="64" /><di:waypoint x="485" y="64" /><di:waypoint x="485" y="75" /><bpmndi:BPMNLabel><dc:Bounds x="1720" y="196" width="100" height="28" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Gw_Quedan_Task_Consolidar_di" bpmnElement="Flow_Gw_Quedan_Task_Consolidar"><di:waypoint x="1695" y="415" /><di:waypoint x="1738" y="415" /><di:waypoint x="1738" y="565" /><di:waypoint x="1780" y="565" /><bpmndi:BPMNLabel><dc:Bounds x="1700" y="396" width="28" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Task_Consolidar_End_1_di" bpmnElement="Flow_Task_Consolidar_End_1"><di:waypoint x="1910" y="565" /><di:waypoint x="2002" y="565" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_Ann_1_di" bpmnElement="Assoc_Ann_1"><di:waypoint x="445" y="305" /><di:waypoint x="445" y="385" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_Ann_2_di" bpmnElement="Assoc_Ann_2"><di:waypoint x="1145" y="305" /><di:waypoint x="1145" y="385" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_Ann_3_di" bpmnElement="Assoc_Ann_3"><di:waypoint x="1320" y="455" /><di:waypoint x="1230" y="537" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_Ann_4_di" bpmnElement="Assoc_Ann_4"><di:waypoint x="1845" y="525" /><di:waypoint x="1845" y="443" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

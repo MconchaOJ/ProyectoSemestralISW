@@ -1,0 +1,92 @@
+# =============================================================================
+# Secretos y configuración local. NUNCA se suben al repositorio.
+# (las claves viven en variables de entorno; .env.example documenta sus nombres)
+# =============================================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+application-local.properties
+application-local.yml
+application-secret*.properties
+application-secret*.yml
+secrets/
+
+# =============================================================================
+# Maven / Java (Spring Boot)
+# =============================================================================
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+*.war
+*.ear
+!.mvn/wrapper/maven-wrapper.jar
+HELP.md
+hs_err_pid*
+replay_pid*
+
+# =============================================================================
+# IDEs y editores
+# =============================================================================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+# Eclipse / Spring Tool Suite
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+bin/
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+# Visual Studio Code
+.vscode/
+
+# =============================================================================
+# Sistema operativo
+# =============================================================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# =============================================================================
+# Registros, temporales y archivos generados en ejecución
+# =============================================================================
+*.log
+logs/
+*.tmp
+*.bak
+*.swp
+~$*
+
+# Archivos de audio de las notas de voz (HU-11, sprint posterior): son datos de personas
+uploads/
+audio/
+
+# =============================================================================
+# Material confidencial y pesado del cliente y de la universidad (NO se sube):
+# entrevista, .rar de las prácticas, .docx del proceso, notebook de referencia y rúbricas.
+# =============================================================================
+/Documents/
+/Pautas/
+*.rar
+
+# Boceto del tablero de Trello (solo para importar): no forma parte del repositorio.
+/Sprint1/tablero.csv

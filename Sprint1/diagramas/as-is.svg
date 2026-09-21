@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2170" height="810" viewBox="0 0 2170 810" font-family="Segoe UI, Arial, sans-serif">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#22242a"/></marker></defs>
+<rect width="2170" height="810" fill="#ffffff"/>
+<rect x="160" y="40" width="1990" height="750" fill="#fff" stroke="#22242a" stroke-width="2"/>
+<rect x="160" y="40" width="30" height="750" fill="#f4f4f6" stroke="#22242a" stroke-width="2"/>
+<text transform="translate(180,415.0) rotate(-90)" text-anchor="middle" font-size="13" font-weight="bold" fill="#1f2328">Proceso actual (AS-IS): pautas en papel y notas en Adecca</text>
+<rect x="190" y="40" width="1960" height="150" fill="none" stroke="#22242a" stroke-width="1.2"/>
+<rect x="190" y="40" width="30" height="150" fill="#f9f9fb" stroke="#22242a" stroke-width="1.2"/>
+<text transform="translate(209,115.0) rotate(-90)" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f2328">Estudiante</text>
+<rect x="190" y="190" width="1960" height="150" fill="none" stroke="#22242a" stroke-width="1.2"/>
+<rect x="190" y="190" width="30" height="150" fill="#f9f9fb" stroke="#22242a" stroke-width="1.2"/>
+<text transform="translate(209,265.0) rotate(-90)" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f2328">Profesor guía</text>
+<rect x="190" y="340" width="1960" height="150" fill="none" stroke="#22242a" stroke-width="1.2"/>
+<rect x="190" y="340" width="30" height="150" fill="#f9f9fb" stroke="#22242a" stroke-width="1.2"/>
+<text transform="translate(209,415.0) rotate(-90)" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f2328">Profesor del curso</text>
+<rect x="190" y="490" width="1960" height="150" fill="none" stroke="#22242a" stroke-width="1.2"/>
+<rect x="190" y="490" width="30" height="150" fill="#f9f9fb" stroke="#22242a" stroke-width="1.2"/>
+<text transform="translate(209,565.0) rotate(-90)" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f2328">Coordinador</text>
+<rect x="190" y="640" width="1960" height="150" fill="none" stroke="#22242a" stroke-width="1.2"/>
+<rect x="190" y="640" width="30" height="150" fill="#f9f9fb" stroke="#22242a" stroke-width="1.2"/>
+<text transform="translate(209,715.0) rotate(-90)" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f2328">Plataforma Adecca</text>
+<polyline points="288,115 380,115" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="445,155 445,225" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="510,265 595,265" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="620,240 620,48 405,48 405,75" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="645,265 688,265 688,115 730,115" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="795,155 795,375" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="860,415 945,415" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="970,390 970,56 445,56 445,75" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="995,415 1038,415 1038,115 1080,115" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="1145,155 1145,225" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="1210,265 1255,265" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="1320,305 1320,375" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="1385,415 1408,415 1408,715 1430,715" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="1560,715 1602,715 1602,415 1645,415" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="1670,390 1670,64 485,64 485,75" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="1695,415 1738,415 1738,565 1780,565" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<polyline points="1910,565 2002,565" fill="none" stroke="#22242a" stroke-width="1.5" marker-end="url(#ar)"/>
+<rect x="524" y="195" width="92" height="16" fill="#ffffff" opacity="0.85"/>
+<text text-anchor="middle" font-size="11" fill="#22242a" font-weight="bold"><tspan x="570.0" y="206.8">Sí: corregir</tspan></text>
+<rect x="649" y="245" width="30" height="16" fill="#ffffff" opacity="0.85"/>
+<text text-anchor="middle" font-size="11" fill="#22242a" font-weight="bold"><tspan x="664.0" y="256.9">No</tspan></text>
+<rect x="865" y="195" width="102" height="30" fill="#ffffff" opacity="0.85"/>
+<text text-anchor="middle" font-size="11" fill="#22242a" font-weight="bold"><tspan x="916.0" y="206.8">No: volver a</tspan><tspan x="916.0" y="220.8">planificar</tspan></text>
+<rect x="999" y="395" width="30" height="16" fill="#ffffff" opacity="0.85"/>
+<text text-anchor="middle" font-size="11" fill="#22242a" font-weight="bold"><tspan x="1014.0" y="406.9">Sí</tspan></text>
+<rect x="1719" y="195" width="102" height="30" fill="#ffffff" opacity="0.85"/>
+<text text-anchor="middle" font-size="11" fill="#22242a" font-weight="bold"><tspan x="1770.0" y="206.8">Sí: siguiente</tspan><tspan x="1770.0" y="220.8">clase</tspan></text>
+<rect x="1699" y="395" width="30" height="16" fill="#ffffff" opacity="0.85"/>
+<text text-anchor="middle" font-size="11" fill="#22242a" font-weight="bold"><tspan x="1714.0" y="406.9">No</tspan></text>
+<circle cx="270" cy="115" r="18" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="270.0" y="148.2">Empieza la</tspan><tspan x="270.0" y="162.2">práctica</tspan></text>
+<rect x="380" y="75" width="130" height="80" rx="10" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="445" y="105.2">Escribir la</tspan><tspan x="445" y="119.2">planificación de la</tspan><tspan x="445" y="133.2">clase</tspan></text>
+<text x="386" y="88" font-size="9" fill="#22242a" opacity="0.8">U</text>
+<rect x="380" y="225" width="130" height="80" rx="10" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="445" y="255.2">Revisar la</tspan><tspan x="445" y="269.2">planificación y</tspan><tspan x="445" y="283.2">responder por correo</tspan></text>
+<text x="386" y="238" font-size="9" fill="#22242a" opacity="0.8">U</text>
+<polygon points="620,240 645,265 620,290 595,265" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<path d="M611,256 L629,274 M629,256 L611,274" stroke="#22242a" stroke-width="3"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="620.0" y="305.2">¿Hay que</tspan><tspan x="620.0" y="319.2">mejorarla?</tspan></text>
+<rect x="730" y="75" width="130" height="80" rx="10" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="795" y="105.2">Enviar la</tspan><tspan x="795" y="119.2">planificación al</tspan><tspan x="795" y="133.2">profesor del curso</tspan></text>
+<text x="736" y="88" font-size="9" fill="#22242a" opacity="0.8">U</text>
+<rect x="730" y="375" width="130" height="80" rx="10" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="795" y="412.2">Revisar y autorizar</tspan><tspan x="795" y="426.2">la clase</tspan></text>
+<text x="736" y="388" font-size="9" fill="#22242a" opacity="0.8">U</text>
+<polygon points="970,390 995,415 970,440 945,415" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<path d="M961,406 L979,424 M979,406 L961,424" stroke="#22242a" stroke-width="3"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="970.0" y="455.2">¿Autoriza la</tspan><tspan x="970.0" y="469.2">clase?</tspan></text>
+<rect x="1080" y="75" width="130" height="80" rx="10" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="1145" y="119.2">Hacer la clase</tspan></text>
+<text x="1086" y="88" font-size="9" fill="#22242a" opacity="0.8">U</text>
+<rect x="1080" y="225" width="130" height="80" rx="10" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="1145" y="255.2">Observar la clase y</tspan><tspan x="1145" y="269.2">llenar la pauta a</tspan><tspan x="1145" y="283.2">mano</tspan></text>
+<text x="1086" y="238" font-size="9" fill="#22242a" opacity="0.8">M</text>
+<rect x="1255" y="225" width="130" height="80" rx="10" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="1320" y="255.2">Comentar la clase,</tspan><tspan x="1320" y="269.2">firmar y timbrar la</tspan><tspan x="1320" y="283.2">pauta</tspan></text>
+<text x="1261" y="238" font-size="9" fill="#22242a" opacity="0.8">M</text>
+<rect x="1255" y="375" width="130" height="80" rx="10" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="1320" y="405.2">Recibir la pauta en</tspan><tspan x="1320" y="419.2">papel y pasarla a</tspan><tspan x="1320" y="433.2">Adecca</tspan></text>
+<text x="1261" y="388" font-size="9" fill="#22242a" opacity="0.8">M</text>
+<rect x="1430" y="675" width="130" height="80" rx="10" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="1495" y="705.2">Guardar las notas y</tspan><tspan x="1495" y="719.2">calcular el promedio</tspan><tspan x="1495" y="733.2">final</tspan></text>
+<text x="1436" y="688" font-size="9" fill="#22242a" opacity="0.8">S</text>
+<polygon points="1670,390 1695,415 1670,440 1645,415" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<path d="M1661,406 L1679,424 M1679,406 L1661,424" stroke="#22242a" stroke-width="3"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="1670.0" y="455.2">¿Quedan clases</tspan><tspan x="1670.0" y="469.2">por evaluar?</tspan></text>
+<rect x="1780" y="525" width="130" height="80" rx="10" fill="#ffffff" stroke="#22242a" stroke-width="2"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="1845" y="555.2">Juntar planillas y</tspan><tspan x="1845" y="569.2">correos para armar</tspan><tspan x="1845" y="583.2">informes</tspan></text>
+<text x="1786" y="538" font-size="9" fill="#22242a" opacity="0.8">U</text>
+<circle cx="2020" cy="565" r="18" fill="#ffffff" stroke="#22242a" stroke-width="4"/>
+<text text-anchor="middle" font-size="12" fill="#1f2328" font-weight="normal"><tspan x="2020.0" y="598.2">Informes listos,</tspan><tspan x="2020.0" y="612.2">sin recorrido</tspan><tspan x="2020.0" y="626.2">completo</tspan></text>
+<line x1="445" y1="305" x2="445" y2="385" stroke="#c62828" stroke-width="1.2" stroke-dasharray="2,3"/>
+<path d="M370,385 L360,385 L360,443 L370,443" fill="none" stroke="#c62828" stroke-width="1.5"/>
+<text text-anchor="start" font-size="11" fill="#c62828" font-weight="normal"><tspan x="368" y="404.9">Todo por correo: la</tspan><tspan x="368" y="417.9">retroalimentación no queda en</tspan><tspan x="368" y="430.9">un solo lugar</tspan></text>
+<line x1="1145" y1="305" x2="1145" y2="385" stroke="#c62828" stroke-width="1.2" stroke-dasharray="2,3"/>
+<path d="M1060,385 L1050,385 L1050,443 L1060,443" fill="none" stroke="#c62828" stroke-width="1.5"/>
+<text text-anchor="start" font-size="11" fill="#c62828" font-weight="normal"><tspan x="1058" y="404.9">Pauta a mano: 4 por estudiante</tspan><tspan x="1058" y="417.9">en Pedagógica y 8 en</tspan><tspan x="1058" y="430.9">Profesional</tspan></text>
+<line x1="1320" y1="455" x2="1230" y2="537" stroke="#c62828" stroke-width="1.2" stroke-dasharray="2,3"/>
+<path d="M1140,537 L1130,537 L1130,595 L1140,595" fill="none" stroke="#c62828" stroke-width="1.5"/>
+<text text-anchor="start" font-size="11" fill="#c62828" font-weight="normal"><tspan x="1138" y="556.9">Doble digitación: se escribe dos</tspan><tspan x="1138" y="569.9">veces y en Adecca solo queda la</tspan><tspan x="1138" y="582.9">nota final</tspan></text>
+<line x1="1845" y1="525" x2="1845" y2="443" stroke="#c62828" stroke-width="1.2" stroke-dasharray="2,3"/>
+<path d="M1760,385 L1750,385 L1750,443 L1760,443" fill="none" stroke="#c62828" stroke-width="1.5"/>
+<text text-anchor="start" font-size="11" fill="#c62828" font-weight="normal"><tspan x="1758" y="411.4">Información dispersa: nadie ve</tspan><tspan x="1758" y="424.4">el recorrido de las 6 prácticas</tspan></text>
+<path d="M250,530 L240,530 L240,588 L250,588" fill="none" stroke="#22242a" stroke-width="1.5"/>
+<text text-anchor="start" font-size="11" fill="#22242a" font-weight="normal"><tspan x="248" y="556.4">Rojo: lo que hoy duele. Si algo no se</tspan><tspan x="248" y="569.4">entiende, mira la nota roja más cercana.</tspan></text>
+</svg>
