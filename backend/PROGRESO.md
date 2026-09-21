@@ -1,7 +1,7 @@
 # PROGRESO — Fase C (backend Spring Boot)
 
 > Se actualiza después de cada historia. Si retomas el trabajo, lee esto primero.
-> **Última actualización: 2026-09-20 — las 5 historias del Sprint 1 están terminadas y probadas.**
+> **Última actualización: 2026-09-21 — las 5 historias del Sprint 1 están terminadas y probadas; el front-end web (Fase D) está hecho en la rama `frontend`.**
 
 ## Estado
 
@@ -21,6 +21,25 @@
 **Cambios del 2026-09-20 por las respuestas de un estudiante** (ver `RESUMEN.md` §13): modalidad `GRUPO`, `requiere_planificacion`, sin guía en el ciclo inicial, planificación sin guía directo al profesor del curso, 3 días de anticipación. Detalle en S-34 a S-38 y en "Migraciones".
 
 **Siguiente:** nada pendiente del Sprint 1. Ver "Pendientes y mejoras" abajo. Antes de la defensa: ejecutar `.\db\bd.ps1` (datos limpios) y arrancar el jar.
+
+## Front-end web (Fase D, 2026-09-21, rama `frontend`)
+
+Interfaz en HTML + CSS + JavaScript puro (sin frameworks, sin npm, sin CDN) en `src/main/resources/static/`, servida por la misma aplicación en <http://localhost:8080> (mismo origen: sin CORS). El backend no cambió salvo `SecurityConfig` (ver abajo). **No es una historia nueva:** es la capa que permite mostrar las 5 HU sin Swagger.
+
+| Archivo | Qué hace |
+|---|---|
+| `index.html`, `css/login.css`, `js/login.js` | Login (logo institucional, errores 400/401, si ya hay sesión pasa a la app) |
+| `app.html`, `css/app.css`, `js/app.js` | Estructura fija: cabecera con el escudo, barra lateral por rol (colapsable) y zona principal con enrutador por hash |
+| `js/menu.js` | Las historias del Sprint 1 y las futuras ("Próximamente") con los roles que las ven, y los accesos rápidos por rol |
+| `js/api.js` | `fetch` con `Authorization: Bearer`; JWT en `sessionStorage`; un 401 borra la sesión y vuelve al login |
+| `js/ui.js` | Plantilla `html` que escapa todo (contra XSS), iconos SVG, toasts, modales, validación de formularios en español y traducción de los errores 400/401/403/404/409 |
+| `js/vistas/*.js`, `css/vistas.css` | `inicio`, `cuenta` (HU-01), `gestion` (HU-02), `evaluaciones` (HU-03), `planificaciones` (HU-04), `historial` (HU-05) |
+
+- **Rutas:** `#/inicio`, `#/cuenta`, `#/estudiantes` (y `#/profesores`, `#/inscripciones`), `#/evaluaciones[/nueva|/{id}]`, `#/planificaciones[/nueva|/{id}|/{id}/editar]`, `#/historial[/{estudianteId}]`.
+- **`SecurityConfig`:** se permiten solo los recursos estáticos (`/`, `/index.html`, `/app.html`, `/css/**`, `/js/**`, `/img/**`, `/favicon.ico`). `/api/**` sigue exigiendo token, salvo `/api/auth/login`. Sin cambios de esquema ni de reglas de negocio; las 146 pruebas siguen en verde.
+- **Imágenes** (en `static/img/`, nombres exactos): `LogoInstitucionalPNG.png` solo en el login; `EscudoUBB.png` fijo en la esquina superior izquierda de la cabecera (el PNG trae mucho margen transparente y un texto blanco, así que se recorta a solo el escudo dentro de un marco blanco redondeado); `LaCastilla.jpg` en la pantalla de inicio. Si falta un archivo hay un degradado de respaldo.
+- **Cómo se verificó:** compilación y 146 pruebas; 200 en `/` y `/app.html`, 401 en `/api/**` sin token; recorrido de todas las vistas con los 5 roles en Chrome sin errores de consola; flujos completos (evaluación creada, respondida y finalizada; planificación aprobada por el guía y autorizada por el profesor del curso; alta de estudiante e inscripción; cierre de inscripción; errores 400, 403, 404 y 409; token inválido → login).
+- **Limitaciones:** no hay editor de pautas ni cambio de contraseña (fuera del Sprint 1) y las historias futuras del menú están deshabilitadas a propósito. **SUPUESTO de presentación (no del cliente):** para los roles distintos del coordinador, HU-02 se muestra como "Mis inscripciones" (solo lectura).
 
 ## Endpoints creados (32 operaciones; todas visibles en Swagger)
 

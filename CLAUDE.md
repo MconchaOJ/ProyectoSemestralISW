@@ -10,6 +10,7 @@ futuros. El detalle completo está en `RESUMEN.md`.
 - Fase A (documentos en `Sprint1/`): terminada.
 - Fase B (base de datos MySQL, carpeta `db/`): terminada.
 - Fase C (backend Spring Boot en `backend/`): **terminada y probada el 2026-09-20**. Las 5 HU, 32 endpoints, 146 pruebas automáticas.
+- Fase D (front-end web en `backend/src/main/resources/static/`, rama `frontend`, 2026-09-21): HTML + CSS + JS puro en http://localhost:8080; solo cambió `SecurityConfig` (estáticos permitidos). Guion en `docs/GUIA_DEFENSA.md` sección 8. Sin merge a `main` todavía.
 - Ajustes del 2026-09-20 por las respuestas de un estudiante de PEM (orientativas, no del cliente): Aproximación es `GRUPO` sin planificaciones, Ambientes es `DUPLA`, el ciclo inicial no tiene guía, planificación con 3 días de anticipación. Cambió el esquema (migración `db/migraciones/001_...sql`).
 - **Abierto:** S-37 (¿flujo de planificación en secuencia o en paralelo?), S-38 (el jefe de carrera pidió ver los chats; el estudiante no quiere que el guía los lea), S-09 (archivo del formato de planificación) y el peso de las pautas.
 - **Pendiente del proyecto:** presentación (Persona 4), retrospectiva, subir el tablero, confirmar supuestos con el cliente o la profesora.

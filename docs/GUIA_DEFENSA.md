@@ -4,7 +4,8 @@ Sistema de Formación Práctica PEM-UBB · Java 17 · Spring Boot 3 · MySQL 8 �
 
 > **Cómo usar esta guía:** la sección 1 es la explicación de arquitectura (1 página). La sección 4 trae, por cada historia,
 > qué hace, sus endpoints, sus reglas y un **guion para demostrarla en Swagger** con los usuarios de prueba. La sección 5 son
-> las preguntas probables con su respuesta. Lo que se asumió sin confirmar está marcado como **SUPUESTO** (lista completa en `backend/PROGRESO.md`).
+> las preguntas probables con su respuesta. La sección 8 es el guion para demostrar todo con el **front-end web** (<http://localhost:8080>).
+> Lo que se asumió sin confirmar está marcado como **SUPUESTO** (lista completa en `backend/PROGRESO.md`).
 
 ---
 
@@ -13,7 +14,7 @@ Sistema de Formación Práctica PEM-UBB · Java 17 · Spring Boot 3 · MySQL 8 �
 1. MySQL encendido: `Get-Service MySQL84` → *Running* (si no: `Start-Service MySQL84`).
 2. **Partir de datos limpios** (para que la demo salga como el guion): desde la raíz del proyecto, `.\db\bd.ps1`.
 3. Arrancar la API: `cd backend` y `java -jar target\practicas-0.1.0-SNAPSHOT.jar` (si no existe el jar: `mvn clean package -DskipTests`).
-4. Abrir <http://localhost:8080/swagger-ui.html>.
+4. Abrir el front-end en <http://localhost:8080> (guion en la sección 8) y, si hace falta, Swagger en <http://localhost:8080/swagger-ui.html>.
 5. Tener a mano la clave de los usuarios de demostración (encabezado de `db/seed.sql`).
 
 Si un ensayo dejó datos extra (estudiantes, evaluaciones, planificaciones nuevas), repite el paso 2.
@@ -374,3 +375,33 @@ Los S-01 a S-16 y S-34 a S-38 están en `Sprint1/sprint-backlog.md`. Los que se 
 - 12 entidades JPA sobre 14 tablas (20 FK, 32 CHECK, 13 UNIQUE, 2 triggers).
 - 146 pruebas automáticas + prueba HTTP real de cada historia (32 + 30 + 24 + 27 + 18 comprobaciones), el ensayo completo del guion (59) y las reglas del ciclo inicial y de los 3 días (11).
 - Pauta real de 20 indicadores en 3 dimensiones (fuente: pauta de observación de Trabajo Colaborativo 2026).
+
+---
+
+## 8. Demo con el front-end
+
+El front-end es HTML + CSS + JavaScript puro (sin frameworks ni librerías externas). Vive en `backend/src/main/resources/static/` y lo entrega la misma aplicación Spring Boot, así que **no hay CORS**: todo corre en <http://localhost:8080>. Habla con la API con `fetch`, guarda el token JWT en `sessionStorage` (solo esa pestaña; se borra al cerrar sesión) y, si la API responde 401, vuelve al login.
+
+**Preparación:** `.\db\bd.ps1` → `java -jar target\practicas-0.1.0-SNAPSHOT.jar` → abrir <http://localhost:8080>. La clave de demostración de los usuarios está en el encabezado de `db/seed.sql`. Para cambiar de usuario: *Cerrar sesión* y volver a ingresar (o una ventana de incógnito por rol, así se ven dos roles a la vez).
+
+**Qué mostrar de la pantalla:** el escudo queda fijo en la esquina superior izquierda en todas las vistas; la barra lateral cambia según el rol (las historias futuras salen grises con la etiqueta *Próximamente*) y se contrae con el botón de las tres líneas; el inicio (`#/inicio`) trae los accesos rápidos del rol y la foto del campus.
+
+### Guion por historia (usuario y rol)
+
+| HU | Usuario (rol) | Qué hacer y qué debe pasar |
+|---|---|---|
+| **HU-01** Iniciar sesión con roles | Ingresar con una clave mala; luego `coordinador@demo.example` (COORDINADOR) | Clave mala → "Correo o contraseña incorrectos." Entrando, el menú muestra las funciones del coordinador. En **Iniciar sesión con roles** se ven sus datos, cuándo vence la sesión y la tabla de roles. Luego `camila.rojas@demo.example` (ESTUDIANTE): escribir a mano `#/estudiantes` en la barra de direcciones → "No tienes permiso para esta acción." (el servidor también responde 403) |
+| **HU-02** Registrar estudiantes e inscribirlos | `coordinador@demo.example` (COORDINADOR) | **Estudiantes → Registrar estudiante** con datos ficticios (RUT válido, por ejemplo `12345678-5`); con un RUT mal escrito sale el error del servidor dentro del formulario. **Profesores** → registrar uno. **Inscripciones → Nueva inscripción**: al elegir *Aproximación al Sistema Escolar* el profesor guía se deshabilita ("no lleva guía"); con *Trabajo Colaborativo* es obligatorio. Repetir la misma inscripción → 409 con el mensaje del servidor. **Cerrar** una inscripción EN_CURSO con resultado y nota |
+| **HU-04** Planificar y aprobar en dos etapas | 1) `camila.rojas@demo.example` (ESTUDIANTE) · 2) `guia2@demo.example` (PROFESOR_GUIA) · 3) `curso1@demo.example` (PROFESOR_CURSO) | 1) En **Planificar una clase…** abrir el borrador *Funciones lineales*, **Enviar a revisión** → error: faltan elementos. Editarlo, completar los cinco elementos y enviarlo. La planificación *Proporcionalidad directa* está *Con observaciones*: se ve el comentario del guía, se edita y se reenvía. 2) Lorena Vidal ve las que le esperan ("Requiere tu acción"), abre la de Diego, intenta **Devolver con observaciones** sin comentario (no deja) y luego aprueba. 3) Ricardo Núñez autoriza la de Diego (*Fracciones equivalentes*, ya en autorización). El estado del flujo y el historial de revisiones se actualizan en la misma pantalla |
+| **HU-03** Evaluar con la pauta digital | `guia1@demo.example` (PROFESOR_GUIA) y después `camila.rojas@demo.example` (ESTUDIANTE) | Marcos Bravo: **Evaluar una clase… → Nueva evaluación** para Camila (inscripción de Trabajo Colaborativo); la pauta se elige sola. Completar datos de la clase, marcar los 20 indicadores (el contador y el puntaje parcial se actualizan), **Guardar avance**, intentar **Finalizar** con indicadores sin responder (quedan resaltados) y luego finalizar: aparece el promedio y ya no se puede editar. Camila ve la evaluación finalizada; el borrador nunca lo ve. La evaluación de Camila queda creada: para repetir el guion, `.\db\bd.ps1` |
+| **HU-05** Historial del estudiante | `sebastian.vargas@demo.example` (ESTUDIANTE), `guia1@demo.example` y `coordinador@demo.example` | Sebastián ve **su** recorrido (5 prácticas aprobadas y la sexta en curso). El guía elige a uno de sus estudiantes; probar `#/historial/5` (Javiera, que no es suya) → "No tienes permiso…". El coordinador elige a Valentina Pérez: sus dos evaluaciones muestran que el promedio **sube** de 4,80 a 5,90 |
+
+### Qué decir si preguntan por el front-end
+
+- **¿Por qué sin frameworks?** El sprint era de backend; el front es una capa fina y verificable que muestra las 5 historias. Menos dependencias, nada que instalar y se explica línea por línea.
+- **¿Es seguro guardar el token en el navegador?** Se guarda en `sessionStorage` (no sobrevive al cerrar la pestaña) y dura 8 horas. Toda la seguridad real está en el servidor: aunque alguien cambie el menú o la URL, cada endpoint valida el rol (403). El menú por rol es solo comodidad.
+- **¿Y el XSS?** Todo texto que viene de la API se escapa antes de insertarse en la página (plantilla `html` de `js/ui.js`).
+- **¿Qué pasa si vence la sesión?** Cualquier 401 borra la sesión y vuelve al login con un aviso.
+- **¿Qué archivos de Spring Security se tocaron?** Solo `SecurityConfig`: se permiten `/`, `/index.html`, `/app.html`, `/css/**`, `/js/**`, `/img/**` y `/favicon.ico`. Esos archivos no tienen datos; `/api/**` sigue exigiendo token (salvo el login).
+- **Rutas del front:** `#/inicio`, `#/cuenta`, `#/estudiantes` (con `#/profesores` e `#/inscripciones`), `#/evaluaciones`, `#/planificaciones` y `#/historial`.
+

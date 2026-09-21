@@ -245,7 +245,8 @@ export function confirmar({ titulo, mensaje, textoOk = 'Aceptar', peligro = fals
 // ---------- Botones con estado de carga ----------
 /** Ejecuta `accion` con el botón bloqueado y un spinner. Propaga el resultado o el error. */
 export async function conCarga(boton, accion) {
-  if (!boton || boton.getAttribute('aria-busy') === 'true') return undefined;
+  if (!boton) return accion();
+  if (boton.getAttribute('aria-busy') === 'true') return undefined;
   const original = boton.innerHTML;
   boton.setAttribute('aria-busy', 'true');
   boton.disabled = true;

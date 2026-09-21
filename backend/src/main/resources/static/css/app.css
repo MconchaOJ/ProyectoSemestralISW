@@ -91,14 +91,14 @@ body.app { height: 100vh; overflow: hidden; display: flex; flex-direction: colum
 .item.deshabilitado:hover { background: none; color: #8a97ac; }
 .item.deshabilitado .item-ico { color: #9aa8bf; background: #F3F5F9; }
 .etiqueta-prox {
-  margin-left: auto; flex: none; padding: .1em .55em; font-size: .64rem; font-weight: 700; letter-spacing: .03em;
+  display: inline-block; margin-left: .4em; padding: .05em .5em; vertical-align: 1px; font-size: .64rem; font-weight: 700; letter-spacing: .03em; text-transform: none;
   color: #7a5c0c; background: var(--dorado-suave); border: 1px solid #E7D391; border-radius: 999px; white-space: nowrap;
 }
 
 /* Barra lateral contraída (solo íconos) */
 body.lateral-chico .lateral { width: var(--ancho-lateral-chico); padding-left: .5rem; padding-right: .5rem; }
 body.lateral-chico .item { justify-content: center; padding: .4rem; border-left-width: 0; }
-body.lateral-chico .item-texto, body.lateral-chico .etiqueta-prox { display: none; }
+body.lateral-chico .item-texto { display: none; }
 body.lateral-chico .grupo-titulo { font-size: 0; padding: 0; height: 1px; background: var(--borde); margin: .8rem .5rem; width: auto; cursor: default; pointer-events: none; }
 body.lateral-chico .grupo-titulo .icono { display: none; }
 body.lateral-chico .grupo.plegado .grupo-items { display: block; }
@@ -143,7 +143,7 @@ body.lateral-chico .grupo.plegado .grupo-items { display: block; }
   position: relative; min-height: 420px; overflow: hidden; border-radius: 20px; box-shadow: var(--sombra);
   background: linear-gradient(140deg, var(--azul-500), var(--azul-900)); /* fallback si falta la imagen */
 }
-.hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 50%; }
+.hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 82% 50%; }
 .hero::after { /* degradado azul que disimula el pixelado y da unidad visual */
   content: ""; position: absolute; inset: 0;
   background:
@@ -177,7 +177,6 @@ body.lateral-chico .grupo.plegado .grupo-items { display: block; }
   body.lateral-chico .lateral { width: min(320px, 86vw); }
   body.lateral-chico .item { justify-content: flex-start; padding: .55rem .7rem; border-left-width: 4px; }
   body.lateral-chico .item-texto { display: flex; }
-  body.lateral-chico .etiqueta-prox { display: inline-block; }
   body.lateral-chico .grupo-titulo { font-size: .72rem; height: auto; padding: .3rem .7rem; background: none; margin: 0 0 .2rem; pointer-events: auto; cursor: pointer; }
   body.lateral-chico .grupo-titulo .icono { display: block; }
 }

@@ -47,8 +47,7 @@ function itemHtml(item, activo) {
   if (item.sprint) { // historia futura: deshabilitada
     return html`<div class="item deshabilitado" aria-disabled="true" title="${item.hu} · ${item.nombre} (Sprint ${item.sprint})">
       <span class="item-ico">${icono(item.icono)}</span>
-      <span class="item-texto"><span class="item-nombre">${item.nombre}</span><span class="item-hu">${item.hu}</span></span>
-      <span class="etiqueta-prox">Próximamente</span>
+      <span class="item-texto"><span class="item-nombre">${item.nombre}</span><span class="item-hu">${item.hu} <span class="etiqueta-prox">Próximamente</span></span></span>
     </div>`;
   }
   return html`<a class="item ${activo ? 'activo' : ''}" href="#/${item.ruta}" data-ruta="${item.ruta}" title="${item.hu} · ${item.nombre}" ${activo ? html`aria-current="page"` : ''}>

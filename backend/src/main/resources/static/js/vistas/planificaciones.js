@@ -272,11 +272,12 @@ function pintarAcciones(cont, ctx, p) {
       <button type="button" class="btn btn-primario" id="enviar" data-cargando="Enviando…">${icono('send')} Enviar a revisión</button>
     </div>`.toString();
     zona.querySelector('#enviar').addEventListener('click', async (e) => {
+      const boton = e.currentTarget; // currentTarget se pierde después de un await
       avisos.innerHTML = '';
       const ok = await confirmar({ titulo: 'Enviar a revisión', mensaje: 'La planificación pasará a revisión y no podrás editarla hasta que te respondan. ¿Enviar?', textoOk: 'Enviar' });
       if (!ok) return;
       try {
-        await conCarga(e.currentTarget, () => api.post(`/api/planificaciones/${p.id}/enviar`));
+        await conCarga(boton, () => api.post(`/api/planificaciones/${p.id}/enviar`));
         toast('Planificación enviada a revisión.');
         recargar();
       } catch (err) { if (err.status !== 401) avisos.innerHTML = alertaError(err).toString(); }

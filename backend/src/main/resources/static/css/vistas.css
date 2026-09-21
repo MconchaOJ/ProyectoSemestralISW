@@ -171,3 +171,7 @@ dl.cifras dd { margin: .1em 0 0; font-size: 1.3rem; font-weight: 800; color: var
 .ev-lugar { flex: 1; min-width: 140px; color: var(--texto-suave); font-size: .88rem; }
 .ev-prom { min-width: 3em; text-align: right; font-size: 1.05rem; color: var(--azul-900); }
 .planes li a { flex: 1; min-width: 160px; }
+
+/* Separación de las tarjetas que van dentro de contenedores (#datos) */
+#datos { margin-bottom: 1rem; }
+#avisos:not(:empty) { margin-bottom: 1rem; }

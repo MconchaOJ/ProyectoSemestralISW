@@ -10,7 +10,9 @@ API REST en **Java 17 + Spring Boot 3 + MySQL 8** con las 5 historias del Sprint
 | HU-04 | Planificación de clase con flujo estudiante → profesor guía → profesor del curso |
 | HU-05 | Historial (recorrido) del estudiante con sus evaluaciones y planificaciones |
 
-Documentación para la defensa: [`../docs/GUIA_DEFENSA.md`](../docs/GUIA_DEFENSA.md). Estado del trabajo y supuestos: [`PROGRESO.md`](PROGRESO.md).
+Además trae un **front-end web** (HTML + CSS + JavaScript puro) que se abre en <http://localhost:8080> una vez arrancada la aplicación (ver la sección 5).
+
+Documentación para la defensa: [`../docs/GUIA_DEFENSA.md`](../docs/GUIA_DEFENSA.md) (la sección 8 es el guion de la demo con el front-end). Estado del trabajo y supuestos: [`PROGRESO.md`](PROGRESO.md).
 
 ## 1. Requisitos
 
@@ -65,13 +67,18 @@ java -jar target\practicas-0.1.0-SNAPSHOT.jar
 
 o, en desarrollo, `mvn spring-boot:run`. La API queda en <http://localhost:8080>.
 
+- **Front-end web:** <http://localhost:8080> (entra con un usuario de demostración; el menú cambia según el rol)
 - **Swagger UI (para probar y demostrar):** <http://localhost:8080/swagger-ui.html>
 - Especificación OpenAPI: <http://localhost:8080/v3/api-docs>
 - Para detenerla: `Ctrl+C` en la terminal donde corre.
 
 Para compilar sin correr las pruebas: `mvn clean package -DskipTests`.
 
-## 5. Probar con Swagger (botón Authorize)
+## 5. Abrir el front-end y probar con Swagger
+
+**Front-end:** con la aplicación en marcha, abre <http://localhost:8080> e ingresa con un usuario de demostración (tabla de abajo; la clave está en el encabezado de `db/seed.sql`). No hay nada que instalar: son archivos estáticos en `src/main/resources/static/` (`index.html` es el login y `app.html` la aplicación) que sirve la misma aplicación Spring Boot, por eso no hay CORS. Si editas un archivo del front, hay que recompilar (`mvn clean package -DskipTests`) y reiniciar, porque van dentro del jar. Guion de la demo: `../docs/GUIA_DEFENSA.md`, sección 8.
+
+**Swagger (botón Authorize):**
 
 1. Abre `POST /api/auth/login`, pulsa *Try it out* y entra con un usuario de demostración, por ejemplo
    `{"email": "coordinador@demo.example", "password": "<clave de demostración>"}`.
@@ -113,6 +120,7 @@ backend/
     │   ├── exception/             errores de negocio y manejador global (@RestControllerAdvice)
     │   └── config/                seguridad (CORS, BCrypt) y Swagger
     ├── main/resources/            application.properties y mensajes de validación en español
+    │   └── static/                front-end: index.html (login), app.html, css/, js/ (vistas/), img/
     └── test/                      pruebas unitarias (Mockito) y de integración (MockMvc + MySQL real)
 ```
 

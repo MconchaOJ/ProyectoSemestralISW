@@ -35,7 +35,7 @@ body.login::before {
 .login-logo { display: block; width: clamp(150px, 26vw, 210px); height: auto; }
 
 .login-sistema {
-  margin: 0 0 1rem; text-align: center; font-size: 1.05rem; font-weight: 600; letter-spacing: .04em;
+  margin: 1.1rem 0 1rem; text-align: center; font-size: 1.05rem; font-weight: 600; letter-spacing: .04em;
   color: var(--azul-900); text-transform: uppercase;
 }
 
