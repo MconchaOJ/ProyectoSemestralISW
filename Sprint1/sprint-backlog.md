@@ -132,5 +132,6 @@ Es la lista de todo el proyecto y los números se repiten en los otros documento
 | S-44 | Se agregaron endpoints no pedidos explícitamente (listar documentos y el audio de la nota de voz en una ruta aparte), necesarios para el front-end | HU-11, HU-21, HU-22 |
 | S-45 | El Sprint 1 sigue construido y probado con los cinco elementos de planificación de la entrevista, no con el formato oficial real del `.docx` (ver S-09): migrar `planificacion` queda para un sprint futuro | HU-04 |
 | S-46 | HU-15, HU-16, HU-17 y HU-20 se reescribieron con el contenido real de "RetroPlani Mate" pero siguen sin implementarse: es planificación, no código de esta fase | HU-15, HU-16, HU-17, HU-20 |
+| S-47 | Añadido el 22-sep: enviar una planificación a revisión ahora también exige al menos un documento adjunto (la planificación formal en Word o PDF); los campos del formulario quedan como resumen. Decisión propia, no confirmada por el cliente | HU-04, HU-21 |
 
 Los supuestos S-17 a S-33 son decisiones técnicas que se tomaron al programar el backend y están en `backend/PROGRESO.md`. Las respuestas del estudiante de PEM (20-sep) están en `RESUMEN.md`, sección 13.

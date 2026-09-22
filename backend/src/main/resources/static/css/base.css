@@ -99,6 +99,7 @@ a { color: var(--azul-500); }
 .campo > label, .campo > .etiqueta { font-weight: 600; font-size: .9rem; color: var(--azul-900); }
 .campo .ayuda { font-size: .82rem; color: var(--texto-suave); }
 .campo .error-campo { font-size: .82rem; color: var(--error); font-weight: 600; }
+.campo input[type="file"] { padding: .4rem; border: 1px dashed var(--borde); border-radius: 10px; background: var(--fondo); font-size: .85rem; }
 .req { color: var(--error); }
 
 input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"],

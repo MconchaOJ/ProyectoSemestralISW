@@ -106,6 +106,7 @@ async function formulario(cont, ctx, idEdicion) {
 
   let actual = null;
   let inscripciones = [];
+  let yaTieneDocumento = false;
   if (editando) {
     actual = await api.get(`/api/planificaciones/${idEdicion}`);
     if (!['BORRADOR', 'CON_OBSERVACIONES'].includes(actual.estado)) {
@@ -113,6 +114,7 @@ async function formulario(cont, ctx, idEdicion) {
         ${alerta('aviso', html`Esta planificación está <strong>${nombreEstado(actual.estado)}</strong>: solo se puede editar en borrador o con observaciones.`)}`.toString();
       return;
     }
+    yaTieneDocumento = (await api.get(`/api/planificaciones/${idEdicion}/documentos`)).length > 0;
   } else {
     inscripciones = (await api.get('/api/inscripciones')).filter((i) => i.estado === 'EN_CURSO' && i.asignatura.requierePlanificacion);
     if (inscripciones.length === 0) {
@@ -127,7 +129,7 @@ async function formulario(cont, ctx, idEdicion) {
   cont.innerHTML = html`
     ${cabecera({
       hu: 'HU-04', titulo: editando ? 'Editar planificación' : 'Nueva planificación',
-      subtitulo: 'Un borrador puede estar incompleto; para enviarlo a revisión deben estar los cinco elementos del formato y la clase debe ser dentro de al menos 3 días.',
+      subtitulo: 'Un borrador puede estar incompleto; para enviarla a revisión deben estar los cinco elementos del formato, la planificación formal en Word o PDF, y la clase debe ser dentro de al menos 3 días.',
       acciones: volver,
     })}
     ${editando && actual.estado === 'CON_OBSERVACIONES' ? ultimaObservacion(actual) : ''}
@@ -144,6 +146,13 @@ async function formulario(cont, ctx, idEdicion) {
         ${campo({ nombre: 'tiempos', etiqueta: '3. Tiempos', tipo: 'textarea', completo: true, valor: v.tiempos ?? '', ayuda: 'Distribución de la clase: inicio, desarrollo y cierre.', atributos: { maxlength: 5000 } })}
         ${campo({ nombre: 'evaluacionAprendizaje', etiqueta: '4. Evaluación del aprendizaje', tipo: 'textarea', completo: true, valor: v.evaluacionAprendizaje ?? '', atributos: { maxlength: 5000 } })}
         ${campo({ nombre: 'interaccionParticipantes', etiqueta: '5. Interacción de los participantes con los recursos', tipo: 'textarea', completo: true, valor: v.interaccionParticipantes ?? '', atributos: { maxlength: 5000 } })}
+        <div class="campo completo">
+          <label for="f-documentoFormal">Planificación formal (Word o PDF)</label>
+          <input type="file" id="f-documentoFormal" accept=".docx,.pdf">
+          <span class="ayuda">${yaTieneDocumento
+            ? 'Ya tienes un documento adjunto: solo súbelo aquí si quieres agregar otro. No es necesario para enviar a revisión.'
+            : 'Obligatoria para enviar a revisión: los campos de arriba quedan como resumen y este documento como el respaldo formal. Puedes subirla aquí o después, desde el detalle.'}</span>
+        </div>
       </div>
       <div class="acciones-form">
         <a class="btn" href="${editando ? `#/planificaciones/${idEdicion}` : '#/planificaciones'}">Cancelar</a>
@@ -161,6 +170,8 @@ async function formulario(cont, ctx, idEdicion) {
     limpiarAlertaForm(form);
     if (!validarForm(form)) return;
     const datos = datosForm(form);
+    // El campo de archivo no tiene "name": queda fuera de datosForm() y se sube aparte (multipart), no como JSON.
+    const archivo = form.querySelector('#f-documentoFormal')?.files?.[0];
     let guardada = false;
     try {
       await conCarga(boton, async () => {
@@ -169,6 +180,11 @@ async function formulario(cont, ctx, idEdicion) {
           : await api.post('/api/planificaciones', datos);
         idActual = resp.id;
         guardada = true;
+        if (archivo) {
+          const datosArchivo = new FormData();
+          datosArchivo.append('archivo', archivo);
+          await api.subir(`/api/planificaciones/${idActual}/documentos`, datosArchivo);
+        }
         if (boton.dataset.accion === 'enviar') await api.post(`/api/planificaciones/${idActual}/enviar`);
       });
       toast(boton.dataset.accion === 'enviar' ? 'Planificación enviada a revisión.' : 'Borrador guardado.');
@@ -263,6 +279,9 @@ async function detalle(cont, ctx, id) {
   montarDocumentos(cont.querySelector('#documentos'), {
     base: `/api/planificaciones/${p.id}/documentos`,
     puedeSubir: ctx.rol === 'ESTUDIANTE',
+    ayuda: ['BORRADOR', 'CON_OBSERVACIONES'].includes(p.estado)
+      ? 'Word (.docx) o PDF, máximo 10 MB. Obligatorio al menos uno para poder enviar a revisión.'
+      : 'Word (.docx) o PDF, máximo 10 MB.',
   });
 }
 

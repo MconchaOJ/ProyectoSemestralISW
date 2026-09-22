@@ -17,6 +17,7 @@ import cl.ubb.pem.practicas.exception.AccesoDenegadoException;
 import cl.ubb.pem.practicas.exception.ConflictoException;
 import cl.ubb.pem.practicas.exception.RecursoNoEncontradoException;
 import cl.ubb.pem.practicas.exception.ReglaNegocioException;
+import cl.ubb.pem.practicas.repository.DocumentoPlanificacionRepository;
 import cl.ubb.pem.practicas.repository.InscripcionRepository;
 import cl.ubb.pem.practicas.repository.PlanificacionRepository;
 import cl.ubb.pem.practicas.repository.UsuarioRepository;
@@ -47,16 +48,18 @@ public class PlanificacionService {
     private final AccesoService acceso;
     private final Clock reloj;
     private final PlanificacionProperties reglas;
+    private final DocumentoPlanificacionRepository documentos;
 
     public PlanificacionService(PlanificacionRepository planificaciones, InscripcionRepository inscripciones,
                                 UsuarioRepository usuarios, AccesoService acceso, Clock reloj,
-                                PlanificacionProperties reglas) {
+                                PlanificacionProperties reglas, DocumentoPlanificacionRepository documentos) {
         this.planificaciones = planificaciones;
         this.inscripciones = inscripciones;
         this.usuarios = usuarios;
         this.acceso = acceso;
         this.reloj = reloj;
         this.reglas = reglas;
+        this.documentos = documentos;
     }
 
     @Transactional
@@ -95,7 +98,12 @@ public class PlanificacionService {
         return PlanificacionDto.desde(planificaciones.saveAndFlush(p));
     }
 
-    /** Criterios 2 y 3: para enviarla a revisión todos los elementos del formato son obligatorios. */
+    /**
+     * Criterios 2, 3 y 12: para enviarla a revisión todos los elementos del formato son obligatorios, y también
+     * la planificación formal en Word o PDF (S-47): los campos del formulario quedan como resumen y el documento
+     * adjunto como el respaldo formal. Basta con que exista al menos un documento adjunto (no hay que volver a
+     * subirlo en cada reenvío).
+     */
     @Transactional
     public PlanificacionDto enviar(Long id, UsuarioAutenticado actor) {
         Planificacion p = obtenerDelEstudiante(id, actor);
@@ -104,6 +112,9 @@ public class PlanificacionService {
                     + ": solo se puede enviar desde BORRADOR o CON_OBSERVACIONES.");
         }
         List<String> faltan = p.elementosFaltantes();
+        if (!documentos.existsByPlanificacionId(p.getId())) {
+            faltan.add("documentoFormal");
+        }
         if (!faltan.isEmpty()) {
             throw new ReglaNegocioException("Para enviar la planificación a revisión faltan estos elementos: " + faltan + ".");
         }

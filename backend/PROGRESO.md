@@ -1,10 +1,11 @@
-# PROGRESO — Fase C (backend Spring Boot), Fase E (documentos, nota de voz, frontend) y Fase F (datos de demo)
+# PROGRESO — Fase C (backend Spring Boot), Fase E (documentos, nota de voz, frontend), Fase F (datos de demo) y Fase H (pruebas)
 
 > Se actualiza después de cada historia. Si retomas el trabajo, lee esto primero.
-> **Última actualización: 2026-09-22 — Fase F: todos los estudiantes y profesores guía/curso de la base de demostración
-> tienen actividad real (evaluaciones y planificaciones), no solo los 4-5 de siempre. Sin migración: solo `db/seed.sql`
-> y `db/verificacion.sql`. Sobre la Fase E (documentos, nota de voz, menú limpio, búsqueda), el Sprint 1 (2026-09-20)
-> y el front-end web (Fase D, 2026-09-21).**
+> **Última actualización: 2026-09-22 — S-47: enviar una planificación a revisión ahora también exige al menos un
+> documento adjunto (la planificación formal en Word o PDF, HU-21); los cinco campos del formulario quedan como
+> resumen. Encontrado y corregido durante la ronda de pruebas de la Fase H. Sobre la Fase F (actividad real de
+> demostración), la Fase E (documentos, nota de voz, menú limpio, búsqueda), el Sprint 1 (2026-09-20) y el
+> front-end web (Fase D, 2026-09-21).**
 
 ## Estado
 
@@ -14,20 +15,22 @@
 | HU-01 Autenticación con roles | TERMINADA | 21 (11 integración + 6 JwtService + 4 AuthService) | 32 de 32 OK |
 | HU-02 Estudiantes e inscripción | TERMINADA | 20 (integración; conteos actualizados para 20 estudiantes el 22-sep) + 15 Rut + 9 Inscripción + 3 Estudiante + 2 Usuario | 30 de 30 OK |
 | HU-03 Evaluar con la pauta digital | TERMINADA | 24 (11 integración + 13 servicio) | 24 de 24 OK |
-| HU-04 Planificación con flujo de aprobación | TERMINADA | 32 (13 integración + 19 servicio) | 27 de 27 OK |
+| HU-04 Planificación con flujo de aprobación | TERMINADA | 34 (14 integración + 20 servicio; +2 el 22-sep por S-47) | 27 de 27 OK |
 | HU-05 Historial del estudiante | TERMINADA | 15 (10 integración + 5 servicio) | 18 de 18 OK |
 | HU-11, HU-12 Nota de voz y transcripción (Fase E) | TERMINADA | 6 (integración) | grabar, consultar, corregir y 403 ajeno: OK |
 | HU-21, HU-22 Documentos adjuntos (Fase E) | TERMINADA | 7 (integración) | subir, listar, descargar, extensión y tamaño rechazados, permisos: OK |
 | Transversal: control de acceso (`AccesoService`) | TERMINADO | 5 | — |
 | Guía de defensa (`docs/GUIA_DEFENSA.md`) y `backend/README.md` | TERMINADAS | — | guion completo ensayado por HTTP: 59 de 59 OK |
 
-**Total: 159 pruebas automáticas, 0 fallos** (`mvn clean package`: 146 del Sprint 1 + 13 de la Fase E). Más 131 comprobaciones por HTTP real contra MySQL, el ensayo del guion de defensa (59), 11 comprobaciones de las reglas del 2026-09-20, y las pruebas por HTTP de documentos y nota de voz del 22-sep (ver "Cómo se probó").
+**Total: 161 pruebas automáticas, 0 fallos** (`mvn clean package`: 146 del Sprint 1 + 13 de la Fase E + 2 del 22-sep por S-47). Más 131 comprobaciones por HTTP real contra MySQL, el ensayo del guion de defensa (59), 11 comprobaciones de las reglas del 2026-09-20, y las pruebas por HTTP de documentos y nota de voz del 22-sep (ver "Cómo se probó").
 
 **Cambios del 2026-09-20 por las respuestas de un estudiante** (ver `RESUMEN.md` §13): modalidad `GRUPO`, `requiere_planificacion`, sin guía en el ciclo inicial, planificación sin guía directo al profesor del curso, 3 días de anticipación. Detalle en S-34 a S-38 y en "Migraciones".
 
 **Cambios del 2026-09-22 (Fase E):** documentos adjuntos en planificaciones y evaluaciones (HU-21, HU-22), nota de voz con transcripción (HU-11, HU-12), 20 estudiantes de demostración (antes 5), menú lateral sin sprints/HU/"Próximamente", accesos rápidos dentro del menú y búsqueda de estudiantes por nombre/RUT/correo (HU-23, HU-24). Detalle en la sección "Fase E" más abajo y en S-39 a S-46.
 
 **Cambios del 2026-09-22 (Fase F, sin migración):** `db/seed.sql` ahora da actividad real a los ~20 estudiantes y a los 6 profesores guía y 4 profesores del curso: 10 planificaciones más (19 en total, los 5 estados representados) y 8 evaluaciones más (11 en total, 2 en BORRADOR). Se reasignó el guía de 6 inscripciones de Trabajo Colaborativo de la generación completa para que los 4 guías nuevos (Fase E) también evaluaran. `db/verificacion.sql` suma un bloque que confirma que nadie activo queda en cero registros relacionados. Detalle en la sección "Fase F" más abajo.
+
+**Cambios del 2026-09-22 (Fase H, ronda de pruebas):** se recorrieron las 5 HU y las adelantadas de la Fase E por HTTP y en el navegador (Claude in Chrome); único hallazgo real: enviar una planificación sin documento adjunto no daba error (S-47, ver arriba), corregido en `PlanificacionService.enviar` (exige `documentos.existsByPlanificacionId`) y en el formulario del front-end (campo de archivo opcional-si-ya-existe-uno, sube antes de enviar). 2 pruebas nuevas (`PlanificacionServiceTest`, `HU04PlanificacionIntegracionTest`) y 4 pruebas existentes de `HU04PlanificacionIntegracionTest` ajustadas para adjuntar un documento antes de un envío que espera éxito.
 
 **Siguiente:** nada pendiente de lo que se pidió en esta fase. Ver "Pendientes y mejoras" abajo. Antes de la defensa: ejecutar `.\db\bd.ps1` (datos limpios) y arrancar el jar.
 
@@ -153,6 +156,7 @@ Interfaz en HTML + CSS + JavaScript puro (sin frameworks, sin npm, sin CDN) en `
 | S-44 | Se agregaron endpoints no pedidos explícitamente: `GET .../documentos` (listar, además de descargar uno) y `GET .../nota-voz/audio` (el audio en una ruta aparte de los metadatos), necesarios para que el front-end funcione | HU-11, HU-21, HU-22 |
 | S-45 | `planificacion` sigue con los cinco elementos de la entrevista (no los del formato oficial real del `.docx`, ver S-09 en `product-backlog.md`): migrar la entidad, los DTO, el formulario y las 146 pruebas existentes queda para un sprint futuro | HU-04 |
 | S-46 | HU-15, HU-16, HU-17 y HU-20 se reescribieron en `product-backlog.md` con el contenido real de "RetroPlani Mate" (`ChatBot (1).rar`), pero siguen sin implementarse en este backend | HU-15, HU-16, HU-17, HU-20 |
+| S-47 | **Añadido el 22-sep (Fase H):** `PlanificacionService.enviar` exige `DocumentoPlanificacionRepository.existsByPlanificacionId`: sin al menos un documento adjunto, enviar a revisión da 400 (se suma a `elementosFaltantes()` como `"documentoFormal"`). Basta con que exista uno; no hay que volver a subirlo en cada reenvío. Decisión propia, no confirmada por el cliente | HU-04, HU-21 |
 
 ## Fase F: datos de demostración con actividad real (2026-09-22, sin migración)
 

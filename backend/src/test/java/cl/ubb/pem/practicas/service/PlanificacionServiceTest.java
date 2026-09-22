@@ -21,6 +21,7 @@ import cl.ubb.pem.practicas.entity.Usuario;
 import cl.ubb.pem.practicas.exception.AccesoDenegadoException;
 import cl.ubb.pem.practicas.exception.ConflictoException;
 import cl.ubb.pem.practicas.exception.ReglaNegocioException;
+import cl.ubb.pem.practicas.repository.DocumentoPlanificacionRepository;
 import cl.ubb.pem.practicas.repository.InscripcionRepository;
 import cl.ubb.pem.practicas.repository.PlanificacionRepository;
 import cl.ubb.pem.practicas.repository.UsuarioRepository;
@@ -48,6 +49,8 @@ class PlanificacionServiceTest {
     private UsuarioRepository usuarios;
     @Mock
     private AccesoService acceso;
+    @Mock
+    private DocumentoPlanificacionRepository documentos;
 
     private PlanificacionService servicio;
 
@@ -63,13 +66,16 @@ class PlanificacionServiceTest {
     void preparar() {
         // "Hoy" fijo: 20 de septiembre de 2026, con 3 días mínimos de anticipación -> la primera clase válida es el 23
         Clock hoy = Clock.fixed(Instant.parse("2026-09-20T15:00:00Z"), ZoneId.of("America/Santiago"));
-        servicio = new PlanificacionService(planificaciones, inscripciones, usuarios, acceso, hoy, new PlanificacionProperties(3));
+        servicio = new PlanificacionService(planificaciones, inscripciones, usuarios, acceso, hoy, new PlanificacionProperties(3), documentos);
         inscripcion = Datos.inscripcion(3, Datos.estudiante(1, usuarioEstudiante), Datos.asignatura(3, true), guia, curso);
         lenient().when(inscripciones.findById(3L)).thenReturn(Optional.of(inscripcion));
         lenient().when(usuarios.findById(2L)).thenReturn(Optional.of(guia));
         lenient().when(usuarios.findById(4L)).thenReturn(Optional.of(curso));
         lenient().when(planificaciones.save(any(Planificacion.class))).thenAnswer(inv -> inv.getArgument(0));
         lenient().when(planificaciones.saveAndFlush(any(Planificacion.class))).thenAnswer(inv -> inv.getArgument(0));
+        // Por defecto la planificación de prueba (id 10) ya tiene su documento formal adjunto (S-47);
+        // las pruebas que quieren probar justo esa falta la pisan explícitamente.
+        lenient().when(documentos.existsByPlanificacionId(10L)).thenReturn(true);
     }
 
     private Planificacion planificacion(EstadoPlanificacion estado, boolean completa) {
@@ -147,6 +153,17 @@ class PlanificacionServiceTest {
         planificacion(EstadoPlanificacion.BORRADOR, false);
         assertThatThrownBy(() -> servicio.enviar(10L, estudiante)).isInstanceOf(ReglaNegocioException.class)
                 .hasMessageContaining("fechaClase").hasMessageContaining("objetivo").hasMessageContaining("interaccionParticipantes");
+    }
+
+    @Test
+    void sinDocumentoFormalAdjuntoNoSePuedeEnviarAunqueLosCamposEstenCompletos() {
+        planificacion(EstadoPlanificacion.BORRADOR, true);
+        lenient().when(documentos.existsByPlanificacionId(10L)).thenReturn(false);
+        assertThatThrownBy(() -> servicio.enviar(10L, estudiante)).isInstanceOf(ReglaNegocioException.class)
+                .hasMessageContaining("documentoFormal").hasMessageNotContaining("objetivo");   // los demás campos sí están completos
+
+        lenient().when(documentos.existsByPlanificacionId(10L)).thenReturn(true);   // el estudiante lo sube
+        assertThat(servicio.enviar(10L, estudiante).estado()).isEqualTo(EstadoPlanificacion.EN_REVISION_GUIA);
     }
 
     @Test

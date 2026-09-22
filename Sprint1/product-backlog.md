@@ -140,7 +140,7 @@ Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada un
 9. El guía ve todas las planificaciones de sus estudiantes, en cualquier estado.
 10. **Sin profesor guía** (ciclo inicial: Ambientes de Aprendizaje no va a un colegio), al enviarla la planificación pasa **directo a `EN_AUTORIZACION`** y la autoriza el profesor del curso (S-34). Aproximación al Sistema Escolar no entrega planificaciones: crear una da 409.
 11. Se entrega con **al menos 3 días de anticipación** a la clase; si no, al enviarla da 400. El número de días se puede configurar (S-35). Se planifican todas las clases con docencia directa, una planificación por clase (S-36).
-12. Además del formulario, el estudiante puede adjuntar documentos de apoyo (Word o PDF) a su planificación: ver HU-21.
+12. Además de completar el formulario, el estudiante debe adjuntar la planificación formal en Word o PDF (ver HU-21): sin al menos un documento adjunto, enviarla a revisión da 400 (los cinco elementos del formulario quedan como resumen; decisión propia, no confirmada por el cliente, **S-47**).
 
 **Diferencia sin resolver (S-37):** un estudiante contó que la planificación se manda "al profe del ramo y al colaborador", quizás a los dos a la vez. El cliente la describió en secuencia (primero el guía, luego el profesor del curso). Mientras nadie confirme otra cosa, implementamos la secuencia.
 
@@ -173,9 +173,9 @@ Estas seis historias iban para sprints futuros en la planificación original, pe
 - **Criterios:** (1) la transcripción inicial la genera el navegador del evaluador (Web Speech API de Chrome) al momento de grabar, y se manda junto con el audio: es una elección propia, sin confirmar con el cliente qué herramienta de transcripción usar (**S-40**); (2) el evaluador puede corregir el texto después, y el sistema marca si ya fue corregido; (3) si el navegador no soporta grabación o reconocimiento de voz, se avisa claramente y el resto de la pantalla de evaluación sigue funcionando.
 
 #### HU-21 · Adjuntar documentos a la planificación
-**Como** estudiante, **quiero** subir uno o más documentos de apoyo a mi planificación, **para** entregar guías, presentaciones u otros materiales junto con el formulario.
-- **Prioridad:** Media · **Sprint:** 1 · **Estado:** Construida y probada (22-sep) · **Depende de** HU-04.
-- **Criterios:** (1) solo el estudiante dueño de la planificación sube archivos; (2) Word (.docx) o PDF, máximo 10 MB (400 si no cumple, tamaño y formatos son supuesto propio, **S-44**); (3) quien ya puede ver la planificación (el mismo estudiante, su guía, su profesor del curso y el coordinador) puede listar y descargar los documentos; (4) se guarda quién subió cada archivo y cuándo.
+**Como** estudiante, **quiero** subir uno o más documentos a mi planificación (la planificación formal y, si quiero, guías, presentaciones u otros materiales), **para** dejar el respaldo formal junto con el formulario.
+- **Prioridad:** Media · **Sprint:** 1 · **Estado:** Construida y probada (22-sep; obligatorio para enviar desde el 22-sep, S-47) · **Depende de** HU-04.
+- **Criterios:** (1) solo el estudiante dueño de la planificación sube archivos; (2) Word (.docx) o PDF, máximo 10 MB (400 si no cumple, tamaño y formatos son supuesto propio, **S-44**); (3) quien ya puede ver la planificación (el mismo estudiante, su guía, su profesor del curso y el coordinador) puede listar y descargar los documentos; (4) se guarda quién subió cada archivo y cuándo; (5) **es obligatorio al menos un documento para enviar la planificación a revisión** (HU-04, criterio 12): basta con que exista uno, no hay que volver a subirlo en cada reenvío (**S-47**).
 
 #### HU-22 · Adjuntar el documento formal de la evaluación
 **Como** profesor guía, **quiero** subir el documento con la pauta y evaluación formal de una clase, **para** dejar el respaldo escrito junto a la evaluación digital.
@@ -346,5 +346,6 @@ Hay que confirmarlos con el cliente o con la profesora. Los números son los mis
 | S-44 | Se agregaron endpoints no pedidos explícitamente (listar documentos y el audio de la nota de voz en una ruta aparte): necesarios para que el front-end los muestre y reproduzca |
 | S-45 | El Sprint 1 sigue construido y probado con los cinco elementos de planificación de la entrevista (no los del formato oficial real, ver S-09): migrar `planificacion` es trabajo nuevo que queda para un sprint futuro, para no arriesgar una historia ya entregada y sus 146 pruebas |
 | S-46 | HU-15, HU-16, HU-17 y HU-20 se reescribieron con el contenido real de "RetroPlani Mate" (`ChatBot (1).rar`), pero **siguen sin implementarse**: es planificación de un sprint futuro, no código de esta fase |
+| S-47 | **Añadido el 22-sep:** enviar una planificación a revisión ahora también exige al menos un documento adjunto (la planificación formal en Word o PDF, HU-21): los cinco elementos del formulario quedan como resumen y el documento como el respaldo formal. Decisión propia, no confirmada por el cliente |
 
 Los supuestos S-03, S-04, S-13 y S-15 tienen que ver con la organización del sprint y están en `sprint-backlog.md`. Los S-17 a S-33 son decisiones técnicas del backend y están en `backend/PROGRESO.md`.

@@ -10,14 +10,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockMultipartFile;
 
 /**
  * HU-04: planificación con flujo de aprobación, contra la base real (cada prueba se revierte).
  * Seed: inscripción 3 = Camila (guía Marcos, profesor del curso Ricardo); planificaciones de Camila: 3 AUTORIZADA,
  * 4 CON_OBSERVACIONES y 5 BORRADOR incompleto. Diego (inscripción 6, guía Lorena, curso Ricardo): 6 EN_REVISION_GUIA
  * y 7 EN_AUTORIZACION.
+ * Desde S-47, enviar a revisión también exige al menos un documento adjunto (la planificación formal en Word o
+ * PDF, HU-21): {@link #adjuntarDocumentoFormal} lo sube para dejar la planificación lista para enviarse.
  */
 class HU04PlanificacionIntegracionTest extends IntegracionBase {
+
+    private static final byte[] PDF_PEQUENO = "%PDF-1.4 planificación formal de prueba".getBytes();
+
+    /** S-47: sube el documento formal para que la planificación quede lista para "enviar" (una vez basta). */
+    private void adjuntarDocumentoFormal(long planificacionId, String estudiante) throws Exception {
+        MockMultipartFile pdf = archivo("archivo", "planificacion.pdf", "application/pdf", PDF_PEQUENO);
+        mvc.perform(multipart("/api/planificaciones/" + planificacionId + "/documentos", estudiante).file(pdf))
+                .andExpect(status().isCreated());
+    }
 
     private Map<String, Object> completa(long inscripcionId) {
         Map<String, Object> m = new HashMap<>();
@@ -40,7 +52,9 @@ class HU04PlanificacionIntegracionTest extends IntegracionBase {
     }
 
     private long crearCompleta() throws Exception {
-        return cuerpo(enviar("/api/planificaciones", CAMILA, completa(3)).andExpect(status().isCreated())).get("id").asLong();
+        long id = cuerpo(enviar("/api/planificaciones", CAMILA, completa(3)).andExpect(status().isCreated())).get("id").asLong();
+        adjuntarDocumentoFormal(id, CAMILA);
+        return id;
     }
 
     private Map<String, Object> decision(String d, String comentario) {
@@ -138,6 +152,18 @@ class HU04PlanificacionIntegracionTest extends IntegracionBase {
     }
 
     @Test
+    void sinDocumentoFormalAdjuntoNoSePuedeEnviarAunqueLosCamposEstenCompletos() throws Exception {
+        long id = cuerpo(enviar("/api/planificaciones", CAMILA, completa(3)).andExpect(status().isCreated())).get("id").asLong();
+        JsonNode err = cuerpo(enviar("/api/planificaciones/" + id + "/enviar", CAMILA).andExpect(status().isBadRequest()));
+        assertThat(err.get("mensaje").asText()).contains("documentoFormal");
+        assertThat(err.get("mensaje").asText()).doesNotContain("objetivo", "recursos");   // los demás campos sí están completos
+
+        adjuntarDocumentoFormal(id, CAMILA);
+        enviar("/api/planificaciones/" + id + "/enviar", CAMILA).andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("EN_REVISION_GUIA"));
+    }
+
+    @Test
     void elTituloEsObligatorioYLosTextosVaciosCuentanComoNoCompletados() throws Exception {
         enviar("/api/planificaciones", CAMILA, Map.of("inscripcionId", 3, "titulo", " ")).andExpect(status().isBadRequest());
         Map<String, Object> conVacios = completa(3);
@@ -153,8 +179,9 @@ class HU04PlanificacionIntegracionTest extends IntegracionBase {
     void unaPlanificacionAutorizadaDelSeedNoSePuedeModificar() throws Exception {
         reemplazar("/api/planificaciones/3", CAMILA, sinInscripcion(completa(3))).andExpect(status().isConflict());
         enviar("/api/planificaciones/3/enviar", CAMILA).andExpect(status().isConflict());
-        // una CON_OBSERVACIONES (id 4) sí se corrige y se reenvía
+        // una CON_OBSERVACIONES (id 4) sí se corrige y se reenvía (S-47: el seed no trae documentos, hay que adjuntar uno)
         reemplazar("/api/planificaciones/4", CAMILA, sinInscripcion(completa(3))).andExpect(status().isOk());
+        adjuntarDocumentoFormal(4, CAMILA);
         enviar("/api/planificaciones/4/enviar", CAMILA).andExpect(jsonPath("$.estado").value("EN_REVISION_GUIA"));
         sincronizar();
     }
@@ -174,6 +201,7 @@ class HU04PlanificacionIntegracionTest extends IntegracionBase {
         Map<String, Object> muyPronto = completa(3);
         muyPronto.put("fechaClase", LocalDate.now().plusDays(2).toString());
         long id = cuerpo(enviar("/api/planificaciones", CAMILA, muyPronto).andExpect(status().isCreated())).get("id").asLong();
+        adjuntarDocumentoFormal(id, CAMILA);   // S-47: con el documento ya adjunto, el único problema es la fecha
         JsonNode err = cuerpo(enviar("/api/planificaciones/" + id + "/enviar", CAMILA).andExpect(status().isBadRequest()));
         assertThat(err.get("mensaje").asText()).contains("3 días de anticipación").contains(LocalDate.now().plusDays(3).toString());
 
@@ -192,6 +220,7 @@ class HU04PlanificacionIntegracionTest extends IntegracionBase {
                 "periodo", "2026-2", "profesorCursoId", 5)).andExpect(status().isCreated())).get("id").asLong();
         long id = cuerpo(enviar("/api/planificaciones", JAVIERA, completa(inscripcion)).andExpect(status().isCreated())).get("id").asLong();
         String base = "/api/planificaciones/" + id;
+        adjuntarDocumentoFormal(id, JAVIERA);
 
         enviar(base + "/enviar", JAVIERA).andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("EN_AUTORIZACION")).andExpect(jsonPath("$.pendienteDe").value("PROFESOR_CURSO"));
