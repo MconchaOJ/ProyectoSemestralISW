@@ -89,7 +89,8 @@ INSERT INTO indicador (id, dimension_id, numero, descripcion) VALUES
 -- Solo para desarrollo: no usar en ningún sistema real (ver el encabezado).
 SET @pw_demo = '$2a$10$oYiGClqHFshZpKW/kdQIXeUU.LlcoFD47bh.VoUQwhvyRUqRtyxLO';
 
--- Usuarios: 1 coordinadora, 2 profesores guía, 2 profesores del curso, 5 estudiantes
+-- Usuarios base: 1 coordinadora, 2 profesores guía, 2 profesores del curso, 5 estudiantes
+-- (la PARTE 2B, más abajo, agrega 4 guías, 2 del curso y 15 estudiantes más: 20 en total)
 INSERT INTO usuario (id, rol_id, nombre, apellidos, email, password_hash, activo, fecha_creacion) VALUES
     ( 1, 4, 'Andrea',    'Fuentes Lagos',    'coordinador@demo.example',        @pw_demo, TRUE, '2026-09-01 09:00:00'),
     ( 2, 2, 'Marcos',    'Bravo Tapia',      'guia1@demo.example',              @pw_demo, TRUE, '2026-09-01 09:05:00'),
@@ -136,6 +137,103 @@ INSERT INTO inscripcion (id, estudiante_id, asignatura_id, periodo, profesor_gui
     (17, 4, 6, '2026-2', 3,    5, 'EN_CURSO', NULL),
     -- Javiera
     (18, 5, 1, '2026-2', NULL, 5, 'EN_CURSO', NULL);
+
+-- =============================================================================
+-- PARTE 2B - GENERACIÓN COMPLETA DE DEMOSTRACIÓN (2026-09-21, S-39)
+-- 15 estudiantes más (20 en total) con recorridos de 1 a 5 prácticas, y 6
+-- profesores nuevos (4 guía y 2 del curso) para que ningún guía supere los
+-- 15-20 estudiantes reportados por un estudiante de PEM (RESUMEN.md, sección 13,
+-- punto 13). Los ids continúan después de los ya usados arriba (no se tocan los
+-- ids 1-18 de los que ya dependen las pruebas de integración). Generado una sola
+-- vez con un script Python (no forma parte de la carga real: no queda en el repo).
+-- -----------------------------------------------------------------------------
+
+-- Profesores nuevos (guías y del curso), para que ningún guía supere 15-20 estudiantes
+INSERT INTO usuario (id, rol_id, nombre, apellidos, email, password_hash, activo, fecha_creacion) VALUES
+    (11, 2, 'Patricio', 'Soto Herrera', 'guia3@demo.example', @pw_demo, TRUE, '2026-09-01 09:02:00'),
+    (12, 2, 'Carolina', 'Fuentealba Ríos', 'guia4@demo.example', @pw_demo, TRUE, '2026-09-01 09:03:00'),
+    (13, 2, 'Héctor', 'Jara Molina', 'guia5@demo.example', @pw_demo, TRUE, '2026-09-01 09:04:00'),
+    (14, 2, 'Daniela', 'Reyes Cárcamo', 'guia6@demo.example', @pw_demo, TRUE, '2026-09-01 09:05:00');
+INSERT INTO usuario (id, rol_id, nombre, apellidos, email, password_hash, activo, fecha_creacion) VALUES
+    (15, 3, 'Francisco', 'Toledo Aravena', 'curso3@demo.example', @pw_demo, TRUE, '2026-09-01 09:16:00'),
+    (16, 3, 'Marcela', 'Ojeda Campos', 'curso4@demo.example', @pw_demo, TRUE, '2026-09-01 09:17:00');
+
+-- 15 estudiantes nuevos (generación completa 2026-2), con recorridos de 1 a 5 prácticas
+INSERT INTO usuario (id, rol_id, nombre, apellidos, email, password_hash, activo, fecha_creacion) VALUES
+    (17, 1, 'Matías', 'Fernández Bravo', 'matias.fernandez@demo.example', @pw_demo, TRUE, '2026-09-05 09:00:00'),
+    (18, 1, 'Antonia', 'Silva Muñoz', 'antonia.silva@demo.example', @pw_demo, TRUE, '2026-09-05 09:00:00'),
+    (19, 1, 'Benjamín', 'Torres Paredes', 'benjamin.torres@demo.example', @pw_demo, TRUE, '2026-09-05 09:00:00'),
+    (20, 1, 'Fernanda', 'Castillo Rojas', 'fernanda.castillo@demo.example', @pw_demo, TRUE, '2026-09-05 09:00:00'),
+    (21, 1, 'Ignacio', 'Morales Vidal', 'ignacio.morales@demo.example', @pw_demo, TRUE, '2026-09-05 09:00:00'),
+    (22, 1, 'Catalina', 'Espinoza Toro', 'catalina.espinoza@demo.example', @pw_demo, TRUE, '2025-09-05 09:00:00'),
+    (23, 1, 'Tomás', 'Gutiérrez Leiva', 'tomas.gutierrez@demo.example', @pw_demo, TRUE, '2025-09-05 09:00:00'),
+    (24, 1, 'Josefa', 'Sepúlveda Pino', 'josefa.sepulveda@demo.example', @pw_demo, TRUE, '2025-09-05 09:00:00'),
+    (25, 1, 'Vicente', 'Carrasco Díaz', 'vicente.carrasco@demo.example', @pw_demo, TRUE, '2025-09-05 09:00:00'),
+    (26, 1, 'Martina', 'Aravena Soto', 'martina.aravena@demo.example', @pw_demo, TRUE, '2024-09-05 09:00:00'),
+    (27, 1, 'Cristóbal', 'Vergara Neira', 'cristobal.vergara@demo.example', @pw_demo, TRUE, '2024-09-05 09:00:00'),
+    (28, 1, 'Isidora', 'Bustos Cid', 'isidora.bustos@demo.example', @pw_demo, TRUE, '2024-09-05 09:00:00'),
+    (29, 1, 'Joaquín', 'Pizarro Vega', 'joaquin.pizarro@demo.example', @pw_demo, TRUE, '2023-09-05 09:00:00'),
+    (30, 1, 'Trinidad', 'Cárdenas Rojo', 'trinidad.cardenas@demo.example', @pw_demo, TRUE, '2023-09-05 09:00:00'),
+    (31, 1, 'Agustín', 'Navarro Iturra', 'agustin.navarro@demo.example', @pw_demo, TRUE, '2023-09-05 09:00:00');
+
+INSERT INTO estudiante (id, usuario_id, rut, semestre_actual, anio_ingreso) VALUES
+    (6, 17, '20000001-3', 2, 2026),
+    (7, 18, '20000002-1', 2, 2026),
+    (8, 19, '20000003-K', 2, 2026),
+    (9, 20, '20000004-8', 2, 2026),
+    (10, 21, '20000005-6', 2, 2026),
+    (11, 22, '20000006-4', 4, 2025),
+    (12, 23, '20000007-2', 4, 2025),
+    (13, 24, '20000008-0', 4, 2025),
+    (14, 25, '20000009-9', 4, 2025),
+    (15, 26, '20000010-2', 6, 2024),
+    (16, 27, '20000011-0', 6, 2024),
+    (17, 28, '20000012-9', 6, 2024),
+    (18, 29, '20000013-7', 9, 2023),
+    (19, 30, '20000014-5', 9, 2023),
+    (20, 31, '20000015-3', 9, 2023);
+
+-- Recorridos: 5 recién ingresando (1 práctica), 4 en Ambientes (2), 3 llegando a
+-- Trabajo Colaborativo (3) y 3 con recorrido largo hasta Práctica Pedagógica (5),
+-- como ya tenía Sebastián Vargas.
+INSERT INTO inscripcion (id, estudiante_id, asignatura_id, periodo, profesor_guia_id, profesor_curso_id, estado, nota_final) VALUES
+    (19, 6, 1, '2026-2', NULL, 4, 'EN_CURSO', NULL),
+    (20, 7, 1, '2026-2', NULL, 5, 'EN_CURSO', NULL),
+    (21, 8, 1, '2026-2', NULL, 15, 'EN_CURSO', NULL),
+    (22, 9, 1, '2026-2', NULL, 16, 'EN_CURSO', NULL),
+    (23, 10, 1, '2026-2', NULL, 4, 'EN_CURSO', NULL),
+    (24, 11, 1, '2025-2', NULL, 5, 'APROBADA', 5.4),
+    (25, 11, 2, '2026-1', NULL, 15, 'EN_CURSO', NULL),
+    (26, 12, 1, '2025-2', NULL, 16, 'APROBADA', 5.8),
+    (27, 12, 2, '2026-1', NULL, 4, 'EN_CURSO', NULL),
+    (28, 13, 1, '2025-2', NULL, 5, 'APROBADA', 6.2),
+    (29, 13, 2, '2026-1', NULL, 15, 'EN_CURSO', NULL),
+    (30, 14, 1, '2025-2', NULL, 16, 'APROBADA', 5.0),
+    (31, 14, 2, '2026-1', NULL, 4, 'EN_CURSO', NULL),
+    (32, 15, 1, '2024-2', NULL, 5, 'APROBADA', 5.2),
+    (33, 15, 2, '2025-1', NULL, 15, 'APROBADA', 5.5),
+    (34, 15, 3, '2026-2', 2, 16, 'EN_CURSO', NULL),
+    (35, 16, 1, '2024-2', NULL, 4, 'APROBADA', 5.5),
+    (36, 16, 2, '2025-1', NULL, 5, 'APROBADA', 5.8),
+    (37, 16, 3, '2026-2', 3, 15, 'EN_CURSO', NULL),
+    (38, 17, 1, '2024-2', NULL, 16, 'APROBADA', 5.8),
+    (39, 17, 2, '2025-1', NULL, 4, 'APROBADA', 6.1),
+    (40, 17, 3, '2026-2', 11, 5, 'EN_CURSO', NULL),
+    (41, 18, 1, '2023-2', NULL, 15, 'APROBADA', 5.4),
+    (42, 18, 2, '2024-1', NULL, 16, 'APROBADA', 5.7),
+    (43, 18, 3, '2024-2', 12, 4, 'APROBADA', 5.9),
+    (44, 18, 4, '2025-1', 13, 5, 'APROBADA', 6.0),
+    (45, 18, 5, '2025-2', 14, 15, 'EN_CURSO', NULL),
+    (46, 19, 1, '2023-2', NULL, 16, 'APROBADA', 5.7),
+    (47, 19, 2, '2024-1', NULL, 4, 'APROBADA', 6.0),
+    (48, 19, 3, '2024-2', 2, 5, 'APROBADA', 6.1),
+    (49, 19, 4, '2025-1', 3, 15, 'APROBADA', 6.2),
+    (50, 19, 5, '2025-2', 11, 16, 'EN_CURSO', NULL),
+    (51, 20, 1, '2023-2', NULL, 4, 'APROBADA', 6.0),
+    (52, 20, 2, '2024-1', NULL, 5, 'APROBADA', 6.3),
+    (53, 20, 3, '2024-2', 12, 15, 'APROBADA', 6.3),
+    (54, 20, 4, '2025-1', 13, 16, 'APROBADA', 6.4),
+    (55, 20, 5, '2025-2', 14, 4, 'EN_CURSO', NULL);
 
 -- -----------------------------------------------------------------------------
 -- Planificaciones: hay una en cada estado del flujo para poder mostrarlas todas

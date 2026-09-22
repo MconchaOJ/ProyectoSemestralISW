@@ -1,8 +1,9 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 14 tablas con claves, restricciones e
--- índices. No contiene contraseñas (el usuario de la aplicación lo crea
+-- Implementa el MER de Sprint1/mer.md: 16 tablas con claves, restricciones e
+-- índices (14 del Sprint 1 más documento_planificacion y documento_evaluacion,
+-- de la Fase E). No contiene contraseñas (el usuario de la aplicación lo crea
 -- db/bd.ps1 con su clave tomada de una variable de entorno).
 --
 -- ATENCIÓN: es re-ejecutable y, por eso, BORRA y vuelve a crear las tablas.
@@ -33,6 +34,8 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS mensaje_chatbot;
 DROP TABLE IF EXISTS nota_voz;
+DROP TABLE IF EXISTS documento_evaluacion;
+DROP TABLE IF EXISTS documento_planificacion;
 DROP TABLE IF EXISTS respuesta_indicador;
 DROP TABLE IF EXISTS revision_planificacion;
 DROP TABLE IF EXISTS evaluacion;
@@ -352,8 +355,44 @@ END$$
 DELIMITER ;
 
 -- =============================================================================
--- 6. Tablas de sprints posteriores (existen para que el modelo esté completo)
---    NOTA_VOZ: HU-11 y HU-12.  MENSAJE_CHATBOT: HU-15 y HU-16.
+-- 6. Documentos adjuntos de planificaciones y evaluaciones          (Fase E, migración 002)
+-- =============================================================================
+
+CREATE TABLE documento_planificacion (
+    id                BIGINT       NOT NULL AUTO_INCREMENT,
+    planificacion_id  BIGINT       NOT NULL,
+    nombre_archivo    VARCHAR(255) NOT NULL,
+    ruta_archivo      VARCHAR(500) NOT NULL COMMENT 'Ruta relativa en disco, fuera del control de versiones',
+    tipo_mime         VARCHAR(150) NOT NULL,
+    tamano_bytes      BIGINT       NOT NULL,
+    subido_por        BIGINT       NOT NULL,
+    fecha_subida      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_documento_planificacion PRIMARY KEY (id),
+    CONSTRAINT fk_documento_planificacion_planificacion FOREIGN KEY (planificacion_id) REFERENCES planificacion (id),
+    CONSTRAINT fk_documento_planificacion_usuario FOREIGN KEY (subido_por) REFERENCES usuario (id),
+    CONSTRAINT ck_documento_planificacion_tamano CHECK (tamano_bytes > 0 AND tamano_bytes <= 10485760),
+    INDEX ix_documento_planificacion_planificacion (planificacion_id)
+) ENGINE = InnoDB COMMENT = 'Documentos (Word o PDF, máximo 10 MB) que el estudiante adjunta a su planificación';
+
+CREATE TABLE documento_evaluacion (
+    id             BIGINT       NOT NULL AUTO_INCREMENT,
+    evaluacion_id  BIGINT       NOT NULL,
+    nombre_archivo VARCHAR(255) NOT NULL,
+    ruta_archivo   VARCHAR(500) NOT NULL COMMENT 'Ruta relativa en disco, fuera del control de versiones',
+    tipo_mime      VARCHAR(150) NOT NULL,
+    tamano_bytes   BIGINT       NOT NULL,
+    subido_por     BIGINT       NOT NULL,
+    fecha_subida   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_documento_evaluacion PRIMARY KEY (id),
+    CONSTRAINT fk_documento_evaluacion_evaluacion FOREIGN KEY (evaluacion_id) REFERENCES evaluacion (id),
+    CONSTRAINT fk_documento_evaluacion_usuario FOREIGN KEY (subido_por) REFERENCES usuario (id),
+    CONSTRAINT ck_documento_evaluacion_tamano CHECK (tamano_bytes > 0 AND tamano_bytes <= 10485760),
+    INDEX ix_documento_evaluacion_evaluacion (evaluacion_id)
+) ENGINE = InnoDB COMMENT = 'Documentos (Word, Excel o PDF, máximo 10 MB) con la pauta y evaluación formal del guía';
+
+-- =============================================================================
+-- 7. Tablas de sprints posteriores (existen para que el modelo esté completo)
+--    NOTA_VOZ: HU-11 y HU-12 (API ya construida en la Fase E). MENSAJE_CHATBOT: HU-15 y HU-16.
 -- =============================================================================
 
 CREATE TABLE nota_voz (

@@ -76,7 +76,9 @@ logs/
 *.swp
 ~$*
 
-# Archivos de audio de las notas de voz (HU-11, sprint posterior): son datos de personas
+# Documentos adjuntos (planificaciones y evaluaciones) y audios de nota de voz (Fase E): son datos de personas,
+# nunca se suben al repositorio. Se guardan en disco, fuera de git; la base de datos solo guarda la ruta relativa.
+backend/adjuntos/
 uploads/
 audio/
 

@@ -121,7 +121,7 @@ function Install-Bd {
     if ($r.Codigo -ne 0) { throw "No se pudo conectar como $RootUser a ${DbHost}:${DbPort}. Revisa ISW_DB_ROOT_PASSWORD.`n$($r.Error)" }
     Assert-Ok $r "Conexión como $RootUser (MySQL $(($r.Salida -split "`n")[1].Trim()))"
 
-    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (14 tablas, trigger)'
+    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (16 tablas, trigger)'
     Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'seed.sql'))   'seed.sql (catálogo y datos de demo)'
 
     # Usuario de la aplicación: solo puede leer y escribir datos, no cambiar la estructura.
@@ -173,6 +173,7 @@ function Test-Bd {
         @('Planificación enviada a revisión con campos vacíos',   3819, 'ck_planificacion_completa', "INSERT INTO planificacion (inscripcion_id,titulo,estado) VALUES (3,'T','EN_REVISION_GUIA')"),
         @('Devolver una planificación sin comentario',            3819, 'ck_revision_comentario',  "INSERT INTO revision_planificacion (planificacion_id,revisor_id,etapa,decision) VALUES (4,2,'GUIA','OBSERVADA')"),
         @('Segunda nota de voz para la misma evaluación',         1062, 'uq_nota_voz_evaluacion',  "INSERT INTO nota_voz (evaluacion_id,archivo_ruta,duracion_segundos) VALUES (1,'a.mp3',30); INSERT INTO nota_voz (evaluacion_id,archivo_ruta,duracion_segundos) VALUES (1,'b.mp3',40)"),
+        @('Documento de planificación más grande que 10 MB',      3819, 'ck_documento_planificacion_tamano', "INSERT INTO documento_planificacion (planificacion_id,nombre_archivo,ruta_archivo,tipo_mime,tamano_bytes,subido_por) VALUES (3,'x.pdf','planificaciones/x.pdf','application/pdf',99999999,6)"),
         @('Borrar un usuario que tiene inscripciones (FK)',       1451, 'foreign key constraint fails', "DELETE FROM usuario WHERE id = 4"),
         @('La app no puede cambiar la estructura (DROP TABLE)',   1142, 'DROP command denied',     "DROP TABLE usuario")
     )

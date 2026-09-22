@@ -11,12 +11,12 @@
 SELECT CONCAT('Conectado como ', CURRENT_USER(), ' a la base ', DATABASE(), ' (MySQL ', VERSION(), ')') AS conexion;
 
 -- -----------------------------------------------------------------------------
-SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 14)' AS verificacion;
+SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 16)' AS verificacion;
 SELECT COUNT(*) AS tablas
   FROM information_schema.tables
  WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
-SELECT '2. FILAS POR TABLA (esperado: rol 4, usuario 10, estudiante 5, asignatura 6, inscripcion 18, pauta 1, dimension 3, indicador 20, planificacion 9, revision 12, evaluacion 3, respuesta 60, nota_voz 0, mensaje 0)' AS verificacion;
+SELECT '2. FILAS POR TABLA (esperado: rol 4, usuario 31, estudiante 20, asignatura 6, inscripcion 55, pauta 1, dimension 3, indicador 20, planificacion 9, revision 12, evaluacion 3, respuesta 60, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0)' AS verificacion;
 SELECT 'rol' AS tabla, COUNT(*) AS filas FROM rol
 UNION ALL SELECT 'usuario',                COUNT(*) FROM usuario
 UNION ALL SELECT 'estudiante',             COUNT(*) FROM estudiante
@@ -30,9 +30,11 @@ UNION ALL SELECT 'revision_planificacion', COUNT(*) FROM revision_planificacion
 UNION ALL SELECT 'evaluacion',             COUNT(*) FROM evaluacion
 UNION ALL SELECT 'respuesta_indicador',    COUNT(*) FROM respuesta_indicador
 UNION ALL SELECT 'nota_voz',               COUNT(*) FROM nota_voz
-UNION ALL SELECT 'mensaje_chatbot',        COUNT(*) FROM mensaje_chatbot;
+UNION ALL SELECT 'mensaje_chatbot',        COUNT(*) FROM mensaje_chatbot
+UNION ALL SELECT 'documento_planificacion', COUNT(*) FROM documento_planificacion
+UNION ALL SELECT 'documento_evaluacion',    COUNT(*) FROM documento_evaluacion;
 
-SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 14, FOREIGN KEY 20, UNIQUE 13, CHECK 32)' AS verificacion;
+SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 16, FOREIGN KEY 24, UNIQUE 13, CHECK 34)' AS verificacion;
 SELECT constraint_type AS tipo, COUNT(*) AS cantidad
   FROM information_schema.table_constraints
  WHERE table_schema = DATABASE()
@@ -195,3 +197,17 @@ SELECT p.id, CONCAT(u.nombre, ' ', u.apellidos) AS estudiante, a.nombre AS asign
 -- -----------------------------------------------------------------------------
 SELECT '15. ÍNDICES EN USO: la consulta del historial usa el índice UNIQUE de inscripcion (columna key)' AS verificacion;
 EXPLAIN SELECT id FROM inscripcion WHERE estudiante_id = 4 ORDER BY periodo;
+
+-- -----------------------------------------------------------------------------
+SELECT '16. GENERACIÓN COMPLETA (S-39): 20 estudiantes y ningún guía con más de 15-20 (esperado: 20 estudiantes, máximo <= 20 por guía)' AS verificacion;
+SELECT COUNT(*) AS total_estudiantes FROM estudiante;
+SELECT CONCAT(u.nombre, ' ', u.apellidos) AS guia, COUNT(DISTINCT i.estudiante_id) AS estudiantes_asignados
+  FROM inscripcion i
+  JOIN usuario u ON u.id = i.profesor_guia_id
+ GROUP BY u.id, u.nombre, u.apellidos
+ ORDER BY estudiantes_asignados DESC;
+
+SELECT '17. DOCUMENTOS ADJUNTOS Y NOTA DE VOZ: tablas nuevas listas para la aplicación (esperado: 0 filas; se cargan por HTTP, no por seed)' AS verificacion;
+SELECT 'documento_planificacion' AS tabla, COUNT(*) AS filas FROM documento_planificacion
+UNION ALL SELECT 'documento_evaluacion', COUNT(*) FROM documento_evaluacion
+UNION ALL SELECT 'nota_voz', COUNT(*) FROM nota_voz;
