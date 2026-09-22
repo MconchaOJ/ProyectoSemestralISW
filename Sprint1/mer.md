@@ -36,6 +36,8 @@ Tres decisiones que conviene recordar:
 
 Estos cuatro dibujos muestran lo mismo que el modelo completo, pero con pocos datos por tabla y sin claves. Son los que conviene copiar a mano y explicar en la presentación. Se pueden ver pegándolos en <https://mermaid.live>.
 
+**Por qué una Parte D y no meter documentos y nota de voz en B o C:** son entidades nuevas de la Fase E con sus propias relaciones (quién sube, a qué se adjunta); metidas dentro de B o C esos dibujos habrían quedado con demasiadas cajas para copiarlos a mano.
+
 En Mermaid cada dato lleva una palabra de tipo (`string`, `int`...): ignórenla al dibujar. Cómo leer las líneas: `||` es "exactamente uno", `o|` es "cero o uno", `o{` es "cero o muchos" y `|{` es "uno o muchos".
 
 ### Parte A. Personas y prácticas

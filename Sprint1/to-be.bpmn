@@ -4,7 +4,7 @@
     <bpmn:participant id="Participant_ToBe" name="Proceso propuesto (TO-BE): sistema digital de formación práctica" processRef="Process_ToBe" />
   </bpmn:collaboration>
   <bpmn:process id="Process_ToBe" isExecutable="false">
-    <bpmn:documentation>Proceso mejorado (TO-BE). Verde = se construye en el Sprint 1 (HU-01 a HU-05). Gris = llega en sprints siguientes (nota de voz, chatbot, informes, nota final). Blanco = pasa fuera del sistema (la clase). Se dibuja el caso de una práctica que va a un colegio. En el ciclo inicial (Ambientes de Aprendizaje) no hay profesor guía y la planificación va directo al profesor del curso; Aproximación al Sistema Escolar no entrega planificaciones (dato de un estudiante, pendiente de confirmar). El flujo va en secuencia, guía y luego profesor del curso, como lo contó el cliente (S-37 sin resolver).</bpmn:documentation>
+    <bpmn:documentation>Proceso mejorado (TO-BE). Verde = se construye en el Sprint 1 (HU-01 a HU-05, más HU-11/HU-12 y HU-21/HU-22, adelantadas el 22-sep en la Fase E). Gris = llega en sprints siguientes (chatbot, informes, nota final). Blanco = pasa fuera del sistema (la clase). Se dibuja el caso de una práctica que va a un colegio. En el ciclo inicial (Ambientes de Aprendizaje) no hay profesor guía y la planificación va directo al profesor del curso; Aproximación al Sistema Escolar no entrega planificaciones (dato de un estudiante, pendiente de confirmar). El flujo va en secuencia, guía y luego profesor del curso, como lo contó el cliente (S-37 sin resolver).</bpmn:documentation>
     <bpmn:laneSet id="LaneSet_ToBe">
       <bpmn:lane id="Lane_ToBe_0" name="Estudiante">
         <bpmn:documentation>Practicante de Pedagogía en Educación Matemática (PEM).</bpmn:documentation>
@@ -107,7 +107,7 @@
       <bpmn:outgoing>Flow_Task_Pauta_Task_Voz</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="Task_Voz" name="Grabar una nota de voz">
-      <bpmn:documentation>HU-11 y HU-12 (sprint posterior). Después se pasa a texto.</bpmn:documentation>
+      <bpmn:documentation>HU-03/HU-11/HU-12, Sprint 1. El navegador transcribe al grabar y el evaluador puede corregir el texto después.</bpmn:documentation>
       <bpmn:incoming>Flow_Task_Pauta_Task_Voz</bpmn:incoming>
       <bpmn:outgoing>Flow_Task_Voz_Task_Calcular</bpmn:outgoing>
     </bpmn:userTask>
@@ -117,7 +117,7 @@
       <bpmn:outgoing>Flow_Task_Calcular_Task_Retro</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:userTask id="Task_Retro" name="Conversar con el estudiante sobre su pauta">
-      <bpmn:documentation>Con la pauta y el historial: Sprint 1. La nota de voz llega después.</bpmn:documentation>
+      <bpmn:documentation>Con la pauta, el historial y la nota de voz: todo del Sprint 1.</bpmn:documentation>
       <bpmn:incoming>Flow_Task_Calcular_Task_Retro</bpmn:incoming>
       <bpmn:outgoing>Flow_Task_Retro_Task_Revisar</bpmn:outgoing>
     </bpmn:userTask>
@@ -185,7 +185,9 @@
     <bpmn:association id="Assoc_Ann_5" sourceRef="Task_Monitorear" targetRef="Ann_5" />
     <bpmn:textAnnotation id="Ann_6"><bpmn:text>Ambientes de Aprendizaje no va a un colegio: no hay guía y autoriza directo el profesor del curso. Aproximación no entrega planificaciones (por confirmar)</bpmn:text></bpmn:textAnnotation>
     <bpmn:association id="Assoc_Ann_6" sourceRef="Gw_Guia" targetRef="Ann_6" />
-    <bpmn:textAnnotation id="Leg_1"><bpmn:text>Verde: se construye en el Sprint 1 (HU-01 a HU-05). Gris: llega en sprints siguientes. Blanco: pasa fuera del sistema.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Leg_1"><bpmn:text>Verde: se construye en el Sprint 1 (HU-01 a HU-05, HU-11, HU-12, HU-21, HU-22). Gris: llega en sprints siguientes. Blanco: pasa fuera del sistema.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Ann_7"><bpmn:text>Ahora también se pueden adjuntar documentos: la planificación formal (HU-21, junto a "Redactar") y la pauta firmada (HU-22, junto a esta pauta digital)</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Ann_7" sourceRef="Task_Pauta" targetRef="Ann_7" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_ToBe">
     <bpmndi:BPMNPlane id="BPMNPlane_ToBe" bpmnElement="Collaboration_ToBe">
@@ -207,7 +209,7 @@
       <bpmndi:BPMNShape id="Gw_Curso_di" bpmnElement="Gw_Curso" isMarkerVisible="true"><dc:Bounds x="1470" y="390" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1440" y="444" width="110" height="28" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_Clase_di" bpmnElement="Task_Clase"><dc:Bounds x="1625" y="75" width="130" height="80" /></bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_Pauta_di" bpmnElement="Task_Pauta" bioc:stroke="#2e7d32" bioc:fill="#c8e6c9"><dc:Bounds x="1800" y="225" width="130" height="80" /></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_Voz_di" bpmnElement="Task_Voz" bioc:stroke="#616161" bioc:fill="#eeeeee"><dc:Bounds x="1975" y="225" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Voz_di" bpmnElement="Task_Voz" bioc:stroke="#2e7d32" bioc:fill="#c8e6c9"><dc:Bounds x="1975" y="225" width="130" height="80" /></bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_Calcular_di" bpmnElement="Task_Calcular" bioc:stroke="#2e7d32" bioc:fill="#c8e6c9"><dc:Bounds x="2150" y="675" width="130" height="80" /></bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_Retro_di" bpmnElement="Task_Retro" bioc:stroke="#2e7d32" bioc:fill="#c8e6c9"><dc:Bounds x="2325" y="225" width="130" height="80" /></bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_Revisar_di" bpmnElement="Task_Revisar" bioc:stroke="#2e7d32" bioc:fill="#c8e6c9"><dc:Bounds x="2325" y="75" width="130" height="80" /></bpmndi:BPMNShape>
@@ -223,6 +225,7 @@
       <bpmndi:BPMNShape id="Ann_5_di" bpmnElement="Ann_5" bioc:stroke="#616161"><dc:Bounds x="3000" y="385" width="210" height="70" /></bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Ann_6_di" bpmnElement="Ann_6" bioc:stroke="#2e7d32"><dc:Bounds x="850" y="525" width="270" height="78" /></bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Leg_1_di" bpmnElement="Leg_1"><dc:Bounds x="1400" y="525" width="300" height="70" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Ann_7_di" bpmnElement="Ann_7" bioc:stroke="#2e7d32"><dc:Bounds x="1990" y="385" width="230" height="72" /></bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_Start_1_Task_Inscribir_di" bpmnElement="Flow_Start_1_Task_Inscribir"><di:waypoint x="288" y="565" /><di:waypoint x="380" y="565" /></bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Task_Inscribir_Task_Guardar_di" bpmnElement="Flow_Task_Inscribir_Task_Guardar"><di:waypoint x="445" y="605" /><di:waypoint x="445" y="675" /></bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Task_Guardar_Task_Redactar_di" bpmnElement="Flow_Task_Guardar_Task_Redactar"><di:waypoint x="510" y="715" /><di:waypoint x="532" y="715" /><di:waypoint x="532" y="115" /><di:waypoint x="555" y="115" /></bpmndi:BPMNEdge>
@@ -253,6 +256,7 @@
       <bpmndi:BPMNEdge id="Assoc_Ann_4_di" bpmnElement="Assoc_Ann_4"><di:waypoint x="2565" y="155" /><di:waypoint x="2565" y="235" /></bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Assoc_Ann_5_di" bpmnElement="Assoc_Ann_5"><di:waypoint x="3090" y="525" /><di:waypoint x="3090" y="455" /></bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Assoc_Ann_6_di" bpmnElement="Assoc_Ann_6"><di:waypoint x="808" y="703" /><di:waypoint x="900" y="603" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_Ann_7_di" bpmnElement="Assoc_Ann_7"><di:waypoint x="1865" y="305" /><di:waypoint x="2020" y="385" /></bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
