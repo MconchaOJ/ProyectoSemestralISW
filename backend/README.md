@@ -12,7 +12,7 @@ API REST en **Java 17 + Spring Boot 3 + MySQL 8** con las 5 historias del Sprint
 
 Además trae un **front-end web** (HTML + CSS + JavaScript puro) que se abre en <http://localhost:8080> una vez arrancada la aplicación (ver la sección 5).
 
-Documentación para la defensa: [`../docs/GUIA_DEFENSA.md`](../docs/GUIA_DEFENSA.md) (la sección 8 es el guion de la demo con el front-end). Estado del trabajo y supuestos: [`PROGRESO.md`](PROGRESO.md).
+Estado del trabajo, endpoints y supuestos: [`PROGRESO.md`](PROGRESO.md).
 
 ## 1. Requisitos
 
@@ -50,8 +50,8 @@ Luego **abre una terminal nueva** para que la variable quede disponible. La plan
 Desde la raíz del proyecto:
 
 ```powershell
-.\db\bd.ps1                    # crea la base isw_practicas, las 14 tablas, los datos de demo y el usuario isw_app
-.\db\bd.ps1 -Accion Verificar  # solo verifica (22 pruebas negativas incluidas)
+.\db\bd.ps1                    # crea la base isw_practicas, las 16 tablas, los datos de demo y el usuario isw_app
+.\db\bd.ps1 -Accion Verificar  # solo verifica (23 pruebas negativas incluidas)
 ```
 
 `bd.ps1` **borra y recrea** las tablas: úsalo también para volver a los datos de demostración originales.
@@ -61,7 +61,7 @@ La aplicación no crea ni modifica tablas (`spring.jpa.hibernate.ddl-auto=valida
 
 ```powershell
 cd backend
-mvn clean package              # compila y corre las 146 pruebas (necesitan la base encendida y con los datos de demo)
+mvn clean package              # compila y corre las 161 pruebas (necesitan la base encendida y con los datos de demo)
 java -jar target\practicas-0.1.0-SNAPSHOT.jar
 ```
 
@@ -76,7 +76,7 @@ Para compilar sin correr las pruebas: `mvn clean package -DskipTests`.
 
 ## 5. Abrir el front-end y probar con Swagger
 
-**Front-end:** con la aplicación en marcha, abre <http://localhost:8080> e ingresa con un usuario de demostración (tabla de abajo; la clave está en el encabezado de `db/seed.sql`). No hay nada que instalar: son archivos estáticos en `src/main/resources/static/` (`index.html` es el login y `app.html` la aplicación) que sirve la misma aplicación Spring Boot, por eso no hay CORS. Si editas un archivo del front, hay que recompilar (`mvn clean package -DskipTests`) y reiniciar, porque van dentro del jar. Guion de la demo: `../docs/GUIA_DEFENSA.md`, sección 8.
+**Front-end:** con la aplicación en marcha, abre <http://localhost:8080> e ingresa con un usuario de demostración (tabla de abajo; la clave está en el encabezado de `db/seed.sql`). No hay nada que instalar: son archivos estáticos en `src/main/resources/static/` (`index.html` es el login y `app.html` la aplicación) que sirve la misma aplicación Spring Boot, por eso no hay CORS. Si editas un archivo del front, hay que recompilar (`mvn clean package -DskipTests`) y reiniciar, porque van dentro del jar.
 
 **Swagger (botón Authorize):**
 
@@ -114,7 +114,7 @@ backend/
     │   ├── controller/            endpoints REST (delgados: validan y delegan)
     │   ├── service/               reglas de negocio y transacciones
     │   ├── repository/            acceso a MySQL (Spring Data JPA)
-    │   ├── entity/                12 entidades JPA (mapean las tablas de db/schema.sql)
+    │   ├── entity/                15 entidades JPA (mapean las tablas de db/schema.sql)
     │   ├── dto/                   lo que entra y sale por la API (no se exponen entidades)
     │   ├── security/              JWT, filtro de autenticación, 401 y 403 en JSON
     │   ├── exception/             errores de negocio y manejador global (@RestControllerAdvice)

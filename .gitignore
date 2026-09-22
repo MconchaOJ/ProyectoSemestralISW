@@ -92,3 +92,6 @@ audio/
 
 # Boceto del tablero de Trello (solo para importar): no forma parte del repositorio.
 /Sprint1/tablero.csv
+
+# Guion personal de defensa: no hace falta para entender ni correr el código.
+/docs/GUIA_DEFENSA.md
