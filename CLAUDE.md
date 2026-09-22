@@ -2,30 +2,32 @@
 
 ## Proyecto
 Proyecto semestral de Ingeniería de Software (UBB, Pedagogía en Educación Matemática): sistema web para
-evaluar y monitorear las 6 prácticas de cada estudiante. El chatbot y la nota de voz llegan en sprints
-futuros. El detalle completo está en `RESUMEN.md`.
+evaluar y monitorear las 6 prácticas de cada estudiante. El chatbot llega en un sprint futuro; la nota de
+voz con transcripción ya está construida (Fase E). El detalle completo está en `RESUMEN.md`.
 
 ## Estado
 - Sprint 1 con entrega el **viernes 25 de septiembre de 2026**.
-- Fase A (documentos en `Sprint1/`): terminada.
-- Fase B (base de datos MySQL, carpeta `db/`): terminada.
+- Fase A (documentos en `Sprint1/`): terminada. Product Backlog con **30 HU** (ampliado el 2026-09-22).
+- Fase B (base de datos MySQL, carpeta `db/`): terminada. 16 tablas, 2 migraciones.
 - Fase C (backend Spring Boot en `backend/`): **terminada y probada el 2026-09-20**. Las 5 HU, 32 endpoints, 146 pruebas automáticas.
 - Fase D (front-end web en `backend/src/main/resources/static/`, rama `frontend`, 2026-09-21): HTML + CSS + JS puro en http://localhost:8080; solo cambió `SecurityConfig` (estáticos permitidos). Guion en `docs/GUIA_DEFENSA.md` sección 8. Sin merge a `main` todavía.
+- Fase E (misma rama `frontend`, **2026-09-22**): documentos adjuntos en planificaciones y evaluaciones (HU-21, HU-22), nota de voz con transcripción (HU-11 y HU-12, adelantadas del Sprint 3), menú lateral sin sprints/HU/"Próximamente", accesos rápidos dentro del menú y búsqueda de estudiantes (HU-23, HU-24). Migración `db/migraciones/002_documentos_adjuntos.sql`; 20 estudiantes de demostración (antes 5); **42 endpoints, 159 pruebas automáticas**. Sin recorrido visual en navegador (no disponible en esa sesión): probado por HTTP con `curl`. Sin merge a `main`.
 - Ajustes del 2026-09-20 por las respuestas de un estudiante de PEM (orientativas, no del cliente): Aproximación es `GRUPO` sin planificaciones, Ambientes es `DUPLA`, el ciclo inicial no tiene guía, planificación con 3 días de anticipación. Cambió el esquema (migración `db/migraciones/001_...sql`).
-- **Abierto:** S-37 (¿flujo de planificación en secuencia o en paralelo?), S-38 (el jefe de carrera pidió ver los chats; el estudiante no quiere que el guía los lea), S-09 (archivo del formato de planificación) y el peso de las pautas.
-- **Pendiente del proyecto:** presentación (Persona 4), retrospectiva, subir el tablero, confirmar supuestos con el cliente o la profesora.
+- **Abierto:** S-37 (¿flujo de planificación en secuencia o en paralelo?), S-38 (el jefe de carrera pidió ver los chats; el estudiante no quiere que el guía los lea), el peso de las pautas, y S-40 (herramienta de transcripción de la nota de voz). S-09 (formato de planificación) **se resolvió el 22-sep**: la carrera entregó el `.docx`, documentado en el backlog y el MER; migrar `Planificacion` a esos campos queda para un sprint futuro (S-45).
+- **Pendiente del proyecto:** presentación (Persona 4), retrospectiva, subir el tablero, confirmar supuestos con el cliente o la profesora, recorrido visual de la Fase E en un navegador real.
 - 2026-09-21: se rehicieron `Sprint1/as-is.bpmn`, `to-be.bpmn`, `mer.md` (con vista simple en 3 partes) y los dos backlogs para que el equipo los dibuje a mano; imágenes guía en `Sprint1/diagramas/`. `tablero.csv` actualizado (41 tarjetas, código en "Hecho") para importarlo a Trello. Se borró `resumenDelSprint1.md` a pedido del usuario.
-- Para retomar, lee: `backend/PROGRESO.md` (estado, endpoints, supuestos S-17 a S-38), `backend/README.md` (arranque), `docs/GUIA_DEFENSA.md` (arquitectura, guion de demo y preguntas de defensa) y `RESUMEN.md` sección 14.
+- Para retomar, lee: `backend/PROGRESO.md` (estado, endpoints, supuestos S-17 a S-46), `backend/README.md` (arranque), `docs/GUIA_DEFENSA.md` (arquitectura, guion de demo y preguntas de defensa) y `RESUMEN.md` sección 14.
 
 ## Tecnología
 - Java 17, Spring Boot 3.5, Maven, Spring Data JPA, Spring Security con JWT y BCrypt, springdoc (Swagger), MySQL 8 (base `isw_practicas`, usuario de la app `isw_app`).
 - La aplicación se conecta como `isw_app`, nunca como `root`. `ddl-auto=validate`: la app no crea ni altera tablas.
 - Paquete base `cl.ubb.pem.practicas` con `controller, service, repository, entity, dto, security, exception, config`.
+- Documentos adjuntos y audios de nota de voz se guardan en disco (`backend/adjuntos/`, fuera de git; carpeta configurable con `app.adjuntos.directorio`), nunca en la base de datos. La transcripción de la nota de voz la genera el navegador del evaluador (Web Speech API de Chrome), no un servicio externo.
 
 ## Comandos
 - Base de datos: `.\db\bd.ps1` (borra y recrea las tablas con los datos de demo) o `.\db\bd.ps1 -Accion Verificar`.
-- Compilar y probar: `cd backend` y `mvn clean package` (146 pruebas). Sin pruebas: `-DskipTests`.
-- Arrancar: `java -jar target\practicas-0.1.0-SNAPSHOT.jar`. Swagger en `http://localhost:8080/swagger-ui.html` (login → botón Authorize).
+- Compilar y probar: `cd backend` y `mvn clean package` (159 pruebas). Sin pruebas: `-DskipTests`.
+- Arrancar: `java -jar target\practicas-0.1.0-SNAPSHOT.jar`. Swagger en `http://localhost:8080/swagger-ui.html` (login → botón Authorize). Front-end en `http://localhost:8080`.
 
 ## Claves (regla estricta)
 - Solo en variables de entorno de Windows: `ISW_DB_PASSWORD` (la app) e `ISW_DB_ROOT_PASSWORD` (solo administración). Opcional: `ISW_JWT_SECRET` (32 caracteres o más; si falta se genera uno temporal).
@@ -39,6 +41,8 @@ futuros. El detalle completo está en `RESUMEN.md`.
 - El guía (colaborador) solo existe en asignaturas que van a un colegio; en el ciclo inicial asignarlo da 400.
 - Evaluación: BORRADOR → FINALIZADA (exige los 20 indicadores, calcula total y promedio, luego es inmutable). El borrador es privado del evaluador y del coordinador.
 - Historial: el guía o el profesor del curso ve el recorrido completo de un estudiante asignado a él en alguna inscripción (S-21).
+- Documentos adjuntos (Fase E): el estudiante sube a su planificación, el guía evaluador a su evaluación (Word/PDF o Word/Excel/PDF, 10 MB); quien ya puede ver la planificación o la evaluación puede descargar.
+- Nota de voz (Fase E): como máximo una por evaluación (409 si ya existe; se corrige con `PUT`); solo el evaluador graba, sube o corrige (403 para cualquier otro, incluido otro guía); se graba con la evaluación en BORRADOR o FINALIZADA sin romper su inmutabilidad (S-42).
 
 ## Reglas de trabajo
 - Responder siempre en español.
@@ -49,5 +53,5 @@ futuros. El detalle completo está en `RESUMEN.md`.
 - **Las pruebas de integración asumen los datos exactos de `db/seed.sql`.** Probar a mano o por HTTP deja filas nuevas: ejecutar `.\db\bd.ps1` antes de `mvn clean package` y antes de la defensa. Detener la aplicación al terminar de probar.
 - Cambios de esquema: crear una migración nueva en `db/migraciones/` (se ejecuta una vez y como root) y actualizar también `db/schema.sql`, `db/seed.sql`, `db/verificacion.sql`, `Sprint1/mer.md`, las entidades y los DTO; anotarlo en `backend/PROGRESO.md`.
 - En este entorno, los heredocs largos con Bash fallan: crear archivos con la herramienta Write. En PowerShell, el verificador de comandos a veces rechaza órdenes inofensivas (falsos positivos con Remove-Item o Set-Content inline): escribir un `.ps1` con Write y ejecutarlo aparte.
-- Los supuestos S-01 a S-16 (`Sprint1/sprint-backlog.md`), S-34 a S-38 (allí mismo) y S-17 a S-33 (`backend/PROGRESO.md`) siguen sin confirmar con el cliente: marcar como SUPUESTO lo que se asuma.
+- Los supuestos S-01 a S-16 y S-34 a S-46 (`Sprint1/sprint-backlog.md`) y S-17 a S-46 (`backend/PROGRESO.md`) siguen sin confirmar con el cliente: marcar como SUPUESTO lo que se asuma.
 - Lo que responda un estudiante es orientativo, no una confirmación del cliente: anotarlo como "reportado por estudiante, pendiente de confirmar". Preguntas pendientes y respuestas: `RESUMEN.md`, sección 13.

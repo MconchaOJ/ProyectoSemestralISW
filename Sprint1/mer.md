@@ -22,7 +22,9 @@ El cliente quiere poder responder estas preguntas con el sistema:
 | ¿Cómo lo evaluaron, indicador por indicador? | `PAUTA`, `DIMENSION_PAUTA`, `INDICADOR`, `EVALUACION`, `RESPUESTA_INDICADOR` |
 | ¿Qué planificó y quién se lo aprobó? | `PLANIFICACION`, `REVISION_PLANIFICACION` |
 | ¿Cuál es su recorrido por las 6 prácticas? | Sus `INSCRIPCION` ordenadas en el tiempo, con lo que cuelga de cada una |
-| (Más adelante) ¿Qué dijo el profesor en su nota de voz? ¿Qué le respondió el chatbot? | `NOTA_VOZ`, `MENSAJE_CHATBOT` |
+| ¿Qué documentos adjuntó a su planificación o a su evaluación? (Fase E) | `DOCUMENTO_PLANIFICACION`, `DOCUMENTO_EVALUACION` |
+| ¿Qué dijo el profesor en su nota de voz, y su transcripción? (Fase E) | `NOTA_VOZ` |
+| (Más adelante) ¿Qué le respondió el chatbot? | `MENSAJE_CHATBOT` |
 
 Tres decisiones que conviene recordar:
 
@@ -30,9 +32,9 @@ Tres decisiones que conviene recordar:
 2. **La pauta es un dato, no código.** Las dimensiones, los indicadores y la escala están en tablas. Si mañana la carrera usa otra pauta (escala de 2 a 7, Orientación, tutor), se agrega como datos nuevos sin tocar el programa.
 3. **Nada importante se sobrescribe.** Cada decisión sobre una planificación queda como una fila nueva en `REVISION_PLANIFICACION`, y una evaluación finalizada ya no se puede cambiar. Así hay evidencia para la acreditación.
 
-## 2. Vista simple en 3 partes
+## 2. Vista simple en 4 partes
 
-Estos tres dibujos muestran lo mismo que el modelo completo, pero con pocos datos por tabla y sin claves. Son los que conviene copiar a mano y explicar en la presentación. Se pueden ver pegándolos en <https://mermaid.live>.
+Estos cuatro dibujos muestran lo mismo que el modelo completo, pero con pocos datos por tabla y sin claves. Son los que conviene copiar a mano y explicar en la presentación. Se pueden ver pegándolos en <https://mermaid.live>.
 
 En Mermaid cada dato lleva una palabra de tipo (`string`, `int`...): ignórenla al dibujar. Cómo leer las líneas: `||` es "exactamente uno", `o|` es "cero o uno", `o{` es "cero o muchos" y `|{` es "uno o muchos".
 
@@ -128,13 +130,42 @@ erDiagram
 
 Cómo se cuenta: "Un estudiante escribe una planificación por cada clase. El guía y el profesor del curso la revisan: cada decisión queda guardada con quién, cuándo y qué comentó. Si la planificación se usó para una clase evaluada, la evaluación puede apuntar a ella".
 
+### Parte D. Documentos adjuntos y nota de voz (Fase E, 22-sep)
+
+```mermaid
+erDiagram
+    PLANIFICACION ||--o{ DOCUMENTO_PLAN : "recibe"
+    EVALUACION ||--o{ DOCUMENTO_EVAL : "recibe"
+    EVALUACION ||--o| NOTA_VOZ : "puede tener"
+    USUARIO ||--o{ DOCUMENTO_PLAN : "sube"
+    USUARIO ||--o{ DOCUMENTO_EVAL : "sube"
+
+    DOCUMENTO_PLAN {
+        string nombre_archivo
+        string tipo_mime
+        int tamano_bytes
+    }
+    DOCUMENTO_EVAL {
+        string nombre_archivo
+        string tipo_mime
+        int tamano_bytes
+    }
+    NOTA_VOZ {
+        int duracion_segundos
+        string transcripcion
+        boolean transcripcion_corregida
+    }
+```
+
+Cómo se cuenta: "El estudiante puede adjuntar documentos (Word o PDF) a su planificación, y el profesor guía puede adjuntar el documento formal de la pauta a su evaluación. Además, el profesor guía puede grabar como máximo una nota de voz por evaluación, con su transcripción". Documento_plan es `documento_planificacion` y Documento_eval es `documento_evaluacion` en la base; se acortó el nombre solo para que el diagrama se lea cómodo.
+
 ### Un ejemplo con datos de la demo
 
 Camila Rojas (estudiante 1) tiene una inscripción en Trabajo Colaborativo 2026-2 (la inscripción 3), con Marcos Bravo como guía y Ricardo Núñez como profesor del curso. De esa inscripción cuelgan tres planificaciones: una autorizada, una con observaciones y un borrador. Cada revisión de Marcos o de Ricardo es una fila en `REVISION_PLANIFICACION`. Si Marcos evalúa una clase suya, aparece una fila en `EVALUACION` con 20 filas en `RESPUESTA_INDICADOR`.
 
 ## 3. Modelo completo (el que tiene la base de datos)
 
-Este es el diagrama con todos los campos, tipos y claves (`PK` clave primaria, `FK` clave foránea, `UK` único). Son las 14 tablas del script `db/schema.sql`.
+Este es el diagrama con todos los campos, tipos y claves (`PK` clave primaria, `FK` clave foránea, `UK` único). Son las 16 tablas del script `db/schema.sql` (14 del Sprint 1 más `documento_planificacion` y `documento_evaluacion`, de la Fase E).
 
 ```mermaid
 erDiagram
@@ -158,6 +189,10 @@ erDiagram
     USUARIO ||--o{ REVISION_PLANIFICACION : "emite"
     EVALUACION ||--o| NOTA_VOZ : "puede tener"
     INSCRIPCION ||--o{ MENSAJE_CHATBOT : "registra"
+    PLANIFICACION ||--o{ DOCUMENTO_PLANIFICACION : "recibe"
+    USUARIO ||--o{ DOCUMENTO_PLANIFICACION : "sube"
+    EVALUACION ||--o{ DOCUMENTO_EVALUACION : "recibe"
+    USUARIO ||--o{ DOCUMENTO_EVALUACION : "sube"
 
     ROL {
         int id PK
@@ -289,13 +324,33 @@ erDiagram
         text contenido
         datetime fecha
     }
+    DOCUMENTO_PLANIFICACION {
+        bigint id PK
+        bigint planificacion_id FK
+        varchar nombre_archivo
+        varchar ruta_archivo "solo en disco, fuera de git"
+        varchar tipo_mime
+        bigint tamano_bytes "maximo 10 MB"
+        bigint subido_por FK
+        datetime fecha_subida
+    }
+    DOCUMENTO_EVALUACION {
+        bigint id PK
+        bigint evaluacion_id FK
+        varchar nombre_archivo
+        varchar ruta_archivo "solo en disco, fuera de git"
+        varchar tipo_mime
+        bigint tamano_bytes "maximo 10 MB"
+        bigint subido_por FK
+        datetime fecha_subida
+    }
 ```
 
 > Ejemplo de lectura de una línea: `ESTUDIANTE ||--o{ INSCRIPCION` se lee "un estudiante tiene cero o muchas inscripciones; cada inscripción es de exactamente un estudiante".
 
 ## 4. Entidades
 
-Las 12 primeras se usan en el Sprint 1. Las dos últimas (`NOTA_VOZ`, `MENSAJE_CHATBOT`) se crean en la base de datos para que el modelo esté completo, pero su API llega en sprints posteriores (HU-11, HU-12 y HU-15).
+Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO_EVALUACION` y `NOTA_VOZ` se agregaron o activaron en la Fase E (22-sep): las tres ya tienen API y pruebas. Solo `MENSAJE_CHATBOT` sigue sin API: llega con el chatbot, en un sprint posterior (HU-15).
 
 | Entidad | Qué representa (en simple) | Puntos clave | HU |
 |---|---|---|---|
@@ -309,9 +364,11 @@ Las 12 primeras se usan en el Sprint 1. Las dos últimas (`NOTA_VOZ`, `MENSAJE_C
 | `INDICADOR` | Cada criterio que se puntúa | La pauta real tiene 20 | HU-03 |
 | `EVALUACION` | Una clase evaluada con una pauta | Guarda los datos de la cabecera de la pauta en papel (establecimiento, curso, fecha, horas, objetivo, observaciones generales). Al finalizar se calcula y guarda el puntaje. Puede enlazar la planificación de esa clase | HU-03 |
 | `RESPUESTA_INDICADOR` | El puntaje que se puso a un indicador en una evaluación | Resuelve la relación muchos a muchos entre evaluaciones e indicadores | HU-03 |
-| `PLANIFICACION` | El plan escrito de una clase | Tiene los elementos del formato de la carrera: objetivo, recursos, tiempos, evaluación del aprendizaje e interacción de los participantes con los recursos (S-09) | HU-04 |
+| `PLANIFICACION` | El plan escrito de una clase | Tiene los elementos del formato de la carrera contados en la entrevista: objetivo, recursos, tiempos, evaluación del aprendizaje e interacción de los participantes con los recursos. El formato oficial real (`.docx`) ya se conoce y tiene más campos: ver S-09 y S-45 | HU-04 |
 | `REVISION_PLANIFICACION` | Cada decisión del guía o del profesor del curso sobre una planificación | Conserva el historial completo: quién decidió, cuándo, en qué etapa y con qué comentario | HU-04 |
-| `NOTA_VOZ` | Audio que graba el evaluador al terminar la clase, con su transcripción | Como máximo una por evaluación. La transcripción puede ser corregida por el evaluador | HU-11, HU-12 |
+| `DOCUMENTO_PLANIFICACION` | Un archivo (Word o PDF) que el estudiante adjunta a su planificación | Máximo 10 MB (S-43). El archivo se guarda en disco, fuera de git; la tabla solo guarda la ruta relativa | HU-21 |
+| `DOCUMENTO_EVALUACION` | Un archivo (Word, Excel o PDF) con la pauta y evaluación formal que sube el profesor guía | Máximo 10 MB (S-43). Se puede subir con la evaluación en BORRADOR o FINALIZADA (S-41) | HU-22 |
+| `NOTA_VOZ` | Audio que graba el evaluador al terminar la clase, con su transcripción | Como máximo una por evaluación. La transcripción la genera el navegador (S-40) y la puede corregir el evaluador. Se graba en BORRADOR o FINALIZADA (S-42) | HU-11, HU-12 |
 | `MENSAJE_CHATBOT` | Cada mensaje entre el estudiante y el chatbot | Se guarda por inscripción para que el jefe de carrera (HU-20) y, según se decida, el profesor guía (HU-16) puedan revisar el chat | HU-15, HU-16 |
 
 ## 5. Relaciones
@@ -337,6 +394,10 @@ Las 12 primeras se usan en el Sprint 1. Las dos últimas (`NOTA_VOZ`, `MENSAJE_C
 | `PLANIFICACION` — `REVISION_PLANIFICACION` | 1 a N | Cada envío o devolución agrega una revisión |
 | `USUARIO` — `REVISION_PLANIFICACION` | 1 a N | Quien revisa (guía o profesor del curso) emite muchas revisiones |
 | `EVALUACION` — `NOTA_VOZ` | 1 a 0..1 | Una evaluación puede tener una nota de voz |
+| `PLANIFICACION` — `DOCUMENTO_PLANIFICACION` | 1 a N | Una planificación puede tener varios documentos adjuntos |
+| `USUARIO` — `DOCUMENTO_PLANIFICACION` | 1 a N | Quien sube el documento (el estudiante dueño) queda registrado |
+| `EVALUACION` — `DOCUMENTO_EVALUACION` | 1 a N | Una evaluación puede tener varios documentos (pauta, evidencias) |
+| `USUARIO` — `DOCUMENTO_EVALUACION` | 1 a N | Quien sube el documento (el profesor guía evaluador) queda registrado |
 | `INSCRIPCION` — `MENSAJE_CHATBOT` | 1 a N | El chat de un estudiante en una práctica final tiene muchos mensajes |
 
 ## 6. Reglas que el diagrama no puede mostrar
@@ -374,20 +435,22 @@ stateDiagram-v2
 
 ## 7. Qué se implementa en el Sprint 1
 
-- El script SQL (`db/schema.sql`, con `db/seed.sql` y `db/bd.ps1` para cargarlo) crea **las 14 tablas** con sus claves y restricciones (14 `PRIMARY KEY`, 20 `FOREIGN KEY`, 13 `UNIQUE`, 32 `CHECK` y los índices de las consultas de HU-02 a HU-05), y carga datos semilla (roles, las 6 asignaturas y la pauta de observación con sus 3 dimensiones y 20 indicadores) más usuarios y registros de demostración ficticios. Ya está creada y verificada en el MySQL local (base `isw_practicas`).
-- La aplicación Spring Boot usa **12 entidades** en las HU-01 a HU-05. `NOTA_VOZ` y `MENSAJE_CHATBOT` quedan sin API hasta sus sprints.
+- El script SQL (`db/schema.sql`, con `db/seed.sql` y `db/bd.ps1` para cargarlo) crea **las 16 tablas** con sus claves y restricciones (16 `PRIMARY KEY`, 24 `FOREIGN KEY`, 13 `UNIQUE`, 34 `CHECK` y los índices de las consultas de HU-02 a HU-05), y carga datos semilla (roles, las 6 asignaturas, la pauta de observación con sus 3 dimensiones y 20 indicadores, y 20 estudiantes de demostración) más usuarios ficticios (S-39). Ya está creada y verificada en el MySQL local (base `isw_practicas`).
+- La aplicación Spring Boot usa **15 entidades**: las 12 de HU-01 a HU-05, más `DOCUMENTO_PLANIFICACION`, `DOCUMENTO_EVALUACION` y `NOTA_VOZ`, activadas en la Fase E (22-sep). Solo `MENSAJE_CHATBOT` queda sin API hasta el sprint del chatbot.
 - Las cifras de puntaje (`puntaje_total`, `promedio`) se calculan al finalizar la evaluación y se guardan, para que el historial no tenga que recalcular.
+- Los documentos adjuntos y los audios de nota de voz se guardan en disco (`backend/adjuntos/`), fuera del control de versiones; la base solo guarda su ruta relativa.
 
 ## 8. Supuestos
 
 | ID | Supuesto |
 |---|---|
 | S-05 | El profesor del curso es el académico UBB; se modela como un usuario con rol propio, así que si fuera del colegio no cambia la estructura |
-| S-09 | El formato de planificación se modela con los cinco elementos de la entrevista. Si el formato oficial trae otros, se agregan columnas |
+| S-09 | **Resuelto el 22-sep:** el formato oficial ya se conoce (`FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx`) y trae más campos que los cinco de la entrevista. El modelo sigue con los cinco elementos por ahora: migrar `planificacion` queda para un sprint futuro (S-45) |
 | S-11 | Un usuario tiene un solo rol, y cada evaluación pertenece a una inscripción (un estudiante): **un estudiante reportó que en pareja cada alumno tiene su propia pauta**, que es justo lo que el modelo hace. Las duplas y grupos se modelarán en HU-10 con una tabla de agrupación |
 | S-13 | No se modela la duración de las prácticas (semanas y horas), porque los documentos del cliente se contradicen (un estudiante reportó 2 semanas en Investigación en el Aula, como dice la ficha) |
 | S-14 | El semestre y las asignaturas aprobadas se guardan aquí (los ingresa el coordinador); hoy la carrera los ve en la malla de la Intranet, y una importación desde ahí queda como mejora futura |
 | S-16 | Aproximación al Sistema Escolar: `GRUPO` (de 4) y sin planificaciones; Ambientes de Aprendizaje: `DUPLA` con planificaciones; ninguna va a un colegio, así que no tienen guía. Fuente: un estudiante de PEM (2026-09-20), pendiente de confirmar. Cambió el modelo con la migración `db/migraciones/001` |
+| S-39 a S-46 | Fase E (22-sep): generación de 20 estudiantes de demostración, transcripción con la Web Speech API del navegador, documentos y nota de voz sin exigir un estado particular de la evaluación, tamaños y formatos de archivo, endpoints extra para el front-end, y la planificación sigue sin migrar al formato oficial real. Detalle en `product-backlog.md`, sección 6, y `sprint-backlog.md`, sección 7 |
 
 ## 9. Preguntas probables en la defensa
 
@@ -410,4 +473,4 @@ Se consultan sus inscripciones con `estado = APROBADA`. El semestre está en `ES
 Sí, en tercera forma normal: cada atributo depende solo de la clave de su tabla. Los únicos datos calculados (`puntaje_total`, `promedio`) se guardan de forma deliberada al finalizar la evaluación, para congelar el resultado aunque después cambie la pauta.
 
 **¿Qué falta en el modelo?**
-Duplas (HU-10), versiones de pautas (HU-06), tutor y pautas de Práctica Profesional (HU-07), ponderaciones de la nota final (HU-09) y documentos de la práctica (HU-18). El diseño permite agregarlos sin rehacer lo existente.
+Duplas (HU-10), versiones de pautas (HU-06), tutor y pautas de Práctica Profesional (HU-07), ponderaciones de la nota final (HU-09) y los informes/productos finales de la práctica (HU-18). El diseño permite agregarlos sin rehacer lo existente. Los documentos adjuntos y la nota de voz **ya no faltan**: se agregaron en la Fase E (22-sep).

@@ -1,8 +1,8 @@
 # Resumen del proyecto semestral de ISW (Ingeniería de Software 2026)
 
 > Documento para traspasar contexto a otro asistente que no vio la sesión.
-> Fecha de la sesión: 2026-09-20. Idioma de trabajo con el usuario: **español**.
-> Estado (actualizado 2026-09-20): **Fases A, B y C del Sprint 1 terminadas.** Documentos de metodología en `Sprint1/`; base de datos MySQL en `db/` (con la migración 001); **backend Spring Boot en `backend/` con las 5 HU, 32 endpoints y 146 pruebas automáticas** (sección 14) y guía de defensa en `docs/GUIA_DEFENSA.md`. Ese mismo día se ajustó el modelo con las respuestas de un estudiante de PEM (sección 13). **Pendiente:** presentación, retrospectiva, tablero, y confirmar los supuestos con el cliente o la profesora.
+> Última sesión: 2026-09-22 (Fase E). Idioma de trabajo con el usuario: **español**.
+> Estado (actualizado 2026-09-22): **Fases A a E terminadas.** Documentos de metodología en `Sprint1/` (Product Backlog con **30 HU**); base de datos MySQL en `db/` (16 tablas, 2 migraciones, 20 estudiantes de demostración); **backend Spring Boot en `backend/` con 42 endpoints y 159 pruebas automáticas** (sección 14); front-end web en `backend/src/main/resources/static/` (Fases D y E, rama `frontend`, sin merge a `main`) con documentos adjuntos, nota de voz con transcripción, menú limpio, accesos rápidos y búsqueda de estudiantes; y guía de defensa en `docs/GUIA_DEFENSA.md`. El 2026-09-20 se ajustó el modelo con las respuestas de un estudiante de PEM (sección 13); el 2026-09-22 se sumaron el formato real de planificación y el contenido real del chatbot "RetroPlani Mate" (secciones 3.8, 3.9 y 8). **Pendiente:** presentación, retrospectiva, tablero, recorrido visual en un navegador real de lo hecho el 22-sep, y confirmar los supuestos con el cliente o la profesora.
 
 ---
 
@@ -35,7 +35,8 @@ ProyectoSemestralISW/
     ├── 5_Práctica Pedagógica.rar
     ├── 6_Práctica Profesional.rar
     ├── Entrevista/Ingenieriasofware.txt
-    └── SugerenciaChatBot/SugerenciaChatBot.ipynb
+    ├── SugerenciaChatBot/SugerenciaChatBot.ipynb
+    └── ChatBot (1).rar                 <- propuesta de Víctor Parra para el GPT "RetroPlani Mate" (ver sección 3.8)
 ```
 
 Los `.rar` se extrajeron en un directorio temporal de la sesión (no en el proyecto). Para volver a extraerlos: `tar -xf archivo.rar -C destino` (bsdtar de Windows 11 lee RAR). Hay `.rar` y `.zip` anidados. Los `.docx` son ZIP y el texto está en `word/document.xml`. El único `.doc` antiguo (`Indicaciones Presentación TANEP 2025.doc`) se convirtió con Word COM.
@@ -89,6 +90,27 @@ Chatbot RAG en Google Colab:
 - Responde en español, máximo 3 oraciones, y dice que no sabe si el contexto no lo cubre.
 
 Es **solo un ejemplo de arquitectura**: sus PDFs son de ética y género, no de prácticas. La clave de API se lee de los secretos de Colab (no está en el archivo).
+
+### 3.8 `ChatBot (1).rar` (entregado por el cliente, leído 2026-09-21)
+A pesar del nombre, es un `.rar` (no `.zip`); se extrajo con WinRAR/UnRAR a un directorio temporal (no está en el repo). Contiene la propuesta completa del **GPT "RetroPlani Mate"** que ya usa Víctor Parra González (coordinador de prácticas, ver sección 4 punto 5) para retroalimentar planificaciones de matemática. Esto **responde parte de la pregunta abierta 9 de la sección 8** (estilo/criterios de retroalimentación de Víctor Parra), aunque sigue siendo material de referencia para el chatbot de **sprints futuros** (HU-15 a HU-17), no para el Sprint 1.
+
+- **`PROPUESTA_DE_GPT_CHATBOT_RETROPLANI_MATE_V3_21-06...pdf`** (autor: Víctor Parra González, v3 del 21-06-2026, Prototipo 1 en validación con jueces expertos jun-jul 2026): instrucciones completas del GPT, con reglas estrictas:
+  - **Nunca diseña planificaciones desde cero**, solo retroalimenta una ya elaborada y **adjunta como archivo/imagen** (rechaza texto pegado en el chat).
+  - Antes de responder clasifica la solicitud en 3 categorías (retroalimentación válida / planificación insuficiente / solicitud de diseño) y tiene respuestas obligatorias fijas para cada una.
+  - Hace una "verificación documental inicial" (revisa qué recursos declara la planificación vs. qué se adjuntó realmente) antes de opinar.
+  - **Flujo dialógico:** hasta 5 preguntas diagnósticas antes de la retroalimentación final, luego integra las respuestas, y cierra con preguntas de reflexión para la acción de mejora. Máximo 2 retroalimentaciones por la misma clase.
+  - Evalúa: coherencia curricular, los 3 momentos de la clase (inicio/desarrollo/cierre), DUA y diversificación, evaluación para el aprendizaje, recursos didácticos, errores/dificultades matemáticas, rúbrica de planificación (solo cualitativa, nunca asigna nota) y matemática inclusiva. Tono formativo, nunca descalificador.
+  - Incluye también el protocolo de validación con jueces expertos (carta, Escala SUS adaptada, rúbrica de 9 criterios) y el plan de validación con usuarios (10-15 profesores en formación de 4º y 5º año, sept-oct 2026).
+- **`Recursos adjuntos/`** (10 archivos numerados + subcarpeta "Ejemplos de planif"): los documentos que el GPT usa como base de conocimiento — momentos de la clase, rúbrica de planificación, DUA, banco de comentarios de retroalimentación, enlaces de recursos, Bases Curriculares de Matemática (7º básico a 2º medio, y 3º-4º medio) y ejemplos de planificaciones comentadas/de prueba.
+
+**Relevancia para el Sprint 1 actual:** ninguna funcional (el chatbot no se construye hasta un sprint posterior), pero es la referencia de contenido/tono para cuando se implemente HU-15. También aporta al MER: `MENSAJE_CHATBOT` podría necesitar guardar si una interacción fue de tipo "retroalimentación" o "bloqueada por solicitud de diseño".
+
+**Uso en la Fase E (2026-09-22):** con este documento se corrigieron y completaron HU-15, HU-16, HU-17 y HU-20 en `Sprint1/product-backlog.md`, y se agregaron HU-29 (cargar la base de conocimiento del chatbot) y HU-30 (validar con jueces expertos y estudiantes). Siguen siendo planificación de un sprint futuro: no se implementó código del chatbot en esta fase (S-46).
+
+### 3.9 `FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx` (entregado por el cliente, leído 2026-09-22)
+El formato oficial de planificación de clase de la carrera (resuelve el supuesto **S-09**). Es una tabla con estos campos: nombre del profesor/a, establecimiento, año, período (semestre), asignatura, curso, unidad, objetivo de aprendizaje/indicadores de evaluación, objetivo de aprendizaje actitudinal, objetivo de la clase, fecha, duración de la clase, recursos, instrumentos de evaluación, y la descripción de la clase en tres partes con su propia duración: inicio, desarrollo y cierre.
+
+Es más completo que los cinco elementos que se habían asumido en la entrevista (objetivo, recursos, tiempos, evaluación del aprendizaje, interacción de los participantes). Se documentó en `Sprint1/product-backlog.md` (HU-04) y `Sprint1/mer.md`, pero el Sprint 1 **sigue construido y probado con los cinco elementos de la entrevista**: migrar la entidad `Planificacion`, sus DTO, el formulario del front-end y las 146 pruebas que ya la usan queda para un sprint futuro (supuesto **S-45**), para no arriesgar una historia ya entregada.
 
 ---
 
@@ -190,8 +212,8 @@ Decisiones tomadas por las respuestas de un estudiante (2026-09-20, S-34 a S-38,
    - Producto 3: las evaluaciones anexas valen 3 puntos en el texto y 5 en la tabla de la pauta.
    - La rúbrica TANEP lleva el título "2024" aunque el documento es de 2025.
 7. **Qué pautas digitalizar primero:** hay varios formatos (Pedagógica y Profesional, colaborador y tutor, Especialidad y Orientación, y las pautas de observación de 20 indicadores de las intermedias).
-8. **Formato de planificación de la carrera:** el cliente dice que tiene una estructura propia. No se ha entregado el archivo, solo su descripción.
-9. **Datos del chatbot:** de dónde saldrán el semestre y los ramos aprobados de cada estudiante (*un estudiante dice que hoy salen de la malla en la Intranet*), y qué criterios o "estilo" de retroalimentación usa Víctor Parra.
+8. ~~**Formato de planificación de la carrera.**~~ Resuelto el 22-sep: la carrera entregó `FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx` (ver sección 3.9). El Sprint 1 sigue construido con los cinco elementos de la entrevista; migrar `planificacion` al formato real queda para un sprint futuro (S-45).
+9. **Datos del chatbot:** de dónde saldrán el semestre y los ramos aprobados de cada estudiante (*un estudiante dice que hoy salen de la malla en la Intranet*), sigue sin confirmar. El **estilo/criterios de retroalimentación de Víctor Parra ya se conocen**: son las instrucciones del GPT "RetroPlani Mate" (`Documents/ChatBot (1).rar`, ver sección 3.8).
 10. **Flujo de planificación en secuencia o en paralelo (S-37):** la entrevista dice guía y luego profesor del curso; un estudiante dice que se manda a ambos. Si es en paralelo, hay que cambiar la máquina de estados de HU-04.
 11. **Acceso a los chats (S-38):** el jefe de carrera quiere verlos; un estudiante no quiere que su guía los lea. Definir qué ve cada rol (chat completo, resumen o lo que el estudiante comparta) y el aviso al estudiante.
 12. **Quién es el "jefe de carrera"** en el sistema: ¿el coordinador de prácticas o el director (Dr. Panes)? Se asumió el rol COORDINADOR.
@@ -204,9 +226,11 @@ Decisiones tomadas por las respuestas de un estudiante (2026-09-20, S-34 a S-38,
 - **Hecho (Fase B, base de datos):** `db/schema.sql`, `db/seed.sql`, `db/bd.ps1`, `db/verificacion.sql`, `db/migraciones/001_...sql`, `.gitignore` y `.env.example`; base creada y verificada (sección 12).
 - **Hecho (Fase C, backend, 2026-09-20):** proyecto Spring Boot en `backend/` con las 5 HU, 32 endpoints en Swagger, 146 pruebas automáticas (0 fallos), prueba real por HTTP de cada historia y ensayo completo del guion de defensa (sección 14). Documentación: `backend/README.md`, `backend/PROGRESO.md` y `docs/GUIA_DEFENSA.md`.
 - **Hecho (ajustes 2026-09-20):** modelo y reglas corregidos con las respuestas de un estudiante (sección 13): modalidad `GRUPO`, `requiere_planificacion`, ciclo inicial sin guía, planificación sin guía directo al profesor del curso, 3 días de anticipación, HU-19 sube de prioridad y nueva HU-20.
-- **Pendiente:** presentación (PPT, la arma Persona 4), reunión de retrospectiva, subir el tablero a Trello o GitHub Projects, y confirmar los supuestos S-01 a S-38 con el cliente o la profesora (sobre todo S-05, S-09, S-10, S-21, S-29, S-37 y S-38).
+- **Hecho (Fase D, front-end, 2026-09-21, rama `frontend`):** interfaz HTML + CSS + JS puro en `backend/src/main/resources/static/`, servida por la misma aplicación en <http://localhost:8080>. Solo cambió `SecurityConfig` (recursos estáticos permitidos); las 146 pruebas del backend siguen en verde. Guion de demo en `docs/GUIA_DEFENSA.md`, sección 8. Sin merge a `main`.
+- **Hecho (Fase E, 2026-09-22, misma rama `frontend`):** documentos adjuntos en planificaciones y evaluaciones (HU-21, HU-22), nota de voz con transcripción (HU-11 y HU-12, adelantadas del Sprint 3), menú lateral sin sprints/HU/"Próximamente", accesos rápidos dentro del menú y búsqueda de estudiantes por nombre/RUT/correo (HU-23, HU-24). Migración `db/migraciones/002_documentos_adjuntos.sql` y generación completa de 20 estudiantes de demostración (antes 5). Product Backlog ampliado a 30 HU, con HU-15/16/17/20 corregidas según "RetroPlani Mate". 159 pruebas automáticas (146 + 13), 0 fallos. Detalle en secciones 11, 12 y 14, y en `backend/PROGRESO.md`.
+- **Pendiente:** presentación (PPT, la arma Persona 4), reunión de retrospectiva, subir el tablero a Trello o GitHub Projects, confirmar los supuestos S-01 a S-46 con el cliente o la profesora (sobre todo S-05, S-09, S-10, S-21, S-29, S-37, S-38 y S-40), y revisar en un navegador real la nota de voz y los documentos adjuntos (esta sesión no tuvo navegador disponible: se probó por HTTP con `curl`).
 - **Antes de la defensa:** `.\db\bd.ps1` (datos limpios) y arrancar el jar; el guion está en `docs/GUIA_DEFENSA.md`.
-- **Archivos del proyecto:** `RESUMEN.md`, `CLAUDE.md`, `Sprint1/` (7 archivos y la carpeta `diagramas/`), `db/` (`schema.sql`, `seed.sql`, `bd.ps1`, `verificacion.sql`, `migraciones/`), `backend/` (112 clases Java, `pom.xml`, `README.md`, `PROGRESO.md`), `docs/GUIA_DEFENSA.md`, `.gitignore` y `.env.example`. Además hay notas de contexto en la memoria del asistente (fuera del proyecto).
+- **Archivos del proyecto:** `RESUMEN.md`, `CLAUDE.md`, `Sprint1/` (7 archivos y la carpeta `diagramas/`), `db/` (`schema.sql`, `seed.sql`, `bd.ps1`, `verificacion.sql`, `migraciones/` con 2 migraciones), `backend/` (más de 120 clases Java, `pom.xml`, `README.md`, `PROGRESO.md`, `src/main/resources/static/` con el front-end), `docs/GUIA_DEFENSA.md`, `.gitignore` y `.env.example`. Además hay notas de contexto en la memoria del asistente (fuera del proyecto).
 - **Entorno de desarrollo:** ya instalado y verificado (ver sección 10).
 
 ---
@@ -240,14 +264,14 @@ Ya estaban y no se tocaron: Git 2.49.0, Python 3.14.7 con pip, winget 1.29, JRE 
 
 | Archivo | Contenido |
 |---|---|
-| `product-backlog.md` | 20 HU (HU-20 agregada el 2026-09-20) con criterios de aceptación y prioridad. HU-01 a HU-05 son las del Sprint 1; chatbot (HU-15) y nota de voz (HU-11) van en sprints posteriores. Incluye trazabilidad con los 6 requerimientos del cliente |
-| `sprint-backlog.md` | 5 HU (26 puntos, ≈ 42 h), justificación, calendario del 21 al 25 de septiembre, definición de "Hecho", riesgos y **lista global de supuestos S-01 a S-16 y S-34 a S-38** |
+| `product-backlog.md` | **30 HU** (actualizado el 2026-09-22, Fase E): HU-01 a HU-05 son las del Sprint 1; HU-11, HU-12, HU-21 a HU-24 se adelantaron al Sprint 1 el 22-sep; HU-15, HU-16, HU-17 y HU-20 (chatbot) se corrigieron con el contenido real de "RetroPlani Mate" pero siguen sin implementarse; HU-25 a HU-30 son nuevas, para sprints futuros. Incluye trazabilidad con los 6 requerimientos del cliente |
+| `sprint-backlog.md` | 5 HU (26 puntos, ≈ 42 h) más las 6 adelantadas el 22-sep, justificación, calendario del 21 al 25 de septiembre, definición de "Hecho", riesgos y **lista global de supuestos S-01 a S-16, S-34 a S-46** |
 | `as-is.bpmn` | Proceso actual (papel y Adecca). BPMN 2.0 con diagrama (coordenadas), 1 pool y 5 calles |
 | `to-be.bpmn` | Proceso propuesto. Verde = Sprint 1, gris = sprints posteriores |
-| `tablero.csv` | Actualizado el 2026-09-21: 41 tarjetas (81 h) con responsable (Persona 1 a 4), lista (Por hacer, En curso, En revisión, Hecho), estimación, fechas y una columna vacía de horas reales para la retrospectiva. T10 a T31 en "Hecho" (código del 20-sep); nuevas T08, T09 y T41. UTF-8 con BOM para que Excel muestre las tildes. Falta subirlo a Trello o GitHub Projects |
+| `tablero.csv` | Actualizado el 2026-09-21: 41 tarjetas (81 h) con responsable (Persona 1 a 4), lista (Por hacer, En curso, En revisión, Hecho), estimación, fechas y una columna vacía de horas reales para la retrospectiva. T10 a T31 en "Hecho" (código del 20-sep); nuevas T08, T09 y T41. UTF-8 con BOM para que Excel muestre las tildes. Falta subirlo a Trello o GitHub Projects (y agregarle las tareas de la Fase E) |
 | `retrospectiva.md` | Plantilla "Qué salió bien / Qué mejorar / Acciones". **Sin rellenar a propósito**: la completa el equipo tras la reunión |
 | `diagramas/` | Imágenes guía (PNG y SVG) del As-Is y del To-Be para que el equipo los dibuje a mano (2026-09-21). Se generan desde los mismos datos que los `.bpmn`. El antiguo `resumenDelSprint1.md` se borró a pedido del usuario |
-| `mer.md` | `erDiagram` de Mermaid con 14 entidades (12 usadas en el Sprint 1; `NOTA_VOZ` y `MENSAJE_CHATBOT` solo en la BD), explicación de entidades y relaciones, reglas y preguntas de defensa |
+| `mer.md` | `erDiagram` de Mermaid con **16 entidades** (15 con API ya construida; solo `MENSAJE_CHATBOT` queda para el chatbot), vista simple en **4 partes** (la nueva: documentos adjuntos y nota de voz), explicación de entidades y relaciones, reglas y preguntas de defensa |
 
 **Verificaciones hechas:** XML de los BPMN bien formado, sin IDs duplicados ni referencias rotas, todos los elementos con su forma o arista, y ninguna flecha atraviesa una tarea. El MER se renderizó con Mermaid sin errores de sintaxis.
 
@@ -268,30 +292,35 @@ Se revisó de nuevo todo `Sprint1/` contra la entrevista, el MER real y la base 
 
 ---
 
-## 12. Base de datos MySQL (Fase B, 2026-09-20)
+## 12. Base de datos MySQL (Fase B, 2026-09-20; ampliada en la Fase E, 2026-09-22)
 
 Carpeta `db/` y archivos de raíz. **Ninguna clave está escrita en archivos**: viven en variables de entorno de usuario de Windows.
 
 | Archivo | Contenido |
 |---|---|
-| `db/schema.sql` | Las 14 tablas del MER: 14 PK, 20 FK, 13 UNIQUE, 32 CHECK e índices. Re-ejecutable (borra y recrea las tablas). Incluye un procedimiento y 2 triggers sobre `respuesta_indicador` (puntaje dentro de la escala de la pauta, indicador de la misma pauta, evaluación finalizada no se modifica). Eso va más allá del MER, que lo dejaba a la aplicación |
-| `db/seed.sql` | PARTE 1, catálogo real: 4 roles, 6 asignaturas (códigos internos `PEM-P1` a `PEM-P6`), pauta de observación de Trabajo Colaborativo con 3 dimensiones y 20 indicadores. PARTE 2, demo ficticia (S-15): 10 usuarios (correos `@demo.example`), 5 estudiantes, 18 inscripciones, 9 planificaciones (una en cada estado del flujo), 12 revisiones, 3 evaluaciones finalizadas con 60 respuestas |
-| `db/bd.ps1` | `-Accion Instalar` (por defecto): carga schema y seed como root, crea el usuario `isw_app` y verifica. `-Accion Verificar`: consultas de `db/verificacion.sql` y 22 pruebas negativas |
-| `db/verificacion.sql` | 15 bloques de consultas de solo lectura, cada uno con su resultado esperado (el bloque de integridad tiene ahora 11 controles) |
+| `db/schema.sql` | Las **16 tablas** del MER: 16 PK, 24 FK, 13 UNIQUE, 34 CHECK e índices. Re-ejecutable (borra y recrea las tablas). Incluye un procedimiento y 2 triggers sobre `respuesta_indicador` (puntaje dentro de la escala de la pauta, indicador de la misma pauta, evaluación finalizada no se modifica). Eso va más allá del MER, que lo dejaba a la aplicación |
+| `db/seed.sql` | PARTE 1, catálogo real: 4 roles, 6 asignaturas (códigos internos `PEM-P1` a `PEM-P6`), pauta de observación de Trabajo Colaborativo con 3 dimensiones y 20 indicadores. PARTE 2, demo ficticia (S-15): 10 usuarios base, 5 estudiantes, 18 inscripciones, 9 planificaciones (una en cada estado del flujo), 12 revisiones, 3 evaluaciones finalizadas con 60 respuestas. **PARTE 2B (S-39, 22-sep):** 15 estudiantes más (**20 en total**), 4 profesores guía y 2 del curso nuevos (para que ningún guía supere 15-20 estudiantes) y 37 inscripciones más (**55 en total**), con recorridos de 1 a 5 prácticas. Los ids 1-18 no se tocaron: las pruebas de integración del Sprint 1 siguen intactas |
+| `db/bd.ps1` | `-Accion Instalar` (por defecto): carga schema y seed como root, crea el usuario `isw_app` y verifica. `-Accion Verificar`: consultas de `db/verificacion.sql` y **23** pruebas negativas (se sumó una para el tamaño máximo de un documento) |
+| `db/verificacion.sql` | 17 bloques de consultas de solo lectura, cada uno con su resultado esperado (2 bloques nuevos el 22-sep: carga por guía y tablas de documentos/nota de voz) |
 | `db/migraciones/001_grupo_y_planificacion_por_asignatura.sql` | Migración del 2026-09-20: modalidad `GRUPO` y columna `requiere_planificacion`. Se ejecuta una vez y como root; una base nueva no la necesita porque `schema.sql` y `seed.sql` ya la incluyen. Solo ASCII a propósito |
-| `.gitignore`, `.env.example` | Excluyen `.env`, `target/`, claves e IDEs. La plantilla solo trae marcadores |
+| `db/migraciones/002_documentos_adjuntos.sql` | Migración del 2026-09-22 (Fase E): tablas `documento_planificacion` y `documento_evaluacion`. `nota_voz` no cambió: ya tenía todas las columnas que necesitaba la API. Igual que la 001, una base nueva no la necesita |
+| `.gitignore`, `.env.example` | Excluyen `.env`, `target/`, claves e IDEs, y desde el 22-sep `backend/adjuntos/` (documentos y audios de nota de voz: datos de personas, nunca al repositorio). La plantilla solo trae marcadores |
 
 **Conexión de la aplicación:** base `isw_practicas`, usuario `isw_app` (permisos solo `SELECT, INSERT, UPDATE, DELETE` sobre esa base), host `localhost`, puerto 3306. Variables de entorno: `ISW_DB_PASSWORD` (clave de `isw_app`, generada al azar por `bd.ps1`), `ISW_DB_ROOT_PASSWORD` (solo para instalar; conviene borrarla después). En `application.properties` usar `${ISW_DB_PASSWORD}`, nunca la clave.
 
-**Clave de los usuarios ficticios de demostración:** todos usan `Demo2026!` (hash BCrypt `$2a$10$`, compatible con `BCryptPasswordEncoder` de Spring). **Es solo para desarrollo y demostración, y no debe usarse en ningún sistema real.** **Nunca debe aparecer como valor por defecto en el código de la aplicación** (ni en `application.properties`, ni en clases, ni en pruebas de otro entorno). No es la clave de MySQL ni de ningún usuario real. Inicios de sesión útiles: `coordinador@demo.example`, `guia1@demo.example`, `guia2@demo.example`, `curso1@demo.example`, `camila.rojas@demo.example`.
+**Clave de los usuarios ficticios de demostración:** todos usan `Demo2026!` (hash BCrypt `$2a$10$`, compatible con `BCryptPasswordEncoder` de Spring). **Es solo para desarrollo y demostración, y no debe usarse en ningún sistema real.** **Nunca debe aparecer como valor por defecto en el código de la aplicación** (ni en `application.properties`, ni en clases, ni en pruebas de otro entorno). No es la clave de MySQL ni de ningún usuario real. Inicios de sesión útiles: `coordinador@demo.example`, `guia1@demo.example` a `guia6@demo.example`, `curso1@demo.example` a `curso4@demo.example`, `camila.rojas@demo.example`.
 
 **Verificación (2026-09-20):** probado primero en un MySQL desechable y luego en el real: 14 tablas, conteos esperados, 10 controles de integridad en 0 (hoy 11 con el nuevo) y 22 de 22 pruebas negativas rechazadas por la restricción prevista. Cada corrida de `Verificar` adelanta unos números el contador de ids (los INSERT rechazados consumen ids); es inofensivo.
 
-**Cambio del 2026-09-20 (migración `db/migraciones/001_grupo_y_planificacion_por_asignatura.sql`, según respuestas de un estudiante):** `asignatura_practica.modalidad` admite ahora `GRUPO` y hay una columna nueva `requiere_planificacion`. Aproximación al Sistema Escolar quedó `GRUPO` sin planificaciones y Ambientes de Aprendizaje `DUPLA`. `schema.sql`, `seed.sql` y `verificacion.sql` ya incluyen el cambio (una base nueva no necesita la migración; una base creada antes se migra ejecutando ese script como root, o reinstalando con `bd.ps1`). Sigue habiendo 14 tablas, 20 FK, 13 UNIQUE y 32 CHECK.
+**Verificación de la Fase E (2026-09-22):** reinstalada de cero con `.\db\bd.ps1`: **16 tablas**, 20 estudiantes, 55 inscripciones, 0 violaciones de integridad en los 11 controles, **23 de 23** pruebas negativas, y ningún guía con más de 5 estudiantes asignados (muy por debajo del límite de 15-20). También se probó por HTTP con `curl` (fuera del script): subir y descargar un documento, y grabar/corregir una nota de voz; luego se reinstaló la base para dejarla limpia.
+
+**Cambio del 2026-09-20 (migración `db/migraciones/001_grupo_y_planificacion_por_asignatura.sql`, según respuestas de un estudiante):** `asignatura_practica.modalidad` admite ahora `GRUPO` y hay una columna nueva `requiere_planificacion`. Aproximación al Sistema Escolar quedó `GRUPO` sin planificaciones y Ambientes de Aprendizaje `DUPLA`. `schema.sql`, `seed.sql` y `verificacion.sql` ya incluyen el cambio (una base nueva no necesita la migración; una base creada antes se migra ejecutando ese script como root, o reinstalando con `bd.ps1`).
+
+**Cambio del 2026-09-22 (migración `db/migraciones/002_documentos_adjuntos.sql`, Fase E):** agrega `documento_planificacion` y `documento_evaluacion` (FK a `planificacion`/`evaluacion` y a `usuario`, CHECK de tamaño máximo 10 MB). Ahora hay 16 tablas, 24 FK, 13 UNIQUE y 34 CHECK.
 
 **Limitaciones conocidas:**
 - Solo hay pauta para Trabajo Colaborativo (S-07): un estudiante de Investigación en el Aula no se puede evaluar hasta HU-06/HU-07.
-- `NOTA_VOZ` y `MENSAJE_CHATBOT` están creadas pero vacías (sus HU son de sprints posteriores).
+- `MENSAJE_CHATBOT` está creada pero vacía (su HU es de un sprint posterior). `NOTA_VOZ`, `DOCUMENTO_PLANIFICACION` y `DOCUMENTO_EVALUACION` ya tienen API (Fase E) y quedan vacías solo porque el seed no carga archivos reales.
 - `bd.ps1` debe guardarse como UTF-8 **con BOM** (Windows PowerShell 5.1 lo lee como ANSI si no); los `.sql` van sin BOM.
 - El directorio no es un repositorio Git todavía y `Documents/` (los `.rar` del cliente) no está en `.gitignore`.
 
@@ -382,21 +411,30 @@ Correspondencia con los supuestos: 1 → S-16, 2 → S-05, 3 → S-09, 4 → S-1
 
 ---
 
-## 14. Fase C: backend Spring Boot (2026-09-20)
+## 14. Fase C: backend Spring Boot (2026-09-20) y Fase E: documentos y nota de voz (2026-09-22)
 
-**Dónde:** `backend/`. **Cómo arrancar y probar:** `backend/README.md`. **Estado, endpoints y supuestos S-17 a S-38:** `backend/PROGRESO.md`. **Demo y preguntas de defensa:** `docs/GUIA_DEFENSA.md`.
+**Dónde:** `backend/`. **Cómo arrancar y probar:** `backend/README.md`. **Estado, endpoints y supuestos S-17 a S-46:** `backend/PROGRESO.md`. **Demo y preguntas de defensa:** `docs/GUIA_DEFENSA.md`.
 
 **Arquitectura:** Java 17, Spring Boot 3.5, Maven; paquete `cl.ubb.pem.practicas` con `controller, service, repository, entity, dto, security, exception, config`. DTO en lugar de entidades; manejador global de errores en español (`ApiError`); CORS abierto a `http://localhost:*`; Swagger en `/swagger-ui.html` con botón Authorize. Seguridad sin estado: login con BCrypt y token JWT de 8 horas (S-06); `@PreAuthorize` por rol en cada endpoint y `AccesoService` para "quién ve qué". La app usa `isw_app` con `${ISW_DB_PASSWORD}` y `ddl-auto=validate`. El secreto del JWT es `ISW_JWT_SECRET` (opcional; si falta se genera uno temporal).
 
-**Las 5 historias (32 endpoints):**
+**Las 5 historias del Sprint 1 (32 endpoints):**
 
 | HU | Qué hace | Endpoints principales |
 |---|---|---|
 | HU-01 | Inicio de sesión y roles | `POST /api/auth/login`, `GET /api/auth/me`, `GET /api/roles` |
-| HU-02 | Estudiantes, profesores, asignaturas e inscripciones | `/api/estudiantes`, `/api/profesores`, `/api/asignaturas`, `/api/inscripciones` (incluye `PUT .../cierre`) |
+| HU-02 | Estudiantes, profesores, asignaturas e inscripciones | `/api/estudiantes` (con `?buscar=`), `/api/profesores`, `/api/asignaturas`, `/api/inscripciones` (incluye `PUT .../cierre`) |
 | HU-03 | Pauta digital de 20 indicadores (1 a 7) y evaluación con puntaje automático | `/api/pautas`, `/api/evaluaciones` (`/respuestas`, `/finalizar`) |
 | HU-04 | Planificación con flujo de aprobación | `/api/planificaciones` (`/enviar`, `/revision-guia`, `/revision-curso`) |
 | HU-05 | Historial (recorrido) del estudiante | `GET /api/estudiantes/{id}/historial`, `GET /api/estudiantes/me/historial` |
+
+**Adelantadas al Sprint 1 el 22-sep, Fase E (10 endpoints más, 42 en total):**
+
+| HU | Qué hace | Endpoints principales |
+|---|---|---|
+| HU-11, HU-12 | Nota de voz del profesor guía evaluador, con transcripción a texto | `/api/evaluaciones/{id}/nota-voz` (`POST`, `GET`, `PUT`), `GET .../nota-voz/audio` |
+| HU-21 | Documentos adjuntos a la planificación (Word o PDF, 10 MB) | `/api/planificaciones/{id}/documentos` (`POST`, `GET`), `GET .../documentos/{docId}` |
+| HU-22 | Documento formal de la evaluación (Word, Excel o PDF, 10 MB) | `/api/evaluaciones/{id}/documentos` (`POST`, `GET`), `GET .../documentos/{docId}` |
+| HU-23 | Buscar estudiante por nombre, RUT o correo | reutiliza `GET /api/estudiantes?buscar=` |
 
 **Reglas de negocio clave:**
 - Correo y RUT únicos (409); RUT con dígito verificador (400); una inscripción por estudiante, asignatura y periodo (409); el guía debe tener rol PROFESOR_GUIA y el profesor del curso PROFESOR_CURSO (400).
@@ -404,11 +442,13 @@ Correspondencia con los supuestos: 1 → S-16, 2 → S-05, 3 → S-09, 4 → S-1
 - Evaluación: puntaje entero dentro de la escala de la pauta e indicador de esa pauta (400); solo el guía asignado a la inscripción evalúa (403); finalizar exige los 20 indicadores, calcula total (máx. 140) y promedio con 2 decimales y deja la evaluación inmutable (409). El borrador es privado del evaluador y del coordinador.
 - Planificación: BORRADOR → EN_REVISION_GUIA → EN_AUTORIZACION → AUTORIZADA; devolver exige comentario; si el profesor del curso devuelve, el flujo repite desde el guía (S-10); una AUTORIZADA no se modifica; cada decisión queda en `revision_planificacion`. Sin guía, "enviar" lleva directo a EN_AUTORIZACION (S-34). Se envía con al menos 3 días de anticipación a la clase (`app.planificacion.dias-anticipacion-minimos`, S-35). Aproximación no entrega planificaciones (S-36).
 - Historial: inscripciones en orden cronológico con sus evaluaciones finalizadas y planificaciones; incluye semestre actual y asignaturas aprobadas (contexto del futuro chatbot).
+- **Documentos (HU-21, HU-22):** el estudiante sube a su planificación, el evaluador a su evaluación; quien ya puede ver la planificación o la evaluación puede descargar. Se guardan en disco (`backend/adjuntos/`), fuera de git; la base solo guarda la ruta relativa, el nombre, el tipo MIME, el tamaño y quién subió cada uno.
+- **Nota de voz (HU-11, HU-12):** como máximo una por evaluación (409 si ya existe; se corrige con `PUT`); solo el evaluador graba, sube o corrige (403 para cualquier otro, incluido otro guía); se puede grabar con la evaluación en BORRADOR o FINALIZADA (S-42); la transcripción inicial la genera el navegador del evaluador y el backend solo la guarda (S-40).
 
-**Pruebas (146, 0 fallos):** unitarias con Mockito (reglas de cada servicio) y una clase de integración por historia (`HU0xIntegracionTest`, MockMvc contra la MySQL real con rollback). Además: 131 comprobaciones por HTTP real (una corrida por historia), el ensayo completo del guion de defensa (59) y 11 comprobaciones de las reglas nuevas. **Las pruebas de integración asumen los datos exactos del seed**: probar a mano deja filas nuevas y hay que volver a `.\db\bd.ps1`.
+**Pruebas (159, 0 fallos):** unitarias con Mockito (reglas de cada servicio) y una clase de integración por historia (`HU0xIntegracionTest`, MockMvc contra la MySQL real con rollback), más `DocumentosAdjuntosIntegracionTest` (7) y `NotaVozIntegracionTest` (6) del 22-sep. Además: 131 comprobaciones por HTTP real del Sprint 1 (una corrida por historia), el ensayo completo del guion de defensa (59), 11 comprobaciones de las reglas del 2026-09-20, y las comprobaciones por `curl` de documentos y nota de voz del 22-sep. **Las pruebas de integración asumen los datos exactos del seed**: probar a mano deja filas nuevas y hay que volver a `.\db\bd.ps1`. Tres pruebas de HU-02 se corrigieron el 22-sep porque contaban los 5 estudiantes/4 profesores del seed anterior (ahora 20 y 10).
 
-**Trampas ya resueltas:** con `@Enumerated(STRING)` Hibernate 6 espera una columna `enum` de MySQL y `validate` falla (se arregló con `@JdbcTypeCode(SqlTypes.VARCHAR)`); las columnas TEXT llevan `columnDefinition = "text"`; `JwtAuthenticationFilter` no es `@Component` (correría dos veces); Jackson con `accept-float-as-int=false` para que un puntaje `4.5` no se trunque a 4; en este entorno los heredocs largos con Bash fallan (usar la herramienta Write).
+**Trampas ya resueltas:** con `@Enumerated(STRING)` Hibernate 6 espera una columna `enum` de MySQL y `validate` falla (se arregló con `@JdbcTypeCode(SqlTypes.VARCHAR)`); las columnas TEXT llevan `columnDefinition = "text"`; `JwtAuthenticationFilter` no es `@Component` (correría dos veces); Jackson con `accept-float-as-int=false` para que un puntaje `4.5` no se trunque a 4; en este entorno los heredocs largos con Bash fallan (usar la herramienta Write); en Git Bash de Windows, `curl -F "campo=@ruta"` falla (exit 26) con una ruta estilo `/c/Users/...`: hay que darle la ruta de Windows (`C:\Users\...`).
 
-**Limitaciones (no bloquean la entrega):** sin `@Version` (control de concurrencia), sin límite de intentos de login, cambio o recuperación de contraseña, refresco de token ni paginación (S-26); un estudiante de Investigación en el Aula no se puede evaluar todavía (solo hay pauta de Trabajo Colaborativo); Swagger abierto (necesario para la demo).
+**Limitaciones (no bloquean la entrega):** sin `@Version` (control de concurrencia), sin límite de intentos de login, cambio o recuperación de contraseña (HU-26, pendiente), refresco de token ni paginación (S-26); un estudiante de Investigación en el Aula no se puede evaluar todavía (solo hay pauta de Trabajo Colaborativo); Swagger abierto (necesario para la demo); los archivos se guardan en el disco local del servidor, no en un almacenamiento externo; la transcripción de la nota de voz depende del navegador del evaluador (S-40); el front-end de la Fase E no se probó todavía en un navegador real (sin esa herramienta disponible en esta sesión): se probó por HTTP con `curl` y revisando el código.
 
-**Siguientes pasos:** confirmar supuestos (S-37 y S-38 primero); Sprint 2: configurar pautas (HU-06), pautas de las prácticas finales y tutor (HU-07), informes (HU-08), nota final (HU-09), duplas y grupos (HU-10); Sprints 3 y 4: nota de voz, avisos por correo (HU-19, sube de prioridad), panel del coordinador, chatbot (HU-15 a HU-17) y acceso del jefe de carrera a los chats (HU-20).
+**Siguientes pasos:** confirmar supuestos (S-37, S-38 y S-40 primero); recorrido visual en Chrome antes de la defensa; Sprint 2: configurar pautas (HU-06), pautas de las prácticas finales y tutor (HU-07), informes (HU-08), nota final (HU-09), duplas y grupos (HU-10), cambiar la contraseña (HU-26), gestión de archivos de pautas formales (HU-25), configurar parámetros del sistema (HU-27), exportar el historial en PDF (HU-28); Sprints 3 y 4: avisos por correo (HU-19, sube de prioridad), panel del coordinador, chatbot (HU-15 a HU-17, HU-29, HU-30) y acceso del jefe de carrera a los chats (HU-20).

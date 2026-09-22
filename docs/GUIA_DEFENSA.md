@@ -103,6 +103,8 @@ Todos son ficticios (dominio `@demo.example`) y comparten la clave de demostraci
 | `sebastian.vargas@demo.example` | ESTUDIANTE | Estudiante 4. Recorrido completo: 5 prácticas aprobadas y la sexta en curso |
 | `javiera.herrera@demo.example` | ESTUDIANTE | Estudiante 5. Recién inicia (Aproximación al Sistema Escolar) |
 
+**Generación completa (Fase E, 22-sep, S-39):** 15 estudiantes más (**20 en total**, `matias.fernandez@demo.example` a `agustin.navarro@demo.example`, misma clave), y 4 profesores guía más (`guia3@demo.example` a `guia6@demo.example`) y 2 profesores del curso más (`curso3@demo.example`, `curso4@demo.example`), para que ningún guía supere los 15-20 estudiantes reportados por un estudiante de PEM. No cambian los usuarios de la tabla de arriba ni sus datos: siguen sirviendo igual para el guion de cada historia.
+
 **Cómo autorizarse en Swagger:** `POST /api/auth/login` → *Try it out* → `{"email":"…","password":"…"}` → copiar el `token` de la respuesta → botón **Authorize** → pegarlo (sin "Bearer") → *Authorize*.
 Para cambiar de usuario: *Authorize → Logout*, y repetir con otro correo.
 
@@ -190,6 +192,7 @@ Para cambiar de usuario: *Authorize → Logout*, y repetir con otro correo.
 - Solo el guía **asignado a esa inscripción** puede evaluarla; otro guía → 403. La inscripción debe estar EN_CURSO, la pauta ser de su asignatura y la planificación vinculada (opcional) ser de la misma inscripción y estar AUTORIZADA (S-30).
 - Un BORRADOR es privado de su autor y del coordinador; el estudiante evaluado y su profesor del curso ven solo las FINALIZADAS (S-29).
 - Fuera de alcance: convertir el puntaje a nota oficial (S-08).
+- **Ampliado en la Fase E (HU-11, HU-12, HU-22, 22-sep):** el evaluador puede grabar una **nota de voz** (`POST/GET/PUT /api/evaluaciones/{id}/nota-voz`, `GET .../nota-voz/audio`) con su transcripción, y subir el **documento formal** de la pauta (`POST/GET /api/evaluaciones/{id}/documentos`). Ambas se pueden hacer con la evaluación en BORRADOR o ya FINALIZADA (S-41, S-42): son retroalimentación complementaria, no cambian el puntaje.
 
 **Guion en Swagger (5 min), como `guia1@demo.example` (Marcos).**
 1. `GET /api/pautas?asignaturaId=3` → la pauta con sus 3 dimensiones y 20 indicadores en orden, escala 1–7. Los ids de los indicadores son 1 a 20.
@@ -215,6 +218,13 @@ Para cambiar de usuario: *Authorize → Logout*, y repetir con otro correo.
 7. Intentar de nuevo `PUT …/respuestas` → **409** (finalizada). `POST …/finalizar` otra vez → **409**.
 8. Autorizar como `guia2@demo.example` (Lorena) y `POST /api/evaluaciones` sobre la inscripción 3 → **403** (no es su estudiante).
 9. Autorizar como `camila.rojas@demo.example` y `GET /api/evaluaciones/{id}` → 200 con el puntaje de cada indicador. (Antes de finalizar habría dado 403: los borradores son del evaluador.)
+
+**Guion de la nota de voz (Fase E, HU-11 y HU-12), en el front-end o en Swagger (3 min), como `guia1@demo.example` (Marcos), sobre la evaluación recién finalizada.**
+1. En el front-end: abrir `#/evaluaciones/{id}` y bajar hasta **"Retroalimentación en voz"** (entre la tarjeta de puntaje/promedio y "Indicadores de la pauta"). Pulsar **Grabar nota de voz**, decir un par de frases y pulsar **Detener grabación**: aparece el reproductor y, si el navegador soporta `SpeechRecognition` (Chrome), el cuadro **Transcripción a texto** se va llenando solo. Pulsar **Guardar nota de voz**.
+2. Recargar la página: la sección ahora muestra el audio grabado y el texto, con la etiqueta "Transcripción automática, sin corregir". Corregir el texto a mano y pulsar **Guardar transcripción corregida**: la etiqueta cambia a "Transcripción corregida por el evaluador".
+3. En Swagger, lo mismo por HTTP: `POST /api/evaluaciones/{id}/nota-voz` (multipart: `audio`, `transcripcion`, `duracionSegundos`) → **201**. Repetirlo → **409** ("ya tiene una nota de voz… usa PUT"). `PUT /api/evaluaciones/{id}/nota-voz` con `{"transcripcion":"texto corregido"}` → **200**, `transcripcionCorregida: true`.
+4. Autorizar como `guia2@demo.example` (Lorena, no es la evaluadora de esta clase) e intentar `POST` o `PUT` sobre la misma nota de voz → **403** en ambos.
+5. Autorizar como `camila.rojas@demo.example` (o el estudiante evaluado) y `GET /api/evaluaciones/{id}/nota-voz` → **200**: también puede escucharla y leer la transcripción (mismas reglas de acceso que ver la evaluación).
 
 ### HU-04 — Planificación de clase con flujo de aprobación
 
@@ -347,18 +357,18 @@ BORRADOR ──enviar──▶ EN_REVISION_GUIA ──guía aprueba──▶ EN_
 
 **¿Cómo se agregarían las otras pautas (Práctica Pedagógica y Profesional, tutor)?** Como datos nuevos en `pauta`, `dimension_pauta` e `indicador` (HU-06 y HU-07), sin rehacer el modelo. Falta enseñar al servicio la regla evaluador–tipo de pauta para el tutor (S-12).
 
-**¿Qué NO está en este sprint?** Chatbot y nota de voz (S-02, sprints 3 y 4), otras pautas y tutor (S-12), duplas (S-11, HU-10), informes y nota final ponderada (HU-08 y HU-09), notificaciones. Tampoco: límite de intentos de login, cambio o recuperación de contraseña, refresco de token, paginación de listados (S-26) ni control de concurrencia.
+**¿Qué NO está en este sprint?** El chatbot (S-02, sprint 4), otras pautas y tutor (S-12), duplas (S-11, HU-10), informes y nota final ponderada (HU-08 y HU-09), notificaciones. La **nota de voz sí está** (se adelantó del sprint 3 el 22-sep, HU-11 y HU-12). Tampoco hay: límite de intentos de login, cambio o recuperación de contraseña (HU-26), refresco de token, paginación de listados (S-26) ni control de concurrencia.
 
 ---
 
 ## 6. Supuestos que conviene nombrar
 
-Los S-01 a S-16 y S-34 a S-38 están en `Sprint1/sprint-backlog.md`. Los que se sumaron al programar están en `backend/PROGRESO.md` (S-17 a S-38). Un estudiante de PEM respondió varias preguntas el 2026-09-20 (registradas en `RESUMEN.md`, sección 13): son **orientativas, no del cliente**. Los que más conviene confirmar con el cliente:
+Los S-01 a S-16 y S-34 a S-46 están en `Sprint1/sprint-backlog.md`. Los que se sumaron al programar están en `backend/PROGRESO.md` (S-17 a S-46). Un estudiante de PEM respondió varias preguntas el 2026-09-20 (registradas en `RESUMEN.md`, sección 13): son **orientativas, no del cliente**. Los que más conviene confirmar con el cliente:
 
 | Supuesto | Qué se asumió |
 |---|---|
 | S-05 | El "profesor del curso" que autoriza es el académico UBB (es un rol propio, así que si fuera del colegio no cambia la estructura) |
-| S-09 | El formato de planificación son los 5 elementos de la entrevista (el archivo oficial no se ha entregado) |
+| S-09 | **Resuelto el 22-sep:** el formato oficial ya se conoce (`.docx` entregado por la carrera); el Sprint 1 sigue con los 5 elementos de la entrevista, migrar `planificacion` queda para un sprint futuro (S-45) |
 | S-10 | Si el profesor del curso devuelve, se repite el flujo desde el guía |
 | S-21 | El guía y el profesor del curso ven el historial completo del estudiante asignado |
 | S-22 | El coordinador cierra las inscripciones con nota (endpoint extra) |
@@ -366,14 +376,18 @@ Los S-01 a S-16 y S-34 a S-38 están en `Sprint1/sprint-backlog.md`. Los que se 
 | S-37 | El flujo de planificación es en secuencia (guía → profesor del curso) aunque un estudiante habló de enviarla a ambos |
 | S-38 | El jefe de carrera ve los chats (rol COORDINADOR); el acceso del guía al chat está por decidir por privacidad |
 | S-29 | Los borradores de evaluación son privados del evaluador |
+| S-40 | La transcripción de la nota de voz la genera el navegador del evaluador (Web Speech API de Chrome), sin costo y sin instalar nada; nadie ha confirmado con el cliente qué herramienta usar |
+| S-42 | La nota de voz se puede grabar con la evaluación en BORRADOR o FINALIZADA: es retroalimentación complementaria, no cambia el puntaje |
 
 ---
 
 ## 7. Cifras para mencionar
 
-- 5 historias completas (26 puntos) · 32 endpoints documentados en Swagger · 4 roles.
-- 12 entidades JPA sobre 14 tablas (20 FK, 32 CHECK, 13 UNIQUE, 2 triggers).
-- 146 pruebas automáticas + prueba HTTP real de cada historia (32 + 30 + 24 + 27 + 18 comprobaciones), el ensayo completo del guion (59) y las reglas del ciclo inicial y de los 3 días (11).
+- 5 historias del Sprint 1 (26 puntos) más 6 adelantadas el 22-sep (HU-11, HU-12, HU-21 a HU-24) · **42 endpoints** documentados en Swagger · 4 roles.
+- 15 entidades JPA con API sobre **16 tablas** (24 FK, 34 CHECK, 13 UNIQUE, 2 triggers); solo `MENSAJE_CHATBOT` (chatbot) queda sin API.
+- **159 pruebas automáticas** (146 del Sprint 1 + 13 de la Fase E) + prueba HTTP real de cada historia del Sprint 1 (32 + 30 + 24 + 27 + 18 comprobaciones), el ensayo completo del guion (59), las reglas del ciclo inicial y de los 3 días (11), y las comprobaciones por `curl` de documentos y nota de voz del 22-sep.
+- **20 estudiantes** de demostración (antes 5), 6 profesores guía y 4 profesores del curso, ningún guía con más de 5 estudiantes asignados.
+- Product Backlog con **30 historias de usuario** (20 originales + 6 adelantadas + 4 nuevas para sprints futuros).
 - Pauta real de 20 indicadores en 3 dimensiones (fuente: pauta de observación de Trabajo Colaborativo 2026).
 
 ---
@@ -384,17 +398,19 @@ El front-end es HTML + CSS + JavaScript puro (sin frameworks ni librerías exter
 
 **Preparación:** `.\db\bd.ps1` → `java -jar target\practicas-0.1.0-SNAPSHOT.jar` → abrir <http://localhost:8080>. La clave de demostración de los usuarios está en el encabezado de `db/seed.sql`. Para cambiar de usuario: *Cerrar sesión* y volver a ingresar (o una ventana de incógnito por rol, así se ven dos roles a la vez).
 
-**Qué mostrar de la pantalla:** el escudo queda fijo en la esquina superior izquierda en todas las vistas; la barra lateral cambia según el rol (las historias futuras salen grises con la etiqueta *Próximamente*) y se contrae con el botón de las tres líneas; el inicio (`#/inicio`) trae los accesos rápidos del rol y la foto del campus.
+**Qué mostrar de la pantalla:** el escudo queda fijo en la esquina superior izquierda en todas las vistas; la barra lateral cambia según el rol y se contrae con el botón de las tres líneas. Desde la Fase E (22-sep) el menú **ya no menciona sprints ni historias de usuario**: solo aparecen los nombres de las funciones a las que el rol tiene acceso, y bajo ellas una sección **"Accesos rápidos"** con los mismos atajos que hoy están en Inicio (útil para saltar de una función a otra sin volver primero a `#/inicio`). El inicio (`#/inicio`) trae los accesos rápidos del rol y la foto del campus.
 
 ### Guion por historia (usuario y rol)
 
 | HU | Usuario (rol) | Qué hacer y qué debe pasar |
 |---|---|---|
-| **HU-01** Iniciar sesión con roles | Ingresar con una clave mala; luego `coordinador@demo.example` (COORDINADOR) | Clave mala → "Correo o contraseña incorrectos." Entrando, el menú muestra las funciones del coordinador. En **Iniciar sesión con roles** se ven sus datos, cuándo vence la sesión y la tabla de roles. Luego `camila.rojas@demo.example` (ESTUDIANTE): escribir a mano `#/estudiantes` en la barra de direcciones → "No tienes permiso para esta acción." (el servidor también responde 403) |
+| **HU-01** Iniciar sesión con roles | Ingresar con una clave mala; luego `coordinador@demo.example` (COORDINADOR) | Clave mala → "Correo o contraseña incorrectos." Entrando, el menú muestra las funciones del coordinador. En **Mi cuenta** se ven sus datos, cuándo vence la sesión y la tabla de roles. Luego `camila.rojas@demo.example` (ESTUDIANTE): escribir a mano `#/estudiantes` en la barra de direcciones → "No tienes permiso para esta acción." (el servidor también responde 403) |
 | **HU-02** Registrar estudiantes e inscribirlos | `coordinador@demo.example` (COORDINADOR) | **Estudiantes → Registrar estudiante** con datos ficticios (RUT válido, por ejemplo `12345678-5`); con un RUT mal escrito sale el error del servidor dentro del formulario. **Profesores** → registrar uno. **Inscripciones → Nueva inscripción**: al elegir *Aproximación al Sistema Escolar* el profesor guía se deshabilita ("no lleva guía"); con *Trabajo Colaborativo* es obligatorio. Repetir la misma inscripción → 409 con el mensaje del servidor. **Cerrar** una inscripción EN_CURSO con resultado y nota |
 | **HU-04** Planificar y aprobar en dos etapas | 1) `camila.rojas@demo.example` (ESTUDIANTE) · 2) `guia2@demo.example` (PROFESOR_GUIA) · 3) `curso1@demo.example` (PROFESOR_CURSO) | 1) En **Planificar una clase…** abrir el borrador *Funciones lineales*, **Enviar a revisión** → error: faltan elementos. Editarlo, completar los cinco elementos y enviarlo. La planificación *Proporcionalidad directa* está *Con observaciones*: se ve el comentario del guía, se edita y se reenvía. 2) Lorena Vidal ve las que le esperan ("Requiere tu acción"), abre la de Diego, intenta **Devolver con observaciones** sin comentario (no deja) y luego aprueba. 3) Ricardo Núñez autoriza la de Diego (*Fracciones equivalentes*, ya en autorización). El estado del flujo y el historial de revisiones se actualizan en la misma pantalla |
-| **HU-03** Evaluar con la pauta digital | `guia1@demo.example` (PROFESOR_GUIA) y después `camila.rojas@demo.example` (ESTUDIANTE) | Marcos Bravo: **Evaluar una clase… → Nueva evaluación** para Camila (inscripción de Trabajo Colaborativo); la pauta se elige sola. Completar datos de la clase, marcar los 20 indicadores (el contador y el puntaje parcial se actualizan), **Guardar avance**, intentar **Finalizar** con indicadores sin responder (quedan resaltados) y luego finalizar: aparece el promedio y ya no se puede editar. Camila ve la evaluación finalizada; el borrador nunca lo ve. La evaluación de Camila queda creada: para repetir el guion, `.\db\bd.ps1` |
-| **HU-05** Historial del estudiante | `sebastian.vargas@demo.example` (ESTUDIANTE), `guia1@demo.example` y `coordinador@demo.example` | Sebastián ve **su** recorrido (5 prácticas aprobadas y la sexta en curso). El guía elige a uno de sus estudiantes; probar `#/historial/5` (Javiera, que no es suya) → "No tienes permiso…". El coordinador elige a Valentina Pérez: sus dos evaluaciones muestran que el promedio **sube** de 4,80 a 5,90 |
+| **HU-21** Documentos en la planificación (Fase E) | `camila.rojas@demo.example` (ESTUDIANTE) y después `guia1@demo.example` | Camila abre cualquiera de sus planificaciones y baja hasta **"Documentos"**: sube un PDF con el botón **Subir documento** (aparece en la lista con su nombre, tamaño y fecha). Probar con un `.exe` → error de extensión no permitida. Como Marcos Bravo (su guía), abrir la misma planificación y **descargar** el documento que subió Camila |
+| **HU-22** Documento formal de la evaluación (Fase E) | `guia1@demo.example` (PROFESOR_GUIA) | En el detalle de una evaluación (propia), bajar hasta **"Documentos"** (al final de la pantalla) y subir un `.docx` o `.xlsx` con la pauta firmada. Como `guia2@demo.example` (Lorena, no es la evaluadora) intentar entrar a esa misma evaluación → sin acceso |
+| **HU-03 + HU-11/HU-12** Evaluar con la pauta digital y grabar la nota de voz | `guia1@demo.example` (PROFESOR_GUIA) y después `camila.rojas@demo.example` (ESTUDIANTE) | Marcos Bravo: **Evaluar una clase… → Nueva evaluación** para Camila (inscripción de Trabajo Colaborativo); la pauta se elige sola. Completar datos de la clase, marcar los 20 indicadores (el contador y el puntaje parcial se actualizan), **Guardar avance**, intentar **Finalizar** con indicadores sin responder (quedan resaltados) y luego finalizar: aparece el promedio y ya no se puede editar. Justo debajo del promedio, en **"Retroalimentación en voz"**, grabar una nota de voz corta y mostrar cómo se llena sola la **"Transcripción a texto"** (si el navegador lo permite); corregirla y **Guardar transcripción corregida**. Camila ve la evaluación finalizada, con el audio y la transcripción, pero nunca el borrador. La evaluación de Camila queda creada: para repetir el guion, `.\db\bd.ps1` |
+| **HU-05 + HU-23** Historial del estudiante y buscarlo | `sebastian.vargas@demo.example` (ESTUDIANTE), `guia1@demo.example` y `coordinador@demo.example` | Sebastián ve **su** recorrido (5 prácticas aprobadas y la sexta en curso). El coordinador entra a **Historial del estudiante** y escribe en el buscador de arriba (por ejemplo "valentina", "33333333" o parte del correo): la lista se filtra al instante, sin distinguir mayúsculas ni tildes. Elige a Valentina Pérez: sus dos evaluaciones muestran que el promedio **sube** de 4,80 a 5,90. El guía Marcos Bravo elige a uno de sus estudiantes; probar `#/historial/5` (Javiera, que no es suya) → "No tienes permiso…" |
 
 ### Qué decir si preguntan por el front-end
 
@@ -404,4 +420,8 @@ El front-end es HTML + CSS + JavaScript puro (sin frameworks ni librerías exter
 - **¿Qué pasa si vence la sesión?** Cualquier 401 borra la sesión y vuelve al login con un aviso.
 - **¿Qué archivos de Spring Security se tocaron?** Solo `SecurityConfig`: se permiten `/`, `/index.html`, `/app.html`, `/css/**`, `/js/**`, `/img/**` y `/favicon.ico`. Esos archivos no tienen datos; `/api/**` sigue exigiendo token (salvo el login).
 - **Rutas del front:** `#/inicio`, `#/cuenta`, `#/estudiantes` (con `#/profesores` e `#/inscripciones`), `#/evaluaciones`, `#/planificaciones` y `#/historial`.
+- **¿Por qué el menú ya no dice "Sprint 1" ni "HU-03"?** Porque el sistema se presenta terminado: al usuario no le importa en qué sprint se construyó cada función, solo qué puede hacer con ella.
+- **¿Dónde se guardan los documentos y el audio de la nota de voz?** En disco, en `backend/adjuntos/` (fuera de git); la base de datos solo guarda la ruta, el nombre, el tipo y quién lo subió. Un `<a href>` o un `<audio src>` normal no pueden llevar el token, así que el front-end descarga el archivo con `fetch` (con el `Authorization`) y arma un enlace o un audio temporal en el navegador.
+- **¿Qué pasa si el navegador no graba audio o no transcribe?** La sección avisa con un mensaje claro y el resto de la pantalla de evaluación sigue funcionando igual (Chrome de escritorio es el navegador de referencia para probar esto).
+- **Nota de esta sesión:** la Fase E (documentos, nota de voz, menú y búsqueda) se probó por HTTP con `curl` porque no había un navegador disponible; falta el recorrido visual en Chrome antes de la defensa.
 

@@ -4,8 +4,8 @@
 |---|---|
 | **Proyecto** | Sistema web para evaluar y monitorear las 6 prácticas de Pedagogía en Educación Matemática (UBB) |
 | **Cliente** | La carrera PEM: Dr. Rodrigo Panes Chavarría y el coordinador de prácticas, Dr. Víctor Parra González |
-| **Versión** | 1.1, actualizada el 21 de septiembre de 2026 (Sprint 1) |
-| **De dónde sale** | La entrevista con el cliente, los protocolos y las pautas de la carpeta `Documents/`, y las respuestas de un estudiante de PEM |
+| **Versión** | 1.2, actualizada el 22 de septiembre de 2026 (Fase E) |
+| **De dónde sale** | La entrevista con el cliente, los protocolos y las pautas de la carpeta `Documents/`, las respuestas de un estudiante de PEM, el formato oficial de planificación (`FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx`) y la propuesta del chatbot "RetroPlani Mate" que ya usa el coordinador (`ChatBot (1).rar`) |
 | **Por qué existe** | El criterio 3 de acreditación pide que la carrera *diseñe, implemente y monitoree un sistema para la formación práctica* que muestre un desarrollo creciente de la efectividad docente de sus estudiantes |
 
 > Lo que el equipo decidió sin poder confirmarlo con el cliente aparece como **supuesto** (S-01, S-02...). Están todos en la sección 6 y con más detalle en `sprint-backlog.md`. Lo que contó un estudiante de PEM lo anotamos como "reportado por un estudiante": nos orienta, pero no es una confirmación del cliente.
@@ -46,18 +46,28 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-08 | Informes por asignatura y por estudiante | Monitoreo | Alta | por estimar | 2 | Pendiente |
 | HU-09 | Nota final ponderada de la asignatura | Evaluación | Media | por estimar | 2 | Pendiente |
 | HU-10 | Prácticas en dupla y en grupo | Gestión académica | Media | por estimar | 2 | Pendiente |
-| HU-11 | Nota de voz del profesor evaluador | Retroalimentación | Alta | por estimar | 3 | Pendiente |
-| HU-12 | Pasar la nota de voz a texto | Retroalimentación | Alta | por estimar | 3 | Pendiente |
+| HU-11 | Nota de voz del profesor evaluador | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** |
+| HU-12 | Pasar la nota de voz a texto | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** |
 | HU-13 | Exportar notas finales para Adecca | Integración | Media | por estimar | 3 | Pendiente |
 | HU-14 | Panel de monitoreo del coordinador | Monitoreo | Media | por estimar | 3 | Pendiente |
 | HU-19 | Avisos por correo de cambios de estado | Planificación | Media (subió desde Baja) | por estimar | 3 (tentativo) | Pendiente |
-| HU-15 | Chatbot de retroalimentación según el contexto del estudiante | Chatbot | Alta | por estimar | 4 | Pendiente |
-| HU-16 | El profesor guía ve el chat y la actividad del estudiante | Chatbot | Alta | por estimar | 4 | Pendiente |
-| HU-17 | Calibrar el estilo del chatbot con el coordinador | Chatbot | Media | por estimar | 4 | Pendiente |
-| HU-20 | El jefe de carrera consulta los chats | Chatbot | Media | por estimar | 4 | Pendiente |
+| HU-15 | Chatbot de retroalimentación según el contexto del estudiante | Chatbot | Alta | por estimar | 4 | Pendiente (contenido corregido con RetroPlani Mate, 22-sep) |
+| HU-16 | El profesor guía ve el chat y la actividad del estudiante | Chatbot | Alta | por estimar | 4 | Pendiente (contenido corregido, 22-sep) |
+| HU-17 | Calibrar el estilo del chatbot con el coordinador | Chatbot | Media | por estimar | 4 | Pendiente (contenido corregido, 22-sep) |
+| HU-20 | El jefe de carrera consulta los chats | Chatbot | Media | por estimar | 4 | Pendiente (contenido corregido, 22-sep) |
 | HU-18 | Registrar informes y productos de la práctica | Documentos | Baja | por estimar | 5 o más | Pendiente |
+| HU-21 | Adjuntar documentos a la planificación | Documentos | Media | 3 | **1** | **Construida y probada (22-sep, Fase E)** |
+| HU-22 | Adjuntar el documento formal de la evaluación | Documentos | Media | 3 | **1** | **Construida y probada (22-sep, Fase E)** |
+| HU-23 | Buscar estudiante por nombre, RUT o correo | Monitoreo | Media | 2 | **1** | **Construida y probada (22-sep, Fase E)** |
+| HU-24 | Accesos rápidos dentro del menú | Interfaz | Baja | 1 | **1** | **Construida (22-sep, Fase E)** |
+| HU-25 | Gestión de archivos de pautas formales | Evaluación | Baja | por estimar | 2 o más | Pendiente |
+| HU-26 | Cambiar la contraseña | Acceso | Media | por estimar | 2 | Pendiente |
+| HU-27 | Configurar los parámetros del sistema | Administración | Baja | por estimar | 2 o más | Pendiente |
+| HU-28 | Exportar el historial del estudiante en PDF | Monitoreo | Media | por estimar | 2 o más | Pendiente |
+| HU-29 | Cargar la base de conocimiento del chatbot | Chatbot | Media | por estimar | 4 | Pendiente |
+| HU-30 | Validar el chatbot con jueces expertos y estudiantes | Chatbot | Baja | por estimar | 5 o más | Pendiente |
 
-Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada uno con lo que aprendamos y lo que confirme el cliente. El chatbot y la nota de voz quedan para más adelante a propósito (supuesto S-02).
+Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada uno con lo que aprendamos y lo que confirme el cliente. El chatbot queda para más adelante a propósito (supuesto S-02); la nota de voz y la transcripción (HU-11 y HU-12) se adelantaron al Sprint 1 el 22 de septiembre (Fase E), junto con los documentos adjuntos, la búsqueda de estudiantes y los accesos rápidos del menú (HU-21 a HU-24). `sprint-backlog.md`, sección 7, anota que se ampliaron los criterios de aceptación de HU-03 para incluir la nota de voz.
 
 ---
 
@@ -116,8 +126,10 @@ Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada un
 
 **Prioridad:** Alta · **Viene de:** el requerimiento 4 y el "Planificación!!!" que el cliente destacó en la entrevista.
 
+**Formato real de la carrera (S-09 resuelto, 22-sep):** la carrera entregó `FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx`. Tiene más campos que los cinco de la entrevista: nombre del profesor/a, establecimiento, año, período (semestre), asignatura, curso, unidad, objetivo de aprendizaje/indicadores de evaluación, objetivo de aprendizaje actitudinal, objetivo de la clase, fecha, duración, recursos, instrumentos de evaluación, y la descripción de la clase en tres partes (inicio, desarrollo y cierre, cada una con su propia duración). **S-09 ya no es un supuesto sobre qué pide la carrera** (el archivo lo confirma), pero el Sprint 1 sigue construido y probado con los cinco elementos de la entrevista: migrar `planificacion` a los campos reales es trabajo nuevo (tocaría la entidad, los DTO, el formulario y las 146 pruebas existentes) y queda para un sprint futuro, marcado como supuesto **S-45** para no arriesgar una historia ya entregada.
+
 **Criterios de aceptación**
-1. El estudiante con una inscripción `EN_CURSO` crea una planificación con el formato de la carrera: título, fecha de la clase, **objetivo**, **recursos**, **tiempos**, **evaluación del aprendizaje** y **cómo interactúan los participantes con los recursos**. Queda en `BORRADOR`. (Supuesto S-09: usamos estos cinco elementos porque nos contaron el formato en la entrevista, pero el archivo oficial no nos lo han entregado.)
+1. El estudiante con una inscripción `EN_CURSO` crea una planificación con el formato de la carrera: título, fecha de la clase, **objetivo**, **recursos**, **tiempos**, **evaluación del aprendizaje** y **cómo interactúan los participantes con los recursos**. Queda en `BORRADOR`. (Estos cinco elementos venían de la entrevista, antes de tener el archivo oficial; ver el aviso de arriba y S-45.)
 2. Un borrador puede estar incompleto, pero para enviarlo todos los elementos son obligatorios.
 3. Al enviarla pasa a `EN_REVISION_GUIA`.
 4. El guía asignado puede **devolverla con observaciones** (el comentario es obligatorio y pasa a `CON_OBSERVACIONES`) o **aprobarla** (pasa a `EN_AUTORIZACION`).
@@ -128,6 +140,7 @@ Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada un
 9. El guía ve todas las planificaciones de sus estudiantes, en cualquier estado.
 10. **Sin profesor guía** (ciclo inicial: Ambientes de Aprendizaje no va a un colegio), al enviarla la planificación pasa **directo a `EN_AUTORIZACION`** y la autoriza el profesor del curso (S-34). Aproximación al Sistema Escolar no entrega planificaciones: crear una da 409.
 11. Se entrega con **al menos 3 días de anticipación** a la clase; si no, al enviarla da 400. El número de días se puede configurar (S-35). Se planifican todas las clases con docencia directa, una planificación por clase (S-36).
+12. Además del formulario, el estudiante puede adjuntar documentos de apoyo (Word o PDF) a su planificación: ver HU-21.
 
 **Diferencia sin resolver (S-37):** un estudiante contó que la planificación se manda "al profe del ramo y al colaborador", quizás a los dos a la vez. El cliente la describió en secuencia (primero el guía, luego el profesor del curso). Mientras nadie confirme otra cosa, implementamos la secuencia.
 
@@ -142,6 +155,42 @@ Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada un
 3. Se puede abrir el detalle de una evaluación y ver el puntaje de cada indicador.
 4. La respuesta incluye el **semestre actual** y las **asignaturas aprobadas**: es el contexto que usará el chatbot más adelante.
 5. Cada uno ve solo lo que le corresponde: el estudiante, su propio historial; el guía, el de los estudiantes que tiene asignados; el profesor del curso, el de sus inscripciones; el coordinador, el de todos. Cualquier otro acceso da 403.
+
+---
+
+### Adelantadas al Sprint 1 el 22 de septiembre (Fase E)
+
+Estas seis historias iban para sprints futuros en la planificación original, pero se adelantaron y ya están construidas y probadas: HU-11 y HU-12 porque el requerimiento 3 del cliente (nota de voz) es sencillo de construir sobre la tabla `NOTA_VOZ` que ya existía, y HU-21 a HU-24 porque son necesidades que ya habían aparecido (documentos adjuntos, búsqueda de estudiantes) o mejoras directas a la interfaz del Sprint 1.
+
+#### HU-11 · Nota de voz del profesor evaluador
+**Como** profesor guía evaluador, **quiero** grabar una nota de voz al terminar la clase y dejarla ligada a la evaluación, **para** usarla después en la retroalimentación con el estudiante.
+- **Prioridad:** Alta · **Sprint:** 1 · **Estado:** Construida y probada (22-sep) · **Viene de:** el requerimiento 3 del cliente.
+- **Criterios:** (1) como máximo una nota de voz por evaluación; (2) solo el profesor guía evaluador de esa evaluación graba o reemplaza la nota (403 para cualquier otro, incluido otro guía); (3) se puede grabar con la evaluación en `BORRADOR` o ya `FINALIZADA`, porque es retroalimentación complementaria y no cambia el puntaje (**S-42**); (4) la escuchan el evaluador, el estudiante evaluado, su profesor del curso y el coordinador (las mismas reglas de acceso de HU-03); (5) el audio se guarda en disco, fuera del repositorio, con la ruta en la base de datos; tamaño y formato máximos son un supuesto propio, no confirmado por el cliente (**S-43**).
+
+#### HU-12 · Pasar la nota de voz a texto
+**Como** profesor guía evaluador, **quiero** convertir la nota de voz en texto, **para** revisarla, corregirla y entregársela al estudiante por escrito.
+- **Prioridad:** Alta · **Sprint:** 1 · **Estado:** Construida y probada (22-sep) · **Depende de** HU-11.
+- **Criterios:** (1) la transcripción inicial la genera el navegador del evaluador (Web Speech API de Chrome) al momento de grabar, y se manda junto con el audio: es una elección propia, sin confirmar con el cliente qué herramienta de transcripción usar (**S-40**); (2) el evaluador puede corregir el texto después, y el sistema marca si ya fue corregido; (3) si el navegador no soporta grabación o reconocimiento de voz, se avisa claramente y el resto de la pantalla de evaluación sigue funcionando.
+
+#### HU-21 · Adjuntar documentos a la planificación
+**Como** estudiante, **quiero** subir uno o más documentos de apoyo a mi planificación, **para** entregar guías, presentaciones u otros materiales junto con el formulario.
+- **Prioridad:** Media · **Sprint:** 1 · **Estado:** Construida y probada (22-sep) · **Depende de** HU-04.
+- **Criterios:** (1) solo el estudiante dueño de la planificación sube archivos; (2) Word (.docx) o PDF, máximo 10 MB (400 si no cumple, tamaño y formatos son supuesto propio, **S-44**); (3) quien ya puede ver la planificación (el mismo estudiante, su guía, su profesor del curso y el coordinador) puede listar y descargar los documentos; (4) se guarda quién subió cada archivo y cuándo.
+
+#### HU-22 · Adjuntar el documento formal de la evaluación
+**Como** profesor guía, **quiero** subir el documento con la pauta y evaluación formal de una clase, **para** dejar el respaldo escrito junto a la evaluación digital.
+- **Prioridad:** Media · **Sprint:** 1 · **Estado:** Construida y probada (22-sep) · **Depende de** HU-03.
+- **Criterios:** (1) solo el profesor guía evaluador de esa evaluación sube documentos; (2) Word (.docx), Excel (.xlsx) o PDF, máximo 10 MB; (3) se puede subir con la evaluación en `BORRADOR` o ya `FINALIZADA`, sin exigir un estado particular (**S-41**); (4) quien ya puede ver la evaluación (mismas reglas de HU-03: el evaluador, y si está finalizada también el estudiante, su profesor del curso y el coordinador) puede listar y descargar.
+
+#### HU-23 · Buscar estudiante por nombre, RUT o correo
+**Como** coordinador, profesor guía o profesor del curso, **quiero** filtrar la lista de estudiantes por nombre, RUT o correo al elegir a quién ver el historial, **para** encontrarlo rápido cuando tengo muchos estudiantes asignados.
+- **Prioridad:** Media · **Sprint:** 1 · **Estado:** Construida (22-sep) · **Depende de** HU-02 y HU-05.
+- **Criterios:** (1) la búsqueda no distingue mayúsculas ni tildes; (2) el coordinador reutiliza el parámetro `buscar` de `GET /api/estudiantes`; (3) el guía y el profesor del curso filtran entre los estudiantes de sus propias inscripciones.
+
+#### HU-24 · Accesos rápidos dentro del menú
+**Como** cualquier usuario, **quiero** ver mis accesos rápidos también dentro del menú lateral (no solo en Inicio), **para** saltar de una función a otra sin volver primero a la pantalla de inicio.
+- **Prioridad:** Baja · **Sprint:** 1 · **Estado:** Construida (22-sep).
+- **Criterios:** (1) las mismas tarjetas de accesos rápidos de Inicio aparecen como enlaces en una sección del menú lateral, según el rol; (2) el menú ya no menciona sprints, historias de usuario ni funciones futuras: solo los nombres de las funciones a las que el usuario tiene acceso.
 
 ---
 
@@ -172,16 +221,6 @@ Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada un
 - **Prioridad:** Media · **Sprint:** 2
 - **Criterios:** (1) una dupla comparte guía, colegio y curso; (2) **cada integrante tiene su propia pauta de evaluación** (reportado por un estudiante; el modelo de datos ya lo cumple); (3) el historial de cada uno muestra con quién trabajó.
 
-#### HU-11 · Nota de voz del profesor evaluador
-**Como** profesor evaluador, **quiero** grabar una nota de voz al terminar la clase y dejarla ligada a la evaluación, **para** usarla después en la retroalimentación con el estudiante.
-- **Prioridad:** Alta · **Sprint:** 3 (supuesto S-02)
-- **Criterios:** (1) el audio queda asociado a una evaluación; (2) solo lo escuchan el evaluador, el estudiante evaluado, su guía y el coordinador; (3) se define el tamaño y el formato máximos del archivo.
-
-#### HU-12 · Pasar la nota de voz a texto
-**Como** profesor evaluador, **quiero** convertir la nota de voz en texto, **para** revisarla, corregirla y entregársela al estudiante por escrito.
-- **Prioridad:** Alta · **Sprint:** 3 · **Depende de** HU-11 y de elegir la herramienta de transcripción (todavía sin definir).
-- **Criterios:** (1) la transcripción se guarda junto al audio; (2) el evaluador puede corregirla; (3) el sistema indica si el texto es automático o ya corregido.
-
 #### HU-13 · Exportar notas finales para Adecca
 **Como** profesor del curso, **quiero** exportar las notas finales en un archivo, **para** subirlas a Adecca sin volver a digitarlas.
 - **Prioridad:** Media · **Sprint:** 3 · **Depende de** conocer el formato que acepta Adecca.
@@ -198,9 +237,18 @@ Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada un
 - **Por qué subió:** un estudiante contó que hoy toda la retroalimentación de las planificaciones va **por correo "para que quede respaldo"**. Las revisiones del sistema ya guardan ese respaldo (autor, fecha y comentario); el correo sería solo el aviso, y cómo se envía hay que definirlo con el cliente.
 
 #### HU-15 · Chatbot de retroalimentación según el contexto del estudiante
-**Como** estudiante de Práctica Pedagógica o Profesional, **quiero** conversar con un chatbot que me retroalimente según mi semestre y mis asignaturas aprobadas, **para** mejorar mis planificaciones y mi desempeño.
-- **Prioridad:** Alta · **Sprint:** 4 (supuesto S-02)
-- **Criterios:** (1) solo está disponible en las dos prácticas finales; (2) usa como contexto el semestre y las asignaturas aprobadas (los entrega HU-05); (3) responde en español y dice cuando no sabe; (4) guarda cada mensaje del chat.
+**Como** estudiante de Práctica Pedagógica o Profesional, **quiero** conversar con un chatbot que retroalimente la planificación que yo ya escribí, según mi semestre y mis asignaturas aprobadas, **para** mejorar mis planificaciones y mi desempeño.
+- **Prioridad:** Alta · **Sprint:** 4 (supuesto S-02) · **Contenido corregido el 22-sep** con la propuesta real **"RetroPlani Mate"** (`Documents/ChatBot (1).rar`), el GPT que ya usa el coordinador Víctor Parra para retroalimentar planificaciones de matemática.
+- **Criterios:**
+  1. Solo está disponible en las dos prácticas finales; usa como contexto el semestre y las asignaturas aprobadas (los entrega HU-05).
+  2. El estudiante adjunta su planificación como archivo o imagen (.docx, .pdf, .png, .jpg o .jpeg); si la pega como texto en el chat, el chatbot no la retroalimenta y pide el archivo.
+  3. El chatbot **nunca diseña una planificación desde cero**: si el estudiante pide eso ("hazme el inicio", "dame una actividad lista"...), responde con un mensaje fijo de límite y no entrega ningún componente listo para copiar, ni antes ni después de que el estudiante insista.
+  4. Antes de retroalimentar hace una verificación documental: qué recursos declara la planificación (guía, PPT, ticket de salida...) y cuáles fueron realmente adjuntados; si falta alguno, lo avisa antes de seguir (o detiene el flujo si es indispensable para evaluar la coherencia).
+  5. Flujo dialógico: hace hasta 5 preguntas diagnósticas sobre los puntos débiles o ambiguos antes de la retroalimentación final, y la retroalimentación final integra las respuestas del estudiante.
+  6. La retroalimentación revisa coherencia curricular, los tres momentos de la clase (inicio, desarrollo, cierre), Diseño Universal para el Aprendizaje y matemática inclusiva, evaluación para el aprendizaje, recursos didácticos, y errores/dificultades matemáticas; usa la rúbrica de planificación solo como referencia cualitativa y **nunca asigna puntaje ni nota**.
+  7. Cierra con preguntas de reflexión para la acción de mejora, y admite como máximo dos retroalimentaciones completas para la misma clase (con el mismo objetivo y recursos).
+  8. Responde en español, con tono cercano y formativo (nunca descalificador), y dice explícitamente cuando la información es insuficiente.
+  9. Guarda cada mensaje del chat, por inscripción.
 - **Uso esperado (reportado por un estudiante):** preguntarle formas de enseñar un contenido y cómo mejorar una planificación.
 
 #### HU-16 · El profesor guía ve el chat y la actividad del estudiante
@@ -210,8 +258,9 @@ Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada un
 - **Criterios:** (1) el guía ve el chat de sus estudiantes asignados y de nadie más; (2) el estudiante sabe que su guía puede verlo.
 
 #### HU-17 · Calibrar el estilo de retroalimentación del chatbot
-**Como** coordinador, **quiero** definir los criterios y el estilo con que retroalimenta el chatbot, **para** que se parezca a la retroalimentación que doy hoy con mi chatbot de ChatGPT.
-- **Prioridad:** Media · **Sprint:** 4 · **Depende de** que el coordinador entregue sus criterios.
+**Como** coordinador, **quiero** ajustar los criterios y el estilo con que retroalimenta el chatbot, **para** que se parezca a la retroalimentación que doy hoy con mi chatbot de ChatGPT.
+- **Prioridad:** Media · **Sprint:** 4 · **Contenido corregido el 22-sep:** el estilo base **ya se conoce** (son las instrucciones completas del GPT "RetroPlani Mate", `ChatBot (1).rar`): tono cercano y formativo, expresiones a usar ("Falta incorporar…", "Considera…") y a evitar ("Está mal…", "No sirve…"), y los 8 casos de respuesta modelo (solo objetivo, objetivo + un momento, faltan recursos, piden diseñar, etc.). Ya no depende de que el coordinador aporte los criterios desde cero: el coordinador solo **calibra** sobre esa base.
+- **Criterios:** (1) el coordinador puede editar el tono y las expresiones permitidas/evitadas sin tocar código; (2) puede revisar y ajustar los casos de respuesta modelo; (3) los cambios aplican a las conversaciones nuevas, no reescriben las ya guardadas.
 
 #### HU-20 · El jefe de carrera consulta los chats
 **Como** jefe de carrera, **quiero** consultar las conversaciones de los estudiantes con el chatbot, **para** llevar un registro y saber cómo ha aportado el chatbot.
@@ -224,20 +273,51 @@ Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada un
 **Como** estudiante, **quiero** subir mi informe final, mi diario de reflexión y mi proyecto de intervención, **para** que queden en mi recorrido.
 - **Prioridad:** Baja · **Sprint:** 5 o más
 
+#### HU-25 · Gestión de archivos de pautas formales
+**Como** coordinador, **quiero** subir y reemplazar los archivos oficiales de cada pauta de evaluación (PDF o Word firmados y timbrados), **para** tener siempre a mano el documento formal detrás de cada instrumento digitalizado.
+- **Prioridad:** Baja · **Sprint:** 2 o más · **Depende de** HU-06.
+- **Criterios:** (1) el coordinador sube un archivo por pauta y puede reemplazarlo; (2) queda un historial de versiones (quién y cuándo); (3) quien puede ver la pauta puede descargar su archivo oficial.
+
+#### HU-26 · Cambiar la contraseña
+**Como** cualquier usuario, **quiero** cambiar mi contraseña desde la aplicación, **para** no depender de que el coordinador me asigne una nueva.
+- **Prioridad:** Media · **Sprint:** 2 · **Viene de:** limitación conocida del Sprint 1 (no hay cambio ni recuperación de clave, ver `backend/PROGRESO.md`).
+- **Criterios:** (1) pide la clave actual y la nueva; (2) la nueva clave cumple el mismo formato mínimo que al registrar un usuario; (3) las sesiones con el token anterior siguen válidas hasta que venzan (no hay revocación en el Sprint 1).
+
+#### HU-27 · Configurar los parámetros del sistema
+**Como** coordinador, **quiero** ajustar parámetros como los días mínimos de anticipación de una planificación o el tamaño máximo de los archivos adjuntos, **para** no depender de un programador cada vez que la carrera cambia una regla operativa.
+- **Prioridad:** Baja · **Sprint:** 2 o más · **Viene de:** hoy `app.planificacion.dias-anticipacion-minimos` y los límites de tamaño de archivo están fijos en `application.properties`.
+- **Criterios:** (1) los parámetros se editan desde una pantalla, no desde el código; (2) el cambio aplica de inmediato a las peticiones siguientes; (3) solo el coordinador los edita.
+
+#### HU-28 · Exportar el historial del estudiante en PDF
+**Como** coordinador o profesor guía, **quiero** descargar el historial de un estudiante en PDF, **para** usarlo como evidencia de la acreditación (criterio 3) sin tener que hacer capturas de pantalla.
+- **Prioridad:** Media · **Sprint:** 2 o más · **Depende de** HU-05 y HU-08.
+- **Criterios:** (1) el PDF trae las mismas inscripciones, evaluaciones y planificaciones que la pantalla de historial; (2) respeta las mismas reglas de acceso que ver el historial; (3) incluye la fecha de generación.
+
+#### HU-29 · Cargar y mantener la base de conocimiento del chatbot
+**Como** coordinador, **quiero** cargar y actualizar los documentos que usará el chatbot para retroalimentar (rúbrica de planificación, ejemplos de acciones DUA, bases curriculares de Matemática, banco de comentarios de retroalimentación), **para** que responda con los mismos criterios que usa hoy el coordinador con su chatbot de ChatGPT.
+- **Prioridad:** Media · **Sprint:** 4 · **Depende de** HU-15 y HU-17 · **Viene de:** la propuesta "RetroPlani Mate" (`ChatBot (1).rar`), sección "Archivos que deberías cargar".
+- **Criterios:** (1) el coordinador sube o reemplaza cada documento de referencia; (2) el chatbot responde solo con la información de esos documentos cargados (Prototipo 1, sin navegación web, igual que la propuesta original); (3) queda registro de cuándo se actualizó cada archivo.
+
+#### HU-30 · Validar el chatbot con jueces expertos y estudiantes
+**Como** coordinador, **quiero** que el chatbot pase por una validación con jueces expertos (Escala de Usabilidad SUS y una rúbrica de 9 criterios pedagógicos) y luego con un grupo de estudiantes de 4º y 5º año, **para** asegurar su calidad pedagógica, didáctica e inclusiva antes de liberarlo a todos.
+- **Prioridad:** Baja · **Sprint:** 5 o más · **Depende de** HU-15 a HU-17 y HU-29 · **Viene de:** la propuesta "RetroPlani Mate" (`ChatBot (1).rar`), que ya planea esta validación entre septiembre y octubre de 2026 con dos grupos de Práctica Pedagógica y Práctica Profesional.
+- **Criterios (borrador):** (1) se puede marcar un grupo de usuarios como "validadores"; (2) se registran las respuestas de la Escala SUS y de la rúbrica de juicio experto; (3) el chatbot no se habilita para el resto de los estudiantes hasta cerrar esta etapa; a definir con el cliente si esto se hace dentro del sistema o fuera de él.
+
 ---
 
 ## 5. De los requerimientos del cliente a las historias
 
 | # | Lo que pidió el cliente | Historias que lo cubren |
 |---|---|---|
-| 1 | Un solo sistema para evaluar y monitorear las 6 prácticas, con el recorrido completo | HU-02, HU-05, HU-08, HU-14 |
-| 2 | Digitalizar la pauta de evaluación | HU-03, HU-06, HU-07, HU-09 |
+| 1 | Un solo sistema para evaluar y monitorear las 6 prácticas, con el recorrido completo | HU-02, HU-05, HU-08, HU-14, HU-23, HU-28 |
+| 2 | Digitalizar la pauta de evaluación | HU-03, HU-06, HU-07, HU-09, HU-22, HU-25 |
 | 3 | Nota de voz con opción de pasarla a texto | HU-11, HU-12 |
-| 4 | Flujo de planificación (estudiante, guía y profesor del curso; sin guía en el ciclo inicial) | HU-04, HU-19 |
-| 5 | Chatbot según el semestre y los ramos aprobados, solo en las prácticas finales | HU-15, HU-17, HU-20 (el contexto lo da HU-05) |
+| 4 | Flujo de planificación (estudiante, guía y profesor del curso; sin guía en el ciclo inicial) | HU-04, HU-19, HU-21 |
+| 5 | Chatbot según el semestre y los ramos aprobados, solo en las prácticas finales | HU-15, HU-17, HU-20, HU-29, HU-30 (el contexto lo da HU-05) |
 | 6 | Que los profesores guía accedan a todo lo del estudiante | HU-05, HU-16 (la privacidad del chat está por decidir, S-38) |
-| — | Roles y protección de datos (necesidad de todo el sistema) | HU-01 |
+| — | Roles y protección de datos (necesidad de todo el sistema) | HU-01, HU-26 |
 | — | Terminar con la doble digitación en Adecca | HU-03, HU-13 |
+| — | Otras necesidades identificadas por el equipo, no pedidas explícitamente | HU-18, HU-24, HU-27 |
 
 ## 6. Supuestos que afectan a este backlog
 
@@ -245,18 +325,26 @@ Hay que confirmarlos con el cliente o con la profesora. Los números son los mis
 
 | ID | Qué asumimos |
 |---|---|
-| S-01 | El Sprint 1 entrega solo **backend y base de datos** (API con Spring Boot y MySQL), sin pantallas. La demostración se hace con Swagger |
-| S-02 | El **chatbot** y la **nota de voz** quedan para sprints posteriores |
+| S-01 | El Sprint 1 entrega solo **backend y base de datos** (API con Spring Boot y MySQL), sin pantallas. La demostración se hace con Swagger. *(La Fase D, 21-sep, agregó igual un front-end web sin cambiar el alcance del Sprint 1.)* |
+| S-02 | El **chatbot** queda para sprints posteriores. *(La **nota de voz** se adelantó al Sprint 1 el 22-sep, Fase E: ver HU-11 y HU-12.)* |
 | S-05 | El **profesor del curso** que autoriza la clase es el académico UBB de la asignatura. Un estudiante contó que se manda "al profe del ramo y al colaborador" |
 | S-06 | La sesión dura 8 horas y usamos nuestro propio inicio de sesión (no el de la UBB) |
 | S-07 | La primera pauta que se digitaliza es la de observación de clase del colaborador (20 indicadores, escala 1 a 7) |
 | S-08 | En el Sprint 1 se calcula puntaje total y promedio; la conversión a nota oficial se define después |
-| S-09 | El formato de planificación son los cinco elementos que describió el cliente, hasta que nos entreguen el archivo oficial |
+| S-09 | **Resuelto el 22-sep** (ya no es un supuesto sobre qué campos pide la carrera): la carrera entregó `FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx`. Sigue como supuesto **S-45** que el Sprint 1 no migró todavía `planificacion` a esos campos reales |
 | S-10 | Si el profesor del curso no autoriza, la planificación vuelve al estudiante y el flujo empieza otra vez desde el guía. Un estudiante dijo "debes mejorar tu planificación", sin aclarar si vuelve primero al guía |
 | S-11 | Cada usuario tiene un solo rol y cada evaluación pertenece a una inscripción. Un estudiante confirmó que en pareja cada alumno tiene su propia pauta |
 | S-12 | El tutor y las 8 pautas de Práctica Profesional entran en el Sprint 2 |
 | S-14 | El semestre y las asignaturas aprobadas los ingresa el coordinador. Un estudiante contó que hoy se ven en la malla de la Intranet; importarlos de ahí queda como mejora futura |
 | S-16 | Aproximación es en grupos de 4 y sin planificaciones; Ambientes es en parejas y con planificaciones; ninguna va a un colegio, así que no tienen guía (corregido el 20-sep según un estudiante) |
 | S-34 a S-38 | Sin guía la planificación va directo al profesor del curso; se entrega con 3 días de anticipación; una planificación por clase; el flujo en secuencia (guía y luego curso) sigue en discusión; el jefe de carrera usa el rol coordinador. Detalle en `sprint-backlog.md`, sección 7 |
+| S-39 | Generación completa de 20 estudiantes de demostración (`db/seed.sql`): perfiles de avance, y a qué guía o profesor del curso se asigna cada uno, son datos inventados por el equipo, no vienen del cliente |
+| S-40 | La transcripción inicial de la nota de voz (HU-12) la genera el navegador del evaluador (Web Speech API de Chrome), sin costo y sin instalar nada: nadie ha confirmado con el cliente qué herramienta de transcripción usar |
+| S-41 | El documento formal de la evaluación (HU-22) se puede subir con la evaluación en `BORRADOR` o ya `FINALIZADA`: no se exige un estado particular, porque el cliente no lo especificó |
+| S-42 | La nota de voz (HU-11) se puede grabar con la evaluación en `BORRADOR` o ya `FINALIZADA`, porque es retroalimentación complementaria: no cambia el puntaje ni rompe la inmutabilidad de una evaluación finalizada |
+| S-43 | Tamaño y formatos de archivo son decisión propia, no confirmada por el cliente: documentos de planificaciones y evaluaciones hasta 10 MB (.docx/.pdf o .docx/.xlsx/.pdf); audio de la nota de voz hasta 25 MB (.webm/.ogg/.mp3/.wav/.m4a) |
+| S-44 | Se agregaron endpoints no pedidos explícitamente (listar documentos y el audio de la nota de voz en una ruta aparte): necesarios para que el front-end los muestre y reproduzca |
+| S-45 | El Sprint 1 sigue construido y probado con los cinco elementos de planificación de la entrevista (no los del formato oficial real, ver S-09): migrar `planificacion` es trabajo nuevo que queda para un sprint futuro, para no arriesgar una historia ya entregada y sus 146 pruebas |
+| S-46 | HU-15, HU-16, HU-17 y HU-20 se reescribieron con el contenido real de "RetroPlani Mate" (`ChatBot (1).rar`), pero **siguen sin implementarse**: es planificación de un sprint futuro, no código de esta fase |
 
 Los supuestos S-03, S-04, S-13 y S-15 tienen que ver con la organización del sprint y están en `sprint-backlog.md`. Los S-17 a S-33 son decisiones técnicas del backend y están en `backend/PROGRESO.md`.

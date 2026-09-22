@@ -10,6 +10,8 @@
 
 Las 5 historias ya están **construidas y probadas** desde el domingo 20: 32 endpoints, 146 pruebas automáticas y una demostración completa ensayada por HTTP contra MySQL. Eso quedó antes de que empezara el sprint, así que la semana se dedica a lo que falta: tablero, diagramas, presentación, retrospectiva y confirmar supuestos. El detalle técnico está en `backend/PROGRESO.md` y el guion de la demo en `docs/GUIA_DEFENSA.md`.
 
+**Ampliación del 22 de septiembre (Fase E):** se agregaron y probaron, sobre las mismas 5 historias, HU-11 y HU-12 (nota de voz con transcripción), HU-21 y HU-22 (documentos adjuntos en planificaciones y evaluaciones), HU-23 (buscar estudiante) y HU-24 (accesos rápidos del menú). Se amplió el criterio de aceptación de HU-03 para que también cubra la nota de voz (grabarla, escucharla y corregir su transcripción desde la pantalla de la evaluación). Ahora son 159 pruebas automáticas (`mvn clean package`: 146 + 13 nuevas) más las 23 pruebas negativas de `db/bd.ps1`, y la base de demostración creció a 20 estudiantes (S-39). Detalle en `backend/PROGRESO.md` y `RESUMEN.md` secciones 8, 9, 11, 12 y 14.
+
 ---
 
 ## 1. Historias del sprint
@@ -43,8 +45,7 @@ Los criterios de aceptación de cada historia están en `product-backlog.md`.
 
 | Historia | Motivo |
 |---|---|
-| HU-11 y HU-12 (nota de voz y texto) | Hay que elegir una herramienta de transcripción y manejar audio. Es mucho riesgo para 5 días (supuesto S-02) |
-| HU-15 a HU-17 (chatbot) | Falta definir el modelo de lenguaje y los criterios de retroalimentación del coordinador (supuesto S-02) |
+| HU-15 a HU-17, HU-20, HU-29, HU-30 (chatbot) | Falta definir el modelo de lenguaje; el estilo y los criterios de retroalimentación ya se conocen (RetroPlani Mate, `ChatBot (1).rar`) pero construir el chatbot es un riesgo mayor que 5 días (supuesto S-02) |
 | HU-06 y HU-07 (más pautas) | Cargamos la pauta de observación con un script; así se demuestra la digitalización sin construir todavía un editor de pautas |
 | HU-08 y HU-09 (informes y nota final) | Dependen de tener evaluaciones registradas y de que el cliente confirme las fórmulas de la nota |
 
@@ -123,5 +124,13 @@ Es la lista de todo el proyecto y los números se repiten en los otros documento
 | S-36 | Se planifican todas las clases con docencia directa (dato de un estudiante): una planificación por clase | HU-04 |
 | S-37 | **Sin resolver:** el cliente describió el flujo en secuencia (estudiante, guía, profesor del curso). Un estudiante dice que se manda al profesor del ramo y al colaborador "para que la aprueben o hagan sus observaciones", quizás a la vez. **Seguimos con la secuencia** hasta que alguien confirme | HU-04, To-Be |
 | S-38 | El **jefe de carrera pidió ver los chats** de los estudiantes (HU-20). Asumimos que usa el rol coordinador. Un estudiante dijo que le molestaría que su guía lea todo su chat: el acceso del guía (HU-16) queda por decidir | HU-16, HU-20 |
+| S-39 | Generación completa de 20 estudiantes de demostración: perfiles de avance y a qué guía o profesor del curso se asigna cada uno son datos inventados por el equipo, no del cliente | `db/seed.sql` |
+| S-40 | La transcripción inicial de la nota de voz la genera el navegador (Web Speech API de Chrome), sin costo y sin instalar nada: nadie ha confirmado con el cliente qué herramienta de transcripción usar | HU-12 |
+| S-41 | El documento formal de la evaluación se puede subir con la evaluación en BORRADOR o ya FINALIZADA: no se exige un estado particular | HU-22 |
+| S-42 | La nota de voz se puede grabar con la evaluación en BORRADOR o ya FINALIZADA, porque es retroalimentación complementaria y no cambia el puntaje | HU-11 |
+| S-43 | Tamaño y formatos de archivo son decisión propia: documentos hasta 10 MB (.docx/.pdf o .docx/.xlsx/.pdf); audio hasta 25 MB (.webm/.ogg/.mp3/.wav/.m4a) | HU-11, HU-21, HU-22 |
+| S-44 | Se agregaron endpoints no pedidos explícitamente (listar documentos y el audio de la nota de voz en una ruta aparte), necesarios para el front-end | HU-11, HU-21, HU-22 |
+| S-45 | El Sprint 1 sigue construido y probado con los cinco elementos de planificación de la entrevista, no con el formato oficial real del `.docx` (ver S-09): migrar `planificacion` queda para un sprint futuro | HU-04 |
+| S-46 | HU-15, HU-16, HU-17 y HU-20 se reescribieron con el contenido real de "RetroPlani Mate" pero siguen sin implementarse: es planificación, no código de esta fase | HU-15, HU-16, HU-17, HU-20 |
 
 Los supuestos S-17 a S-33 son decisiones técnicas que se tomaron al programar el backend y están en `backend/PROGRESO.md`. Las respuestas del estudiante de PEM (20-sep) están en `RESUMEN.md`, sección 13.
