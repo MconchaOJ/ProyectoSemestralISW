@@ -96,9 +96,64 @@ async function pedir(metodo, ruta, { cuerpo, params, publico = false } = {}) {
   return datos;
 }
 
+/** POST multipart/form-data (subir un archivo): sin Content-Type, el navegador pone el boundary solo. */
+async function subirFormData(ruta, formData) {
+  const cabeceras = {};
+  if (sesion.token()) cabeceras.Authorization = 'Bearer ' + sesion.token();
+  let respuesta;
+  try {
+    respuesta = await fetch(ruta, { method: 'POST', headers: cabeceras, body: formData });
+  } catch {
+    throw new ApiError(0, 'No se pudo conectar con el servidor. Revisa que la aplicación esté encendida.');
+  }
+  const texto = await respuesta.text();
+  let datos = null;
+  if (texto) { try { datos = JSON.parse(texto); } catch { datos = null; } }
+  if (!respuesta.ok) {
+    if (respuesta.status === 401) sesionExpirada();
+    throw new ApiError(respuesta.status, datos?.mensaje || respuesta.statusText || 'Error inesperado', datos?.errores || []);
+  }
+  return datos;
+}
+
+/** GET binario (documento adjunto o audio de nota de voz): fetch con el token, porque un <a href> o <audio src>
+ *  normal no puede llevar la cabecera Authorization. Devuelve el blob, su nombre (Content-Disposition) y tipo. */
+async function obtenerArchivo(ruta) {
+  const cabeceras = {};
+  if (sesion.token()) cabeceras.Authorization = 'Bearer ' + sesion.token();
+  let respuesta;
+  try {
+    respuesta = await fetch(ruta, { headers: cabeceras });
+  } catch {
+    throw new ApiError(0, 'No se pudo conectar con el servidor. Revisa que la aplicación esté encendida.');
+  }
+  if (!respuesta.ok) {
+    if (respuesta.status === 401) sesionExpirada();
+    let mensaje = respuesta.statusText || 'No se pudo obtener el archivo.';
+    try { const datos = JSON.parse(await respuesta.text()); if (datos?.mensaje) mensaje = datos.mensaje; } catch { /* sin cuerpo JSON */ }
+    throw new ApiError(respuesta.status, mensaje);
+  }
+  const disposicion = respuesta.headers.get('Content-Disposition') || '';
+  const coincide = /filename="?([^";]+)"?/i.exec(disposicion);
+  return { blob: await respuesta.blob(), nombre: coincide ? coincide[1] : 'archivo', tipo: respuesta.headers.get('Content-Type') };
+}
+
 export const api = {
   get: (ruta, params) => pedir('GET', ruta, { params }),
   post: (ruta, cuerpo) => pedir('POST', ruta, { cuerpo: cuerpo ?? {} }),
   put: (ruta, cuerpo) => pedir('PUT', ruta, { cuerpo: cuerpo ?? {} }),
   login: (email, password) => pedir('POST', '/api/auth/login', { cuerpo: { email, password }, publico: true }),
+  subir: (ruta, formData) => subirFormData(ruta, formData),
+  archivo: (ruta) => obtenerArchivo(ruta),
 };
+
+/** Dispara la descarga de un blob ya obtenido con api.archivo(...) (o crea un <audio>/<a> a partir de él). */
+export function descargarArchivo({ blob, nombre }) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nombre; a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}

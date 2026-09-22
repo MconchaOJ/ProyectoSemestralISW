@@ -4,6 +4,8 @@
 //   #/evaluaciones/{id}       detalle: el guía autor completa, guarda y finaliza; los demás roles solo lo ven
 import { api } from '../api.js';
 import { opcionesInscripcion } from '../datos.js';
+import { montarDocumentos } from '../documentos.js';
+import { montarNotaVoz } from '../notaVoz.js';
 import {
   alerta, alertaError, badge, cabecera, campo, cargando, cajaAlertaForm, confirmar, conCarga, decimal,
   enlazarFormulario, fecha, fechaHora, hora, html, icono, modalFormulario, promedio, toast, vacio,
@@ -211,6 +213,7 @@ async function detalle(cont, ctx, id) {
       <div id="avisos"></div>
       <div id="datos"></div>
       ${ev.estado === 'FINALIZADA' ? resultado() : ''}
+      <div id="nota-voz"></div>
       <div class="tarjeta pauta" id="pauta">
         <h2>Indicadores de la pauta <span class="contador" id="contador-titulo"></span></h2>
         ${!editable() && ev.estado === 'BORRADOR' ? alerta('info', 'Borrador: solo lo ven su autor y el coordinador. Al finalizar lo verán el estudiante y el profesor del curso.') : ''}
@@ -220,10 +223,18 @@ async function detalle(cont, ctx, id) {
             ${d.indicadores.map((ind) => indicador(ind))}
           </section>`)}
       </div>
-      ${editable() ? barraAcciones() : ''}`.toString();
+      ${editable() ? barraAcciones() : ''}
+      <div id="documentos"></div>`.toString();
     pintarDatos();
     enlazar();
     actualizarContador();
+    montarNotaVoz(cont.querySelector('#nota-voz'), { evaluacionId: ev.id, esEvaluador: esAutor() });
+    montarDocumentos(cont.querySelector('#documentos'), {
+      base: `/api/evaluaciones/${ev.id}/documentos`,
+      puedeSubir: esAutor(),
+      tiposAceptados: '.docx,.xlsx,.pdf',
+      ayuda: 'Word (.docx), Excel (.xlsx) o PDF, máximo 10 MB: la pauta y evaluación formal.',
+    });
   };
 
   function resultado() {

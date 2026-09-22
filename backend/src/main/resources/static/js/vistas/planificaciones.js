@@ -5,6 +5,7 @@
 //   #/planificaciones/{id}/editar    editar un borrador o una planificación con observaciones (estudiante)
 import { api } from '../api.js';
 import { opcionesInscripcion } from '../datos.js';
+import { montarDocumentos } from '../documentos.js';
 import {
   alerta, alertaError, alertaForm, badge, cabecera, cajaAlertaForm, campo, cargando, confirmar, conCarga, datosForm,
   fecha, fechaHora, html, icono, limpiarAlertaForm, nombreEstado, nombreRol, toast, validarForm, vacio,
@@ -228,6 +229,7 @@ async function detalle(cont, ctx, id) {
           ${bloque('4. Evaluación del aprendizaje', p.evaluacionAprendizaje)}
           ${bloque('5. Interacción de los participantes con los recursos', p.interaccionParticipantes)}
         </div>
+        <div id="documentos"></div>
       </div>
 
       <aside>
@@ -258,6 +260,10 @@ async function detalle(cont, ctx, id) {
     </div>`.toString();
 
   pintarAcciones(cont, ctx, p);
+  montarDocumentos(cont.querySelector('#documentos'), {
+    base: `/api/planificaciones/${p.id}/documentos`,
+    puedeSubir: ctx.rol === 'ESTUDIANTE',
+  });
 }
 
 function pintarAcciones(cont, ctx, p) {

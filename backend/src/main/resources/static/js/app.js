@@ -1,7 +1,7 @@
 // Estructura de la aplicación: cabecera, barra lateral por rol y enrutador por hash (#/inicio, #/planificaciones...).
 import { api, sesion } from './api.js';
 import { alertaError, cargando, html, icono, iniciales, nombreRol, pintarIconos, vacio } from './ui.js';
-import { PROXIMAMENTE, SPRINT1, itemActivo, rutaPermitida, visiblesPara } from './menu.js';
+import { ACCESOS, FUNCIONES, itemActivo, rutaPermitida, visiblesPara } from './menu.js';
 
 if (!sesion.vigente()) {
   sesion.limpiar();
@@ -43,53 +43,47 @@ $('btn-salir').addEventListener('click', () => {
 });
 
 // ---------- Barra lateral ----------
-function itemHtml(item, activo) {
-  if (item.sprint) { // historia futura: deshabilitada
-    return html`<div class="item deshabilitado" aria-disabled="true" title="${item.hu} · ${item.nombre} (Sprint ${item.sprint})">
-      <span class="item-ico">${icono(item.icono)}</span>
-      <span class="item-texto"><span class="item-nombre">${item.nombre}</span><span class="item-hu">${item.hu} <span class="etiqueta-prox">Próximamente</span></span></span>
-    </div>`;
-  }
-  return html`<a class="item ${activo ? 'activo' : ''}" href="#/${item.ruta}" data-ruta="${item.ruta}" title="${item.hu} · ${item.nombre}" ${activo ? html`aria-current="page"` : ''}>
+// Solo los nombres de las funciones a las que el usuario tiene acceso según su rol: un sistema real
+// terminado no menciona sprints, historias de usuario ni funciones futuras en su menú.
+function itemHtml(item) {
+  return html`<a class="item" href="#/${item.ruta}" data-ruta="${item.ruta}" title="${item.nombre}">
     <span class="item-ico">${icono(item.icono)}</span>
-    <span class="item-texto"><span class="item-nombre">${item.nombre}</span><span class="item-hu">${item.hu}</span></span>
+    <span class="item-texto"><span class="item-nombre">${item.nombre}</span></span>
+  </a>`;
+}
+
+/** Accesos rápidos (los mismos de Inicio) como enlaces directos del menú, para saltar de una función a otra. */
+function accesoHtml(acceso) {
+  return html`<a class="item item-acceso" href="${acceso.hash}" title="${acceso.titulo}">
+    <span class="item-ico">${icono(acceso.icono)}</span>
+    <span class="item-texto"><span class="item-nombre">${acceso.titulo}</span></span>
   </a>`;
 }
 
 function pintarMenu() {
-  const s1 = visiblesPara(SPRINT1, usuario.rol);
-  const prox = visiblesPara(PROXIMAMENTE, usuario.rol);
+  const funciones = visiblesPara(FUNCIONES, usuario.rol);
+  const accesos = ACCESOS[usuario.rol] ?? [];
   menu.innerHTML = html`
     <div class="grupo">
       <a class="item" href="#/inicio" data-ruta="inicio" title="Inicio">
         <span class="item-ico">${icono('home')}</span>
         <span class="item-texto"><span class="item-nombre">Inicio</span></span>
       </a>
+      ${funciones.map((i) => itemHtml(i))}
     </div>
-    <div class="grupo">
-      <button type="button" class="grupo-titulo" aria-expanded="true">Funciones del Sprint 1 ${icono('chevron', 'plegable')}</button>
-      <div class="grupo-items">${s1.map((i) => itemHtml(i, false))}</div>
-    </div>
-    ${prox.length ? html`<div class="grupo">
-      <button type="button" class="grupo-titulo" aria-expanded="true">Próximamente ${icono('chevron', 'plegable')}</button>
-      <div class="grupo-items">${prox.map((i) => itemHtml(i, false))}</div>
+    ${accesos.length ? html`<div class="grupo">
+      <div class="grupo-titulo">Accesos rápidos</div>
+      <div class="grupo-items">${accesos.map((a) => accesoHtml(a))}</div>
     </div>` : ''}`.toString();
 }
 
 menu.addEventListener('click', (ev) => {
-  const titulo = ev.target.closest('.grupo-titulo');
-  if (titulo) {
-    const grupo = titulo.parentElement;
-    grupo.classList.toggle('plegado');
-    titulo.setAttribute('aria-expanded', String(!grupo.classList.contains('plegado')));
-    return;
-  }
   if (ev.target.closest('a.item')) cerrarMovil();
 });
 
 function marcarActivo(seccion) {
   const activo = seccion === 'inicio' ? { ruta: 'inicio' } : itemActivo(seccion, usuario.rol);
-  menu.querySelectorAll('a.item').forEach((a) => {
+  menu.querySelectorAll('a.item[data-ruta]').forEach((a) => {
     const es = Boolean(activo) && a.dataset.ruta === activo.ruta;
     a.classList.toggle('activo', es);
     if (es) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');

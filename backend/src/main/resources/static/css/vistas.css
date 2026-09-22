@@ -9,7 +9,6 @@ h2 .icono { color: var(--azul-500); }
 .vista-cabecera h1 { margin: .15em 0 .1em; font-size: 1.45rem; }
 .vista-cabecera .subtitulo { margin: 0; max-width: 62ch; }
 .vista-acciones { display: flex; gap: .5rem; flex-wrap: wrap; }
-.chip-hu { display: inline-block; padding: .1em .65em; font-size: .72rem; font-weight: 800; letter-spacing: .08em; color: #7a5c0c; background: var(--dorado-suave); border: 1px solid #E7D391; border-radius: 999px; }
 
 /* ---------- Pestañas ---------- */
 .pestanas { display: flex; gap: .25rem; margin-bottom: 1rem; border-bottom: 2px solid var(--borde); overflow-x: auto; }
@@ -175,3 +174,26 @@ dl.cifras dd { margin: .1em 0 0; font-size: 1.3rem; font-weight: 800; color: var
 /* Separación de las tarjetas que van dentro de contenedores (#datos) */
 #datos { margin-bottom: 1rem; }
 #avisos:not(:empty) { margin-bottom: 1rem; }
+#documentos, #nota-voz { margin-top: 1rem; margin-bottom: 1rem; }
+#nota-voz:empty { display: none; }
+
+/* ================= DOCUMENTOS ADJUNTOS (Fase E, punto 3) ================= */
+.form-documento { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--borde); }
+.campo-archivo-linea { flex: 1; min-width: 220px; }
+.campo-archivo-linea input[type="file"] { width: 100%; padding: .4rem; border: 1px dashed var(--borde); border-radius: 10px; background: var(--fondo); font-size: .85rem; }
+.form-documento .ayuda-campo { flex-basis: 100%; margin: 0; font-size: .8rem; color: var(--texto-suave); }
+.form-documento .error-campo { flex-basis: 100%; font-size: .82rem; color: var(--error); font-weight: 600; }
+.documentos { list-style: none; margin: 0; padding: 0; }
+.documento { display: flex; align-items: center; gap: .8rem; padding: .6rem 0; border-top: 1px solid var(--borde); }
+.documento:first-child { border-top: 0; }
+.documento-ico { flex: none; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9px; color: var(--azul-500); background: #F1F6FD; }
+.documento-datos { flex: 1; min-width: 160px; display: flex; flex-direction: column; }
+.documento-datos small { color: var(--texto-suave); }
+
+/* ================= NOTA DE VOZ (Fase E, punto 4; HU-11 y HU-12) ================= */
+.nota-voz audio { display: block; width: 100%; max-width: 420px; margin: .5rem 0; }
+.nota-voz h3 { margin: 1rem 0 .4rem; font-size: .85rem; letter-spacing: .04em; text-transform: uppercase; color: var(--azul-700); }
+.grabador { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+.estado-grabacion, #estado-grabacion { font-weight: 600; color: var(--azul-700); }
+.transcripcion-lectura { white-space: pre-wrap; background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px; padding: .8rem; margin: 0; }
+.nota-voz textarea { width: 100%; }

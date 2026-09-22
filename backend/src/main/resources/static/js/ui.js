@@ -130,11 +130,12 @@ export const nota = (valor) => decimal(valor, 1);
 export const promedio = (valor) => decimal(valor, 2);
 
 // ---------- Cabecera de vista, cargando y vacíos ----------
+// El parámetro "hu" ya no se muestra (un sistema terminado no rotula sus pantallas con historias de usuario);
+// se acepta y se ignora para no tener que tocar cada vista que todavía lo pasa.
 export function cabecera({ titulo, subtitulo = '', hu = '', acciones = '' }) {
   return html`
     <header class="vista-cabecera">
       <div>
-        ${hu ? html`<span class="chip-hu">${hu}</span>` : ''}
         <h1>${titulo}</h1>
         ${subtitulo ? html`<p class="subtitulo">${subtitulo}</p>` : ''}
       </div>

@@ -2,8 +2,11 @@
 //   Estudiante: #/historial (el suyo)   ·   Guía, profesor del curso, coordinador: #/historial/{estudianteId}
 import { api } from '../api.js';
 import {
-  MODALIDADES, alerta, alertaError, badge, cabecera, fecha, html, icono, iniciales, nota, promedio, vacio,
+  MODALIDADES, alerta, alertaError, badge, cabecera, debounce, fecha, html, icono, iniciales, nota, promedio, vacio,
 } from '../ui.js';
+
+/** Sin distinguir mayúsculas ni tildes, para buscar como lo hace la base de datos. */
+const normalizar = (t) => String(t ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export async function render(cont, ctx) {
   const [id] = ctx.args;
@@ -29,23 +32,49 @@ async function selector(cont, ctx) {
   let estudiantes;
   if (ctx.rol === 'COORDINADOR') {
     const lista = await api.get('/api/estudiantes');
-    estudiantes = lista.map((e) => ({ id: e.id, nombre: `${e.nombre} ${e.apellidos}`, detalle: `${e.rut} · semestre ${e.semestreActual}` }));
+    estudiantes = lista.map((e) => ({
+      id: e.id, nombre: `${e.nombre} ${e.apellidos}`, detalle: `${e.rut} · semestre ${e.semestreActual}`,
+      busqueda: normalizar(`${e.nombre} ${e.apellidos} ${e.rut} ${e.email}`),
+    }));
   } else { // guía / profesor del curso: los estudiantes de sus inscripciones
     const inscripciones = await api.get('/api/inscripciones');
     const mapa = new Map();
-    inscripciones.forEach((i) => { if (!mapa.has(i.estudiante.id)) mapa.set(i.estudiante.id, { id: i.estudiante.id, nombre: i.estudiante.nombreCompleto, detalle: i.estudiante.rut }); });
+    inscripciones.forEach((i) => {
+      if (!mapa.has(i.estudiante.id)) {
+        mapa.set(i.estudiante.id, {
+          id: i.estudiante.id, nombre: i.estudiante.nombreCompleto, detalle: i.estudiante.rut,
+          busqueda: normalizar(`${i.estudiante.nombreCompleto} ${i.estudiante.rut}`),
+        });
+      }
+    });
     estudiantes = [...mapa.values()];
   }
 
+  const listaVacia = estudiantes.length === 0;
   cont.innerHTML = html`${encabezado}
-    ${estudiantes.length === 0
+    ${listaVacia
       ? vacio('Todavía no tienes estudiantes asignados', 'Cuando el coordinador te asigne una inscripción, podrás ver el historial del estudiante.', 'users')
-      : html`<div class="tarjetas-estudiantes">${estudiantes.map((e) => html`
+      : html`<label class="buscador">${icono('search')}<input type="search" id="buscar-estudiante"
+              placeholder="Buscar por nombre, RUT o correo…" aria-label="Buscar estudiante"></label>
+          <div class="tarjetas-estudiantes" id="lista-estudiantes"></div>`}`.toString();
+  if (listaVacia) return;
+
+  const buscador = cont.querySelector('#buscar-estudiante');
+  const lista = cont.querySelector('#lista-estudiantes');
+  const pintarLista = () => {
+    const filtro = normalizar(buscador.value.trim());
+    const visibles = filtro ? estudiantes.filter((e) => e.busqueda.includes(filtro)) : estudiantes;
+    lista.innerHTML = visibles.length === 0
+      ? vacio('Sin resultados', 'Prueba con otro nombre, RUT o correo.', 'search').toString()
+      : visibles.map((e) => html`
           <a class="tarjeta-estudiante" href="#/historial/${e.id}">
             <span class="avatar-grande">${iniciales({ nombre: e.nombre.split(' ')[0], apellidos: e.nombre.split(' ')[1] ?? '' })}</span>
             <span><strong>${e.nombre}</strong><small>${e.detalle}</small></span>
             ${icono('clock')}
-          </a>`)}</div>`}`.toString();
+          </a>`).join('');
+  };
+  buscador.addEventListener('input', debounce(pintarLista, 150));
+  pintarLista();
 }
 
 function pintar(cont, ctx, h, { propio }) {
