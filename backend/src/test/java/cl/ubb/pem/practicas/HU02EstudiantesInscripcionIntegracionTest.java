@@ -67,7 +67,7 @@ class HU02EstudiantesInscripcionIntegracionTest extends IntegracionBase {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].rut").value("44444444-4"));
         consultar("/api/estudiantes?buscar=33333333", COORDINADOR).andExpect(jsonPath("$[0].nombre").value("Valentina"));
-        consultar("/api/estudiantes", COORDINADOR).andExpect(jsonPath("$.length()").value(5));
+        consultar("/api/estudiantes", COORDINADOR).andExpect(jsonPath("$.length()").value(20));   // generación completa (S-39)
     }
 
     @Test
@@ -94,9 +94,10 @@ class HU02EstudiantesInscripcionIntegracionTest extends IntegracionBase {
 
     @Test
     void seListanLosProfesoresConFiltroPorRol() throws Exception {
-        consultar("/api/profesores?rol=PROFESOR_GUIA", COORDINADOR).andExpect(jsonPath("$.length()").value(2));
-        consultar("/api/profesores?rol=PROFESOR_CURSO", COORDINADOR).andExpect(jsonPath("$.length()").value(2));
-        consultar("/api/profesores", COORDINADOR).andExpect(jsonPath("$.length()").value(4));
+        // Generación completa (S-39): 6 guías (2 originales + 4 nuevos) y 4 profesores del curso (2 + 2 nuevos)
+        consultar("/api/profesores?rol=PROFESOR_GUIA", COORDINADOR).andExpect(jsonPath("$.length()").value(6));
+        consultar("/api/profesores?rol=PROFESOR_CURSO", COORDINADOR).andExpect(jsonPath("$.length()").value(4));
+        consultar("/api/profesores", COORDINADOR).andExpect(jsonPath("$.length()").value(10));
         consultar("/api/profesores?rol=ESTUDIANTE", COORDINADOR).andExpect(status().isBadRequest());
     }
 
@@ -191,14 +192,15 @@ class HU02EstudiantesInscripcionIntegracionTest extends IntegracionBase {
 
     @Test
     void cadaRolVeSoloSusInscripciones() throws Exception {
-        assertThat(cuerpo(consultar("/api/inscripciones", COORDINADOR))).hasSize(18);
+        assertThat(cuerpo(consultar("/api/inscripciones", COORDINADOR))).hasSize(55);   // generación completa (S-39)
         // Camila tiene 3 inscripciones (ids 1, 2 y 3)
         assertThat(ids(cuerpo(consultar("/api/inscripciones", CAMILA)))).containsExactlyInAnyOrder(1L, 2L, 3L);
-        // el guía 2 (Marcos) figura en las inscripciones 3, 9, 10 y 14
-        assertThat(ids(cuerpo(consultar("/api/inscripciones", GUIA1)))).containsExactlyInAnyOrder(3L, 9L, 10L, 14L);
-        // filtro por periodo dentro del alcance
-        consultar("/api/inscripciones?periodo=2026-2", GUIA1).andExpect(jsonPath("$.length()").value(1));
-        consultar("/api/inscripciones?asignaturaId=3&periodo=2026-2", COORDINADOR).andExpect(jsonPath("$.length()").value(2));
+        // el guía 2 (Marcos) figura en las inscripciones 3, 9, 10 y 14, más 34 y 48 de la generación completa
+        assertThat(ids(cuerpo(consultar("/api/inscripciones", GUIA1)))).containsExactlyInAnyOrder(3L, 9L, 10L, 14L, 34L, 48L);
+        // filtro por periodo dentro del alcance (3 y 34 son de Marcos en 2026-2)
+        consultar("/api/inscripciones?periodo=2026-2", GUIA1).andExpect(jsonPath("$.length()").value(2));
+        // Trabajo Colaborativo 2026-2: las originales (3 y 6) más 34, 37 y 40 de la generación completa
+        consultar("/api/inscripciones?asignaturaId=3&periodo=2026-2", COORDINADOR).andExpect(jsonPath("$.length()").value(5));
     }
 
     @Test

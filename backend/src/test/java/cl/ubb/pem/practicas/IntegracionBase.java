@@ -11,9 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,6 +79,20 @@ public abstract class IntegracionBase {
 
     private MockHttpServletRequestBuilder autenticar(MockHttpServletRequestBuilder req, String email) {
         return email == null ? req : req.header("Authorization", "Bearer " + token(email));
+    }
+
+    /** POST multipart/form-data (subir un archivo), ya autenticado: agrega .file(...) y .param(...) al resultado. */
+    protected MockMultipartHttpServletRequestBuilder multipart(String url, String email) {
+        MockMultipartHttpServletRequestBuilder req = MockMvcRequestBuilders.multipart(url);
+        if (email != null) {
+            req.header("Authorization", "Bearer " + token(email));
+        }
+        return req;
+    }
+
+    /** Un archivo de prueba pequeño con el nombre, tipo MIME y contenido dados. */
+    protected static MockMultipartFile archivo(String parametro, String nombre, String tipoMime, byte[] contenido) {
+        return new MockMultipartFile(parametro, nombre, tipoMime, contenido);
     }
 
     protected JsonNode cuerpo(ResultActions r) throws Exception {

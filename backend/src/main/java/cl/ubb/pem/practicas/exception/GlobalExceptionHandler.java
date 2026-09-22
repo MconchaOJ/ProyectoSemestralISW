@@ -17,6 +17,8 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /** Convierte cualquier error en un JSON claro y en español, con el código HTTP correcto. */
@@ -82,6 +84,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     ResponseEntity<ApiError> faltaParametro(MissingServletRequestParameterException ex, HttpServletRequest req) {
         return responder(HttpStatus.BAD_REQUEST, "Falta el parámetro obligatorio '" + ex.getParameterName() + "'.", req);
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    ResponseEntity<ApiError> faltaParte(MissingServletRequestPartException ex, HttpServletRequest req) {
+        return responder(HttpStatus.BAD_REQUEST, "Falta el archivo obligatorio '" + ex.getRequestPartName() + "'.", req);
+    }
+
+    /** Un archivo (o la petición completa) supera spring.servlet.multipart.max-file-size / max-request-size. */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ApiError> archivoDemasiadoGrande(MaxUploadSizeExceededException ex, HttpServletRequest req) {
+        return responder(HttpStatus.BAD_REQUEST, "El archivo supera el tamaño máximo permitido por el servidor.", req);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
