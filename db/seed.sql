@@ -212,26 +212,26 @@ INSERT INTO inscripcion (id, estudiante_id, asignatura_id, periodo, profesor_gui
     (31, 14, 2, '2026-1', NULL, 4, 'EN_CURSO', NULL),
     (32, 15, 1, '2024-2', NULL, 5, 'APROBADA', 5.2),
     (33, 15, 2, '2025-1', NULL, 15, 'APROBADA', 5.5),
-    (34, 15, 3, '2026-2', 2, 16, 'EN_CURSO', NULL),
+    (34, 15, 3, '2026-2', 11, 16, 'EN_CURSO', NULL),
     (35, 16, 1, '2024-2', NULL, 4, 'APROBADA', 5.5),
     (36, 16, 2, '2025-1', NULL, 5, 'APROBADA', 5.8),
-    (37, 16, 3, '2026-2', 3, 15, 'EN_CURSO', NULL),
+    (37, 16, 3, '2026-2', 12, 15, 'EN_CURSO', NULL),
     (38, 17, 1, '2024-2', NULL, 16, 'APROBADA', 5.8),
     (39, 17, 2, '2025-1', NULL, 4, 'APROBADA', 6.1),
-    (40, 17, 3, '2026-2', 11, 5, 'EN_CURSO', NULL),
+    (40, 17, 3, '2026-2', 13, 5, 'EN_CURSO', NULL),
     (41, 18, 1, '2023-2', NULL, 15, 'APROBADA', 5.4),
     (42, 18, 2, '2024-1', NULL, 16, 'APROBADA', 5.7),
-    (43, 18, 3, '2024-2', 12, 4, 'APROBADA', 5.9),
+    (43, 18, 3, '2024-2', 14, 4, 'APROBADA', 5.9),
     (44, 18, 4, '2025-1', 13, 5, 'APROBADA', 6.0),
     (45, 18, 5, '2025-2', 14, 15, 'EN_CURSO', NULL),
     (46, 19, 1, '2023-2', NULL, 16, 'APROBADA', 5.7),
     (47, 19, 2, '2024-1', NULL, 4, 'APROBADA', 6.0),
     (48, 19, 3, '2024-2', 2, 5, 'APROBADA', 6.1),
-    (49, 19, 4, '2025-1', 3, 15, 'APROBADA', 6.2),
+    (49, 19, 4, '2025-1', 12, 15, 'APROBADA', 6.2),
     (50, 19, 5, '2025-2', 11, 16, 'EN_CURSO', NULL),
     (51, 20, 1, '2023-2', NULL, 4, 'APROBADA', 6.0),
     (52, 20, 2, '2024-1', NULL, 5, 'APROBADA', 6.3),
-    (53, 20, 3, '2024-2', 12, 15, 'APROBADA', 6.3),
+    (53, 20, 3, '2024-2', 3, 15, 'APROBADA', 6.3),
     (54, 20, 4, '2025-1', 13, 16, 'APROBADA', 6.4),
     (55, 20, 5, '2025-2', 14, 4, 'EN_CURSO', NULL);
 
@@ -330,6 +330,110 @@ INSERT INTO revision_planificacion (id, planificacion_id, revisor_id, etapa, dec
     (11, 8, 3, 'GUIA',  'APROBADA', 'Ajustes incorporados.',                                                                                    '2026-09-16 10:00:00'),
     (12, 8, 5, 'CURSO', 'APROBADA', 'Autorizada.',                                                                                              '2026-09-18 12:00:00');
 
+-- =============================================================================
+-- PARTE 2C - ACTIVIDAD DE LA GENERACIÓN COMPLETA (2026-09-22, Fase F)
+-- Planificaciones (10 a 19) para que todos los estudiantes con una asignatura
+-- que pide planificación tengan al menos una, y revisiones para que los 4
+-- guías y los 2 profesores del curso nuevos (Fase E) no queden en cero.
+--   10 BORRADOR (Catalina, sin guía)                14 AUTORIZADA (Martina, guía 11)
+--   11 EN_AUTORIZACION (Tomás, sin guía)             15 CON_OBSERVACIONES (Cristóbal, guía 12)
+--   12 AUTORIZADA (Josefa, sin guía)                 16 AUTORIZADA (Isidora, guía 13)
+--   13 CON_OBSERVACIONES (Vicente, sin guía)         17 CON_OBSERVACIONES (Joaquín, guía 14)
+--                                                     18 EN_AUTORIZACION (Trinidad, guía 2)
+--                                                     19 AUTORIZADA (Agustín, guía 3)
+-- =============================================================================
+INSERT INTO planificacion
+    (id, inscripcion_id, titulo, fecha_clase, objetivo, recursos, tiempos, duracion_minutos,
+     evaluacion_aprendizaje, interaccion_participantes, estado, fecha_creacion, fecha_actualizacion) VALUES
+    (10, 25, 'Simulación: presentar una situación problema', NULL,
+        NULL, NULL, NULL, NULL, NULL, NULL,
+        'BORRADOR', '2026-04-02 09:00:00', '2026-04-02 09:00:00'),
+    (11, 27, 'Simulación de una clase de fracciones equivalentes', '2026-04-20',
+        'Simular la enseñanza de fracciones equivalentes ante el curso, con participación activa de los compañeros.',
+        'Tarjetas con fracciones, pizarra y proyector.',
+        'Inicio 10 min; desarrollo 60 min; cierre 20 min.',
+        90,
+        'Coevaluación entre pares con una pauta breve.',
+        'Los compañeros de curso simulan ser estudiantes de enseñanza media y participan de la actividad.',
+        'EN_AUTORIZACION', '2026-04-10 10:00:00', '2026-04-12 09:00:00'),
+    (12, 29, 'Simulación: resolución de problemas cotidianos', '2026-04-22',
+        'Simular una clase de resolución de problemas cotidianos con operaciones combinadas.',
+        'Guía de problemas impresa y pizarra.',
+        'Inicio 10 min; desarrollo 60 min; cierre 20 min.',
+        90,
+        'Ticket de salida con un problema nuevo.',
+        'Los compañeros de curso participan como estudiantes; se turnan para explicar su estrategia.',
+        'AUTORIZADA', '2026-04-08 11:00:00', '2026-04-15 10:00:00'),
+    (13, 31, 'Simulación de una clase de geometría básica', '2026-04-25',
+        'Simular el reconocimiento de figuras geométricas y sus propiedades básicas.',
+        'Figuras de cartulina y pizarra.',
+        'Inicio 10 min; desarrollo 55 min; cierre 25 min.',
+        90,
+        'Preguntas orales de cierre.',
+        'Los compañeros de curso arman las figuras en parejas.',
+        'CON_OBSERVACIONES', '2026-04-09 12:00:00', '2026-04-14 09:00:00'),
+    (14, 34, 'Ángulos y sus tipos', '2026-09-25',
+        'Clasificar ángulos según su medida en situaciones del entorno.',
+        'Transportador, guía de ejercicios y pizarra.',
+        'Inicio 10 min; desarrollo 60 min; cierre 20 min.',
+        90,
+        'Ticket de salida con tres ángulos por clasificar.',
+        'Los estudiantes miden ángulos en parejas con el transportador y comparan resultados con otra pareja.',
+        'AUTORIZADA', '2026-09-10 16:00:00', '2026-09-17 11:00:00'),
+    (15, 37, 'Perímetro y área de figuras planas', '2026-09-26',
+        'Calcular el perímetro y el área de figuras planas en contextos cotidianos.',
+        'Guía de problemas, regla y pizarra.',
+        'Inicio 10 min; desarrollo 60 min; cierre 20 min.',
+        90,
+        'Problema de cierre con una figura compuesta.',
+        'Los estudiantes miden objetos del aula en parejas y calculan su área y perímetro.',
+        'CON_OBSERVACIONES', '2026-09-11 16:30:00', '2026-09-18 09:00:00'),
+    (16, 40, 'Porcentajes en la vida cotidiana', '2026-09-27',
+        'Calcular porcentajes en situaciones de la vida cotidiana (descuentos, aumentos).',
+        'Boletas y ofertas impresas, pizarra y calculadora.',
+        'Inicio 10 min; desarrollo 60 min; cierre 20 min.',
+        90,
+        'Ticket de salida con un cálculo de descuento.',
+        'Los estudiantes calculan descuentos sobre boletas reales en parejas y comparan sus resultados.',
+        'AUTORIZADA', '2026-09-09 15:00:00', '2026-09-17 10:00:00'),
+    (17, 43, 'Ecuaciones con paréntesis', '2024-10-18',
+        'Resolver ecuaciones lineales que incluyen paréntesis, aplicando la propiedad distributiva.',
+        'Guía de ejercicios y pizarra.',
+        'Inicio 10 min; desarrollo 60 min; cierre 20 min.',
+        90,
+        'Ticket de salida con una ecuación con paréntesis.',
+        'Los estudiantes resuelven en parejas y validan su respuesta sustituyendo el valor encontrado.',
+        'CON_OBSERVACIONES', '2024-10-08 16:00:00', '2024-10-14 09:00:00'),
+    (18, 48, 'Potencias y raíces', '2024-10-20',
+        'Relacionar potencias y raíces cuadradas en ejercicios contextualizados.',
+        'Guía de ejercicios, calculadora y pizarra.',
+        'Inicio 10 min; desarrollo 60 min; cierre 20 min.',
+        90,
+        'Pregunta de cierre sobre la relación entre una potencia y su raíz.',
+        'Los estudiantes resuelven en parejas y explican al curso cómo comprobaron su resultado.',
+        'EN_AUTORIZACION', '2024-10-09 17:00:00', '2024-10-15 08:00:00'),
+    (19, 53, 'Funciones afines', '2024-10-22',
+        'Reconocer la función afín y su gráfica a partir de situaciones de variación constante.',
+        'Papel cuadriculado, regla y proyector.',
+        'Inicio 10 min; desarrollo 60 min; cierre 20 min.',
+        90,
+        'Informe breve con la gráfica de una función afín propuesta por el estudiante.',
+        'Los estudiantes grafican en parejas y contrastan la pendiente y el coeficiente de posición con otra pareja.',
+        'AUTORIZADA', '2024-10-07 18:00:00', '2024-10-16 10:00:00');
+
+INSERT INTO revision_planificacion (id, planificacion_id, revisor_id, etapa, decision, comentario, fecha) VALUES
+    (13, 12, 15, 'CURSO', 'APROBADA', 'Autorizada.',                                                                                             '2026-04-15 10:00:00'),
+    (14, 13, 4,  'CURSO', 'OBSERVADA','Precisar cómo se verificará el reconocimiento de las propiedades de cada figura en el cierre.',            '2026-04-14 09:00:00'),
+    (15, 14, 11, 'GUIA',  'APROBADA', 'Buena secuencia y uso del transportador.',                                                                '2026-09-14 11:00:00'),
+    (16, 14, 16, 'CURSO', 'APROBADA', 'Autorizada.',                                                                                             '2026-09-17 11:00:00'),
+    (17, 15, 12, 'GUIA',  'OBSERVADA','Agregar una actividad que use los errores frecuentes al calcular el área de figuras compuestas.',          '2026-09-18 09:00:00'),
+    (18, 16, 13, 'GUIA',  'APROBADA', 'Contextos claros y pertinentes.',                                                                         '2026-09-13 10:00:00'),
+    (19, 16, 5,  'CURSO', 'APROBADA', 'Autorizada.',                                                                                             '2026-09-17 10:00:00'),
+    (20, 17, 14, 'GUIA',  'OBSERVADA','Explicitar la propiedad distributiva en el desarrollo, no solo en el ticket de salida.',                   '2024-10-14 09:00:00'),
+    (21, 18, 2,  'GUIA',  'APROBADA', 'Buena relación entre potencia y raíz en los ejemplos.',                                                    '2024-10-13 09:00:00'),
+    (22, 19, 3,  'GUIA',  'APROBADA', 'Gráficos claros y bien contextualizados.',                                                                 '2024-10-12 09:00:00'),
+    (23, 19, 15, 'CURSO', 'APROBADA', 'Autorizada.',                                                                                             '2024-10-16 10:00:00');
+
 -- -----------------------------------------------------------------------------
 -- Evaluaciones históricas con la pauta digital (Trabajo Colaborativo).
 -- Se insertan como BORRADOR, se cargan los 20 puntajes (el trigger valida cada
@@ -379,5 +483,97 @@ UPDATE evaluacion e
        e.promedio           = r.prom,
        e.fecha_finalizacion = TIMESTAMP(e.fecha_clase, '13:00:00')
  WHERE e.id IN (1, 2, 3);
+
+-- -----------------------------------------------------------------------------
+-- Evaluaciones de la generación completa (Fase F, 2026-09-22): para que todos
+-- los estudiantes inscritos en Trabajo Colaborativo tengan al menos una, y
+-- todos los guías (2, 3, 11 a 14) hayan evaluado al menos una vez.
+--   4 Camila (BORRADOR, avance parcial)     8 Isidora (FINALIZADA, guía 13)
+--   5 Diego (FINALIZADA, guía 3)            9 Joaquín (FINALIZADA, guía 14)
+--   6 Martina (BORRADOR, avance parcial)   10 Trinidad (FINALIZADA, guía 2)
+--   7 Cristóbal (FINALIZADA, guía 12)      11 Agustín (FINALIZADA, guía 3)
+-- -----------------------------------------------------------------------------
+INSERT INTO evaluacion
+    (id, inscripcion_id, pauta_id, evaluador_id, planificacion_id, establecimiento, curso, fecha_clase,
+     hora_inicio, hora_termino, objetivo_clase, observaciones_generales, estado) VALUES
+    (4, 3, 1, 2, 3, 'Liceo Bicentenario Ejemplo', '1° Medio B', '2026-09-23',
+        '10:15:00', '11:45:00',
+        'Plantear y resolver ecuaciones de primer grado a partir de situaciones cotidianas.',
+        NULL, 'BORRADOR'),
+    (5, 6, 1, 3, NULL, 'Colegio San Andrés', '2° Medio B', '2026-09-24',
+        '09:00:00', '10:30:00',
+        'Aplicar el teorema de Pitágoras para calcular longitudes en triángulos rectángulos.',
+        'Fortalezas: buen uso del geoplano. A mejorar: precisar la síntesis final.', 'BORRADOR'),
+    (6, 34, 1, 11, 14, 'Colegio Los Aromos', '1° Medio A', '2026-09-25',
+        '08:30:00', '10:00:00',
+        'Clasificar ángulos según su medida en situaciones del entorno.',
+        NULL, 'BORRADOR'),
+    (7, 37, 1, 12, NULL, 'Colegio Los Aromos', '1° Medio C', '2026-09-26',
+        '10:15:00', '11:45:00',
+        'Calcular el perímetro y el área de figuras planas en contextos cotidianos.',
+        'Fortalezas: contextos pertinentes y uso de material concreto. A mejorar: cerrar verificando el objetivo.', 'BORRADOR'),
+    (8, 40, 1, 13, 16, 'Liceo Bicentenario Ejemplo', '2° Medio A', '2026-09-27',
+        '09:00:00', '10:30:00',
+        'Calcular porcentajes en situaciones de la vida cotidiana (descuentos, aumentos).',
+        'Fortalezas: uso de boletas reales y buen manejo del contenido. A mejorar: dar más tiempo al cierre.', 'BORRADOR'),
+    (9, 43, 1, 14, NULL, 'Colegio San Andrés', '3° Medio A', '2024-10-19',
+        '11:00:00', '12:30:00',
+        'Resolver ecuaciones lineales que incluyen paréntesis, aplicando la propiedad distributiva.',
+        'Fortalezas: buen manejo de la propiedad distributiva. A mejorar: promover más el trabajo colaborativo.', 'BORRADOR'),
+    (10, 48, 1, 2, NULL, 'Colegio Ejemplo Las Acacias', '2° Medio B', '2024-10-21',
+        '08:30:00', '10:00:00',
+        'Relacionar potencias y raíces cuadradas en ejercicios contextualizados.',
+        'Fortalezas: buen clima de aula y ejemplos claros. A mejorar: precisar la evaluación del cierre.', 'BORRADOR'),
+    (11, 53, 1, 3, 19, 'Liceo Bicentenario Ejemplo', '4° Medio A', '2024-10-23',
+        '10:15:00', '11:45:00',
+        'Reconocer la función afín y su gráfica a partir de situaciones de variación constante.',
+        'Fortalezas: gráficos correctos y buena síntesis. A mejorar: profundizar el análisis de la pendiente.', 'BORRADOR');
+
+-- Respuestas de las evaluaciones FINALIZADAS (20 indicadores cada una)
+INSERT INTO respuesta_indicador (evaluacion_id, indicador_id, puntaje)
+SELECT 5, i.id, ELT(i.numero, 5,5,4,4,4,4,5,5,4,4,5,4,5,5,5,5,6,5,5,5)
+  FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id WHERE d.pauta_id = 1;
+
+INSERT INTO respuesta_indicador (evaluacion_id, indicador_id, puntaje)
+SELECT 7, i.id, ELT(i.numero, 4,4,4,5,4,3,4,5,4,4,4,4,5,4,4,4,5,4,4,4)
+  FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id WHERE d.pauta_id = 1;
+
+INSERT INTO respuesta_indicador (evaluacion_id, indicador_id, puntaje)
+SELECT 8, i.id, ELT(i.numero, 6,6,5,5,5,5,6,6,5,5,6,5,6,6,6,6,7,6,6,6)
+  FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id WHERE d.pauta_id = 1;
+
+INSERT INTO respuesta_indicador (evaluacion_id, indicador_id, puntaje)
+SELECT 9, i.id, ELT(i.numero, 4,4,3,4,3,3,4,4,3,3,4,4,4,4,4,4,5,4,4,4)
+  FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id WHERE d.pauta_id = 1;
+
+INSERT INTO respuesta_indicador (evaluacion_id, indicador_id, puntaje)
+SELECT 10, i.id, ELT(i.numero, 5,5,5,4,4,4,5,5,4,4,5,5,5,5,5,5,6,5,5,5)
+  FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id WHERE d.pauta_id = 1;
+
+INSERT INTO respuesta_indicador (evaluacion_id, indicador_id, puntaje)
+SELECT 11, i.id, ELT(i.numero, 6,5,5,5,5,5,6,6,5,5,6,5,6,6,6,6,7,6,6,6)
+  FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id WHERE d.pauta_id = 1;
+
+-- Respuestas parciales de las evaluaciones que quedan en BORRADOR (avance real, sin finalizar)
+INSERT INTO respuesta_indicador (evaluacion_id, indicador_id, puntaje)
+SELECT 4, i.id, ELT(i.numero, 5,5,4,4,4,3)
+  FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id WHERE d.pauta_id = 1 AND i.numero <= 6;
+
+INSERT INTO respuesta_indicador (evaluacion_id, indicador_id, puntaje)
+SELECT 6, i.id, ELT(i.numero, 4,4,4,5,4,4)
+  FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id WHERE d.pauta_id = 1 AND i.numero <= 6;
+
+-- Finalizar: el puntaje total y el promedio se calculan y se guardan (S-08)
+UPDATE evaluacion e
+  JOIN (SELECT evaluacion_id,
+               SUM(puntaje)           AS total,
+               ROUND(AVG(puntaje), 2) AS prom
+          FROM respuesta_indicador
+         GROUP BY evaluacion_id) r ON r.evaluacion_id = e.id
+   SET e.estado             = 'FINALIZADA',
+       e.puntaje_total      = r.total,
+       e.promedio           = r.prom,
+       e.fecha_finalizacion = TIMESTAMP(e.fecha_clase, '13:00:00')
+ WHERE e.id IN (5, 7, 8, 9, 10, 11);
 
 -- NOTA_VOZ y MENSAJE_CHATBOT quedan vacías: su API llega en sprints posteriores.

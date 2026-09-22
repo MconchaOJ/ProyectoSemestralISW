@@ -1,7 +1,10 @@
-# PROGRESO — Fase C (backend Spring Boot) y Fase E (documentos, nota de voz, frontend)
+# PROGRESO — Fase C (backend Spring Boot), Fase E (documentos, nota de voz, frontend) y Fase F (datos de demo)
 
 > Se actualiza después de cada historia. Si retomas el trabajo, lee esto primero.
-> **Última actualización: 2026-09-22 — Fase E: documentos adjuntos, nota de voz con transcripción, menú limpio, accesos rápidos y búsqueda de estudiantes, sobre las 5 historias del Sprint 1 (terminadas el 2026-09-20) y el front-end web (Fase D, 2026-09-21).**
+> **Última actualización: 2026-09-22 — Fase F: todos los estudiantes y profesores guía/curso de la base de demostración
+> tienen actividad real (evaluaciones y planificaciones), no solo los 4-5 de siempre. Sin migración: solo `db/seed.sql`
+> y `db/verificacion.sql`. Sobre la Fase E (documentos, nota de voz, menú limpio, búsqueda), el Sprint 1 (2026-09-20)
+> y el front-end web (Fase D, 2026-09-21).**
 
 ## Estado
 
@@ -23,6 +26,8 @@
 **Cambios del 2026-09-20 por las respuestas de un estudiante** (ver `RESUMEN.md` §13): modalidad `GRUPO`, `requiere_planificacion`, sin guía en el ciclo inicial, planificación sin guía directo al profesor del curso, 3 días de anticipación. Detalle en S-34 a S-38 y en "Migraciones".
 
 **Cambios del 2026-09-22 (Fase E):** documentos adjuntos en planificaciones y evaluaciones (HU-21, HU-22), nota de voz con transcripción (HU-11, HU-12), 20 estudiantes de demostración (antes 5), menú lateral sin sprints/HU/"Próximamente", accesos rápidos dentro del menú y búsqueda de estudiantes por nombre/RUT/correo (HU-23, HU-24). Detalle en la sección "Fase E" más abajo y en S-39 a S-46.
+
+**Cambios del 2026-09-22 (Fase F, sin migración):** `db/seed.sql` ahora da actividad real a los ~20 estudiantes y a los 6 profesores guía y 4 profesores del curso: 10 planificaciones más (19 en total, los 5 estados representados) y 8 evaluaciones más (11 en total, 2 en BORRADOR). Se reasignó el guía de 6 inscripciones de Trabajo Colaborativo de la generación completa para que los 4 guías nuevos (Fase E) también evaluaran. `db/verificacion.sql` suma un bloque que confirma que nadie activo queda en cero registros relacionados. Detalle en la sección "Fase F" más abajo.
 
 **Siguiente:** nada pendiente de lo que se pidió en esta fase. Ver "Pendientes y mejoras" abajo. Antes de la defensa: ejecutar `.\db\bd.ps1` (datos limpios) y arrancar el jar.
 
@@ -149,6 +154,41 @@ Interfaz en HTML + CSS + JavaScript puro (sin frameworks, sin npm, sin CDN) en `
 | S-45 | `planificacion` sigue con los cinco elementos de la entrevista (no los del formato oficial real del `.docx`, ver S-09 en `product-backlog.md`): migrar la entidad, los DTO, el formulario y las 146 pruebas existentes queda para un sprint futuro | HU-04 |
 | S-46 | HU-15, HU-16, HU-17 y HU-20 se reescribieron en `product-backlog.md` con el contenido real de "RetroPlani Mate" (`ChatBot (1).rar`), pero siguen sin implementarse en este backend | HU-15, HU-16, HU-17, HU-20 |
 
+## Fase F: datos de demostración con actividad real (2026-09-22, sin migración)
+
+Motivo: la generación completa de la Fase E (20 estudiantes) concentraba casi toda la actividad (evaluaciones,
+planificaciones) en 4-5 estudiantes y en un solo guía (Marcos Bravo). Se amplió `db/seed.sql` para que la base se
+vea como un sistema realmente en uso, sin tocar el esquema.
+
+- **Reasignación de guías (6 inscripciones de Trabajo Colaborativo de la generación completa):** las inscripciones
+  34, 37, 40 y 43 pasaron a los 4 guías nuevos de la Fase E (11, 12, 13 y 14, uno cada una) para que también
+  pudieran evaluar (solo hay pauta digital para Trabajo Colaborativo, S-07); la 49 pasó de guía 3 a 12 y la 53 de
+  guía 12 a 3, para que el guía 12 (Carolina) tuviera 2 estudiantes en vez de 1. Los ids de las inscripciones y sus
+  demás columnas no cambiaron, solo `profesor_guia_id`.
+- **10 planificaciones nuevas (ids 10 a 19):** 4 en Ambientes de Aprendizaje (sin guía, decide directo el profesor
+  del curso) y 6 en Trabajo Colaborativo (con guía). Reparten los 5 estados: 2 BORRADOR, 2 EN_AUTORIZACION,
+  4 CON_OBSERVACIONES, 8 AUTORIZADA en total (sumando las 9 del Sprint 1).
+- **11 revisiones nuevas (ids 13 a 23):** decisiones de guía y de curso sobre esas planificaciones, calculadas para
+  que los 4 guías nuevos y los 2 profesores del curso nuevos (Fase E) queden con al menos una revisión cada uno.
+- **8 evaluaciones nuevas (ids 4 a 11):** una por cada estudiante de Trabajo Colaborativo que todavía no tenía
+  ninguna (incluidas Camila y Diego, que ya tenían planificaciones pero ninguna evaluación). 6 se finalizan con los
+  20 indicadores (mismo patrón `ELT` que las 3 del Sprint 1: se insertan en BORRADOR y una única `UPDATE` las pasa a
+  FINALIZADA); 2 quedan en BORRADOR con un avance parcial (6 de 20 indicadores), para mostrar también ese estado.
+- **`db/verificacion.sql`, bloque 18:** confirma en una sola consulta que ningún estudiante en Trabajo Colaborativo
+  se queda sin evaluación, ningún estudiante en una asignatura que pide planificación se queda sin ninguna, y
+  ningún profesor guía o del curso activo se queda sin evaluación/revisión (o con menos de 2 o más de 20
+  estudiantes asignados, en el caso del guía). El bloque 19 muestra la actividad de cada uno para revisar a ojo.
+- **Pruebas de integración ajustadas (4):** `HU02EstudiantesInscripcionIntegracionTest.cadaRolVeSoloSusInscripciones`,
+  `HU03EvaluacionIntegracionTest.lasEvaluacionesFinalizadasDelSeedSeVenSegunElRol` y `.unBorradorEsPrivadoDelEvaluadorYElCoordinador`,
+  y `HU04PlanificacionIntegracionTest.cadaRolVeLasPlanificacionesDeSusInscripcionesEnCualquierEstado` contaban
+  inscripciones, evaluaciones o planificaciones exactas de Marcos Bravo (guía 2), Lorena Vidal (guía 3) o Ricardo
+  Núñez (curso 1): se actualizaron con los ids nuevos que ahora también les pertenecen. Las 159 pruebas siguen en
+  verde (no se agregó ninguna prueba nueva en esta fase, solo datos).
+- **Resultado (verificado):** 10 estudiantes distintos con evaluación (antes 2: Sebastián y Valentina) y 14
+  estudiantes distintos con planificación (antes 4: Camila, Diego, Valentina y Sebastián). Los 6 guías quedaron con
+  2 a 4 estudiantes, 1 a 5 evaluaciones y 1 a 6 revisiones; los 4 profesores del curso con 8 a 13 estudiantes y 1 a
+  4 revisiones. Nadie en cero.
+
 ## Problemas conocidos y limitaciones
 
 - **Las pruebas de integración asumen los datos exactos de `db/seed.sql`** (cuentan filas). Si la base tiene datos extra (por ejemplo tras probar a mano en Swagger), fallan algunas: reinstala con `.\db\bd.ps1` y repite. Las pruebas en sí no modifican la base (rollback).
@@ -177,8 +217,11 @@ Interfaz en HTML + CSS + JavaScript puro (sin frameworks, sin npm, sin CDN) en `
 
 **`db/migraciones/002_documentos_adjuntos.sql`** (2026-09-22, Fase E): agrega las tablas `documento_planificacion` y `documento_evaluacion` (no toca `nota_voz`, que ya existía con todas las columnas que necesitaba la API). Igual que la 001, se ejecuta una sola vez y como root; `db/schema.sql` ya la incluye para una base nueva.
 
+**Fase F (2026-09-22): sin migración nueva.** Solo se amplió `db/seed.sql` (más planificaciones y evaluaciones) y `db/verificacion.sql` (bloque 18 y 19); el esquema no cambió.
+
 ## Cómo se probó (para repetirlo)
 
 1. `.\db\bd.ps1` (base limpia) → `cd backend` → `mvn clean package` (159 pruebas).
 2. Arrancar `java -jar target\practicas-0.1.0-SNAPSHOT.jar` y probar con Swagger según `docs/GUIA_DEFENSA.md`.
 3. **Fase E (22-sep):** además, con la app arrancada y sin navegador disponible, se probó por HTTP con `curl -F` (multipart): login, `POST` y `GET` de documentos en una planificación y en una evaluación, descarga con las cabeceras `Content-Disposition` correctas, 403 de quien no corresponde; `POST`, `GET` y `PUT` de nota de voz, `GET` del audio, 409 al grabar una segunda vez y 403 de otro guía. Después se reinstaló la base (`.\db\bd.ps1`) para dejarla limpia.
+4. **Fase F (22-sep):** `.\db\bd.ps1` → revisar el bloque 18 y 19 de `db/verificacion.sql` (0 violaciones, actividad por guía y por profesor del curso) → `mvn clean package` (159 pruebas) → arrancar la app y comprobar por HTTP (`GET /api/evaluaciones` y `GET /api/planificaciones` como coordinador) que aparecen 10 y 14 estudiantes distintos. Se reinstaló la base al final para dejarla limpia.

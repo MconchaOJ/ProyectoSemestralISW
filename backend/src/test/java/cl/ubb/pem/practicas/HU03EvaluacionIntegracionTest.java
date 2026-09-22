@@ -197,17 +197,21 @@ class HU03EvaluacionIntegracionTest extends IntegracionBase {
         consultar("/api/evaluaciones/9999", COORDINADOR).andExpect(status().isNotFound());
         // y tampoco aparece en el listado del estudiante
         consultar("/api/evaluaciones?inscripcionId=3", CAMILA).andExpect(jsonPath("$.length()").value(0));
-        consultar("/api/evaluaciones?inscripcionId=3", GUIA1).andExpect(jsonPath("$.length()").value(1));
+        // inscripción 3 ya tenía un borrador de Marcos en el seed (id 4, generación completa Fase F) más este nuevo
+        consultar("/api/evaluaciones?inscripcionId=3", GUIA1).andExpect(jsonPath("$.length()").value(2));
     }
 
     @Test
     void lasEvaluacionesFinalizadasDelSeedSeVenSegunElRol() throws Exception {
-        // Seed: evaluación 1 (Sebastián, insc. 14), 2 y 3 (Valentina, insc. 9), todas de Marcos y FINALIZADAS
-        assertThat(ids(cuerpo(consultar("/api/evaluaciones", GUIA1)))).containsExactlyInAnyOrder(1L, 2L, 3L);
-        assertThat(ids(cuerpo(consultar("/api/evaluaciones", COORDINADOR)))).containsExactlyInAnyOrder(1L, 2L, 3L);
+        // Seed: evaluación 1 (Sebastián, insc. 14), 2 y 3 (Valentina, insc. 9), de Marcos y FINALIZADAS.
+        // La generación completa (Fase F, 22-sep) agregó las evaluaciones 4 a 11: Marcos también es evaluador
+        // de la 4 (Camila, BORRADOR) y la 10 (Trinidad, FINALIZADA); Lorena es evaluadora de la 5 y la 11 (FINALIZADA).
+        assertThat(ids(cuerpo(consultar("/api/evaluaciones", GUIA1)))).containsExactlyInAnyOrder(1L, 2L, 3L, 4L, 10L);
+        assertThat(ids(cuerpo(consultar("/api/evaluaciones", COORDINADOR))))
+                .containsExactlyInAnyOrder(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L);
         assertThat(ids(cuerpo(consultar("/api/evaluaciones", VALENTINA)))).containsExactlyInAnyOrder(2L, 3L);
-        assertThat(ids(cuerpo(consultar("/api/evaluaciones?estado=BORRADOR", COORDINADOR)))).isEmpty();
-        consultar("/api/evaluaciones", GUIA2).andExpect(jsonPath("$.length()").value(0));
+        assertThat(ids(cuerpo(consultar("/api/evaluaciones?estado=BORRADOR", COORDINADOR)))).containsExactlyInAnyOrder(4L, 6L);
+        consultar("/api/evaluaciones", GUIA2).andExpect(jsonPath("$.length()").value(2));
         consultar("/api/evaluaciones/1", CAMILA).andExpect(status().isForbidden());           // no es de Camila
         JsonNode e2 = cuerpo(consultar("/api/evaluaciones/2", VALENTINA).andExpect(status().isOk()));
         assertThat(e2.get("puntajeTotal").asInt()).isEqualTo(96);

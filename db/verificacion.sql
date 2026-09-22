@@ -16,7 +16,7 @@ SELECT COUNT(*) AS tablas
   FROM information_schema.tables
  WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
-SELECT '2. FILAS POR TABLA (esperado: rol 4, usuario 31, estudiante 20, asignatura 6, inscripcion 55, pauta 1, dimension 3, indicador 20, planificacion 9, revision 12, evaluacion 3, respuesta 60, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0)' AS verificacion;
+SELECT '2. FILAS POR TABLA (esperado: rol 4, usuario 31, estudiante 20, asignatura 6, inscripcion 55, pauta 1, dimension 3, indicador 20, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0)' AS verificacion;
 SELECT 'rol' AS tabla, COUNT(*) AS filas FROM rol
 UNION ALL SELECT 'usuario',                COUNT(*) FROM usuario
 UNION ALL SELECT 'estudiante',             COUNT(*) FROM estudiante
@@ -170,7 +170,7 @@ SELECT s.semestre_actual,
  GROUP BY s.id, s.semestre_actual;
 
 -- -----------------------------------------------------------------------------
-SELECT '12. HU-04 ESTADOS: planificaciones por estado (esperado: 1 BORRADOR, 2 EN_REVISION_GUIA, 1 CON_OBSERVACIONES, 1 EN_AUTORIZACION, 4 AUTORIZADA)' AS verificacion;
+SELECT '12. HU-04 ESTADOS: planificaciones por estado (esperado: 2 BORRADOR, 2 EN_REVISION_GUIA, 4 CON_OBSERVACIONES, 3 EN_AUTORIZACION, 8 AUTORIZADA)' AS verificacion;
 SELECT estado, COUNT(*) AS planificaciones
   FROM planificacion
  GROUP BY estado
@@ -211,3 +211,70 @@ SELECT '17. DOCUMENTOS ADJUNTOS Y NOTA DE VOZ: tablas nuevas listas para la apli
 SELECT 'documento_planificacion' AS tabla, COUNT(*) AS filas FROM documento_planificacion
 UNION ALL SELECT 'documento_evaluacion', COUNT(*) FROM documento_evaluacion
 UNION ALL SELECT 'nota_voz', COUNT(*) FROM nota_voz;
+
+-- -----------------------------------------------------------------------------
+SELECT '18. ACTIVIDAD REAL (Fase F, 2026-09-22): nadie queda con cero registros relacionados (esperado: 0 en cada fila)' AS verificacion;
+SELECT 'Estudiante en Trabajo Colaborativo sin ninguna evaluación' AS control, COUNT(*) AS violaciones
+  FROM (SELECT DISTINCT i.estudiante_id
+          FROM inscripcion i
+         WHERE i.asignatura_id = 3
+           AND NOT EXISTS (SELECT 1 FROM evaluacion ev WHERE ev.inscripcion_id = i.id)) x
+UNION ALL
+SELECT 'Estudiante en una asignatura que pide planificación sin ninguna planificación', COUNT(*)
+  FROM (SELECT DISTINCT i.estudiante_id
+          FROM inscripcion i
+          JOIN asignatura_practica a ON a.id = i.asignatura_id
+         WHERE a.requiere_planificacion) necesitan
+ WHERE NOT EXISTS (SELECT 1 FROM planificacion p
+                     JOIN inscripcion i2 ON i2.id = p.inscripcion_id
+                    WHERE i2.estudiante_id = necesitan.estudiante_id)
+UNION ALL
+SELECT 'Profesor guía activo (con estudiantes asignados) sin ninguna evaluación realizada', COUNT(*)
+  FROM usuario u
+ WHERE u.rol_id = (SELECT id FROM rol WHERE nombre = 'PROFESOR_GUIA') AND u.activo
+   AND EXISTS (SELECT 1 FROM inscripcion i WHERE i.profesor_guia_id = u.id)
+   AND NOT EXISTS (SELECT 1 FROM evaluacion e WHERE e.evaluador_id = u.id)
+UNION ALL
+SELECT 'Profesor guía activo (con estudiantes asignados) sin ninguna revisión de planificación', COUNT(*)
+  FROM usuario u
+ WHERE u.rol_id = (SELECT id FROM rol WHERE nombre = 'PROFESOR_GUIA') AND u.activo
+   AND EXISTS (SELECT 1 FROM inscripcion i WHERE i.profesor_guia_id = u.id)
+   AND NOT EXISTS (SELECT 1 FROM revision_planificacion r WHERE r.revisor_id = u.id AND r.etapa = 'GUIA')
+UNION ALL
+SELECT 'Profesor guía activo con menos de 2 estudiantes distintos asignados', COUNT(*)
+  FROM (SELECT i.profesor_guia_id, COUNT(DISTINCT i.estudiante_id) AS n
+          FROM inscripcion i WHERE i.profesor_guia_id IS NOT NULL GROUP BY i.profesor_guia_id) x
+ WHERE x.n < 2
+UNION ALL
+SELECT 'Profesor guía activo con más de 20 estudiantes distintos asignados', COUNT(*)
+  FROM (SELECT i.profesor_guia_id, COUNT(DISTINCT i.estudiante_id) AS n
+          FROM inscripcion i WHERE i.profesor_guia_id IS NOT NULL GROUP BY i.profesor_guia_id) x
+ WHERE x.n > 20
+UNION ALL
+SELECT 'Profesor del curso activo sin ninguna inscripción a su cargo', COUNT(*)
+  FROM usuario u
+ WHERE u.rol_id = (SELECT id FROM rol WHERE nombre = 'PROFESOR_CURSO') AND u.activo
+   AND NOT EXISTS (SELECT 1 FROM inscripcion i WHERE i.profesor_curso_id = u.id)
+UNION ALL
+SELECT 'Profesor del curso activo sin ninguna revisión de planificación', COUNT(*)
+  FROM usuario u
+ WHERE u.rol_id = (SELECT id FROM rol WHERE nombre = 'PROFESOR_CURSO') AND u.activo
+   AND NOT EXISTS (SELECT 1 FROM revision_planificacion r WHERE r.revisor_id = u.id AND r.etapa = 'CURSO');
+
+SELECT '19. ACTIVIDAD POR GUÍA Y POR PROFESOR DEL CURSO (para revisar a ojo, sin resultado único esperado)' AS verificacion;
+SELECT CONCAT(u.nombre, ' ', u.apellidos) AS guia,
+       COUNT(DISTINCT i.estudiante_id)                                          AS estudiantes,
+       (SELECT COUNT(*) FROM evaluacion e WHERE e.evaluador_id = u.id)          AS evaluaciones,
+       (SELECT COUNT(*) FROM revision_planificacion r WHERE r.revisor_id = u.id AND r.etapa = 'GUIA') AS revisiones
+  FROM usuario u
+  JOIN inscripcion i ON i.profesor_guia_id = u.id
+ GROUP BY u.id, u.nombre, u.apellidos
+ ORDER BY estudiantes DESC;
+
+SELECT CONCAT(u.nombre, ' ', u.apellidos) AS profesor_del_curso,
+       COUNT(DISTINCT i.estudiante_id)                                          AS estudiantes,
+       (SELECT COUNT(*) FROM revision_planificacion r WHERE r.revisor_id = u.id AND r.etapa = 'CURSO') AS revisiones
+  FROM usuario u
+  JOIN inscripcion i ON i.profesor_curso_id = u.id
+ GROUP BY u.id, u.nombre, u.apellidos
+ ORDER BY estudiantes DESC;

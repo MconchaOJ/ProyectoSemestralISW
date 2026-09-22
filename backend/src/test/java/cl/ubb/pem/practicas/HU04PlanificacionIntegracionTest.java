@@ -234,14 +234,16 @@ class HU04PlanificacionIntegracionTest extends IntegracionBase {
 
     @Test
     void cadaRolVeLasPlanificacionesDeSusInscripcionesEnCualquierEstado() throws Exception {
-        // guía Marcos: inscripciones 3, 9, 10 y 14 -> planificaciones 1, 2, 3, 4 y 5 (incluye CON_OBSERVACIONES y BORRADOR)
-        assertThat(ids(cuerpo(consultar("/api/planificaciones", GUIA1)))).containsExactlyInAnyOrder(1L, 2L, 3L, 4L, 5L);
-        assertThat(ids(cuerpo(consultar("/api/planificaciones", GUIA2)))).containsExactlyInAnyOrder(6L, 7L, 8L, 9L);
+        // guía Marcos: inscripciones 3, 9, 10, 14 y 48 (Fase F) -> planificaciones 1, 2, 3, 4, 5 y 18
+        assertThat(ids(cuerpo(consultar("/api/planificaciones", GUIA1)))).containsExactlyInAnyOrder(1L, 2L, 3L, 4L, 5L, 18L);
+        // guía Lorena también quedó con la inscripción 53 (Fase F) -> se suma la planificación 19
+        assertThat(ids(cuerpo(consultar("/api/planificaciones", GUIA2)))).containsExactlyInAnyOrder(6L, 7L, 8L, 9L, 19L);
         assertThat(ids(cuerpo(consultar("/api/planificaciones", CAMILA)))).containsExactlyInAnyOrder(3L, 4L, 5L);
-        assertThat(cuerpo(consultar("/api/planificaciones", COORDINADOR))).hasSize(9);
+        assertThat(cuerpo(consultar("/api/planificaciones", COORDINADOR))).hasSize(19);
         // bandejas por estado
         assertThat(ids(cuerpo(consultar("/api/planificaciones?estado=EN_REVISION_GUIA", GUIA2)))).containsExactlyInAnyOrder(6L, 9L);
-        assertThat(ids(cuerpo(consultar("/api/planificaciones?estado=EN_AUTORIZACION", CURSO1)))).containsExactlyInAnyOrder(7L);
+        // Ricardo también quedó con la planificación 11 (Tomás, Fase F) en EN_AUTORIZACION
+        assertThat(ids(cuerpo(consultar("/api/planificaciones?estado=EN_AUTORIZACION", CURSO1)))).containsExactlyInAnyOrder(7L, 11L);
         assertThat(ids(cuerpo(consultar("/api/planificaciones?inscripcionId=3&estado=BORRADOR", GUIA1)))).containsExactlyInAnyOrder(5L);
         consultar("/api/planificaciones?estado=INVENTADO", GUIA1).andExpect(status().isBadRequest());
         // el guía ve el detalle de cualquier estado de sus estudiantes; no el de otro guía

@@ -195,10 +195,10 @@ class HU02EstudiantesInscripcionIntegracionTest extends IntegracionBase {
         assertThat(cuerpo(consultar("/api/inscripciones", COORDINADOR))).hasSize(55);   // generación completa (S-39)
         // Camila tiene 3 inscripciones (ids 1, 2 y 3)
         assertThat(ids(cuerpo(consultar("/api/inscripciones", CAMILA)))).containsExactlyInAnyOrder(1L, 2L, 3L);
-        // el guía 2 (Marcos) figura en las inscripciones 3, 9, 10 y 14, más 34 y 48 de la generación completa
-        assertThat(ids(cuerpo(consultar("/api/inscripciones", GUIA1)))).containsExactlyInAnyOrder(3L, 9L, 10L, 14L, 34L, 48L);
-        // filtro por periodo dentro del alcance (3 y 34 son de Marcos en 2026-2)
-        consultar("/api/inscripciones?periodo=2026-2", GUIA1).andExpect(jsonPath("$.length()").value(2));
+        // el guía 2 (Marcos) figura en las inscripciones 3, 9, 10 y 14, más 48 de la generación completa (Fase F)
+        assertThat(ids(cuerpo(consultar("/api/inscripciones", GUIA1)))).containsExactlyInAnyOrder(3L, 9L, 10L, 14L, 48L);
+        // filtro por periodo dentro del alcance (solo 3 es de Marcos en 2026-2; 48 es de 2024-2)
+        consultar("/api/inscripciones?periodo=2026-2", GUIA1).andExpect(jsonPath("$.length()").value(1));
         // Trabajo Colaborativo 2026-2: las originales (3 y 6) más 34, 37 y 40 de la generación completa
         consultar("/api/inscripciones?asignaturaId=3&periodo=2026-2", COORDINADOR).andExpect(jsonPath("$.length()").value(5));
     }
