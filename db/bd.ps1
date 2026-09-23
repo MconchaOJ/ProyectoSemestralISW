@@ -51,8 +51,17 @@ $DbPort     = Get-Entorno 'ISW_DB_PORT' '3306'
 $RootUser   = Get-Entorno 'ISW_DB_ROOT_USER' 'root'
 
 $mysql = (Get-Command mysql -ErrorAction SilentlyContinue).Source
-if (-not $mysql) { $mysql = 'C:\Program Files\MySQL\MySQL Server 8.4\bin\mysql.exe' }
-if (-not (Test-Path $mysql)) { throw "No se encontró mysql.exe. Abre una terminal nueva o revisa la instalación." }
+if (-not $mysql) {
+    $candidatos = @(
+        'C:\Program Files\MySQL\MySQL Server 26.7\bin\mysql.exe',
+        'C:\Program Files\MySQL\MySQL Server 8.4\bin\mysql.exe',
+        'C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe'
+    )
+    foreach ($c in $candidatos) {
+        if (Test-Path $c) { $mysql = $c; break }
+    }
+}
+if (-not $mysql -or -not (Test-Path $mysql)) { throw "No se encontró mysql.exe. Abre una terminal nueva o revisa la instalación." }
 
 # Ejecuta el cliente mysql. El SQL entra por la entrada estándar (en bytes UTF-8, para
 # no perder tildes) y la clave viaja en MYSQL_PWD del proceso hijo: no queda en la línea
