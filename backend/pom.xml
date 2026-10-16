@@ -13,7 +13,7 @@
 
     <groupId>cl.ubb.pem</groupId>
     <artifactId>practicas</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>practicas</name>
     <description>Sistema de formación práctica PEM-UBB - backend Sprint 1</description>
 
