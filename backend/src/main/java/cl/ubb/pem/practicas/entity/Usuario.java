@@ -10,8 +10,9 @@ import lombok.Setter;
 @Table(name = "usuario")
 @Getter
 @Setter
-@NoArgsConstructor
 public class Usuario {
+
+    public Usuario() {}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
