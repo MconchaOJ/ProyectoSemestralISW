@@ -1,50 +1,61 @@
 # Sistema de Formación Práctica PEM-UBB
 
-Proyecto semestral de Ingeniería de Software (UBB, Pedagogía en Educación Matemática): sistema web para evaluar y
-monitorear las 6 prácticas de cada estudiante. Backend en **Java 17 + Spring Boot 3 + MySQL 8**, con un front-end
-web en HTML + CSS + JavaScript puro servido por la misma aplicación.
+Sistema web para evaluar y monitorear las 6 prácticas de Pedagogía en Educación Matemática (Universidad del Bío-Bío).
+Backend en **Java 17 + Spring Boot 3.5 + MySQL 8.4/26.x**, con front-end integrado en HTML5 + CSS3 + Vanilla JavaScript (ES6).
 
-Contexto completo del proyecto (requerimientos del cliente, decisiones y supuestos): [`RESUMEN.md`](RESUMEN.md).
-Instrucciones detalladas para trabajar en el código: [`CLAUDE.md`](CLAUDE.md).
+## Requisitos
+- **Java**: JDK 17 o superior (`java -version`)
+- **Maven**: No requiere instalación global; usa el wrapper incluido (`.\mvnw.cmd -v`)
+- **MySQL**: 8.4 LTS o 26.x (`mysql --version`) o Docker con Docker Compose
 
-## Arrancar todo en 5 minutos
+## Configuración
+1. **Variables de entorno:** Copiar `.env.example` como `.env` y configurar las credenciales:
+   - `DB_PASSWORD`: Contraseña del usuario `isw_app` de MySQL.
+   - `ISW_DB_PASSWORD`: Misma contraseña de aplicación (para compatibilidad de scripts locales).
+   - `ISW_DB_ROOT_PASSWORD` (opcional): Solo necesaria si se usa `db\bd.ps1` para inicializar la base localmente.
+2. **Base de datos:**
+   - **Opción con Docker (recomendada):**
+     ```powershell
+     docker compose up -d
+     ```
+   - **Opción sin Docker (MySQL local ya instalado):**
+     ```powershell
+     .\db\bd.ps1
+     ```
+   *(Flyway aplica automáticamente las migraciones versionadas en `backend/src/main/resources/db/migration/`).*
 
-**Requisitos:** JDK 17, Maven 3.9 y MySQL 8 (servicio encendido). Windows con PowerShell.
+## Ejecutar
+- **Backend (Desarrollo):**
+  ```powershell
+  .\mvnw.cmd -f backend/pom.xml spring-boot:run
+  ```
+  *(o con perfil específico: `.\mvnw.cmd -f backend/pom.xml spring-boot:run "-Dspring-boot.run.profiles=dev"`)*
+- **Backend (Empaquetado JAR):**
+  ```powershell
+  .\mvnw.cmd clean package -DskipTests
+  java -jar backend\target\practicas-0.1.0-SNAPSHOT.jar
+  ```
+- **Front-end:** Con el backend arriba, abrir en el navegador:
+  - Aplicación Web: <http://localhost:8080>
+  - Swagger UI / OpenAPI: <http://localhost:8080/swagger-ui.html>
 
-1. **Variables de entorno** (una sola vez; abre una terminal nueva después). Las claves nunca van en archivos del
-   repositorio, solo en variables de entorno de Windows — ver [`.env.example`](.env.example) para los nombres y el
-   detalle:
-   - `ISW_DB_ROOT_PASSWORD`: clave de `root` de MySQL (solo para crear la base).
-   - `ISW_DB_PASSWORD`: clave del usuario `isw_app` (la usa la aplicación). Si no existe, `db\bd.ps1` la genera sola.
-   - `ISW_JWT_SECRET` (opcional): 32 caracteres o más; si falta, se genera uno temporal al arrancar.
+## Pruebas
+- Ejecutar suite de pruebas unitarias y de servicios:
+  ```powershell
+  .\mvnw.cmd test "-Dtest=*ServiceTest,JwtServiceTest"
+  ```
+- Ejecutar suite completa (con base de datos activa):
+  ```powershell
+  .\mvnw.cmd test
+  ```
 
-2. **Base de datos** (crea `isw_practicas`, sus 16 tablas y los datos de demostración):
-   ```powershell
-   .\db\bd.ps1
-   ```
+## Versiones entregadas
+- **v1.0.0**: Incremento 1 (Sprint 1: Backend 5 HU, 42 endpoints, Front-end SPA, DB 16 tablas y 67+ pruebas automáticas).
 
-3. **Backend** (compila, corre las 161 pruebas y deja el `.jar`):
-   ```powershell
-   cd backend
-   mvn clean package
-   java -jar target\practicas-0.1.0-SNAPSHOT.jar
-   ```
+---
 
-4. **Front-end:** con la aplicación arriba, abre <http://localhost:8080> (usuarios de demostración y su clave en el
-   encabezado de `db/seed.sql`). Swagger UI para probar la API directamente: <http://localhost:8080/swagger-ui.html>.
-
-Detalle completo (variables de entorno, estructura del código, endpoints, problemas frecuentes): [`backend/README.md`](backend/README.md).
-
-## Estructura del repositorio
-
-```
-backend/     API Spring Boot + front-end estático (src/main/resources/static/) + pruebas
-db/          schema.sql, seed.sql, verificacion.sql, migraciones/ y el script bd.ps1
-Sprint1/     Product Backlog, Sprint Backlog, MER, diagramas BPMN (as-is/to-be) y retrospectiva
-```
-
-## Estado del proyecto
-
-Backend, base de datos y front-end del Sprint 1 están terminados y probados (161 pruebas automáticas). El detalle de
-cada historia, los endpoints y los supuestos abiertos están en [`backend/PROGRESO.md`](backend/PROGRESO.md); el
-Product Backlog y el Sprint Backlog, en [`Sprint1/`](Sprint1/).
+### Documentación adicional
+- [`RESUMEN.md`](RESUMEN.md): Contexto completo del proyecto, reglas de negocio y supuestos de carrera.
+- [`CLAUDE.md`](CLAUDE.md): Pautas de arquitectura y desarrollo.
+- [`backend/README.md`](backend/README.md): Detalle técnico del backend, perfiles y endpoints.
+- [`Sprint1/`](Sprint1/): Product Backlog, Sprint Backlog y modelos BPMN/MER.
