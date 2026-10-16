@@ -56,6 +56,7 @@ bin/
 /.nb-gradle/
 # Visual Studio Code
 .vscode/
+node_modules/
 
 # =============================================================================
 # Sistema operativo
