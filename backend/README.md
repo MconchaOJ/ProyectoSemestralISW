@@ -19,8 +19,8 @@ Estado del trabajo, endpoints y supuestos: [`PROGRESO.md`](PROGRESO.md).
 | Herramienta | Versión | Cómo comprobarla |
 |---|---|---|
 | JDK | 17 o superior | `java -version` |
-| Maven | 3.9 | `mvn -version` |
-| MySQL | 8.x, servicio encendido en `localhost:3306` | `Get-Service MySQL84` |
+| Maven Wrapper | 3.9 (incluido en el repositorio) | `.\mvnw.cmd -v` |
+| MySQL | 8.x / 26.x, servicio encendido en `localhost:3306` | `Get-Service MySQL*` |
 
 Si falta alguno, instálalo antes (por ejemplo `winget install EclipseAdoptium.Temurin.17.JDK`) y abre una terminal nueva.
 
@@ -60,23 +60,27 @@ La aplicación no crea ni modifica tablas (`spring.jpa.hibernate.ddl-auto=valida
 ## 4. Compilar, probar y ejecutar
 
 ```powershell
-cd backend
-mvn clean package              # compila y corre las 161 pruebas (necesitan la base encendida y con los datos de demo)
-java -jar target\practicas-0.1.0-SNAPSHOT.jar
+# Desde la raíz del proyecto o desde backend/
+.\mvnw.cmd clean package              # compila y corre las pruebas
+java -jar backend\target\practicas-0.1.0-SNAPSHOT.jar
 ```
 
-o, en desarrollo, `mvn spring-boot:run`. La API queda en <http://localhost:8080>.
+o, en desarrollo: `.\mvnw.cmd spring-boot:run` (o con perfil: `.\mvnw.cmd -f backend/pom.xml spring-boot:run "-Dspring-boot.run.profiles=dev"`). La API queda en <http://localhost:8080>.
 
 - **Front-end web:** <http://localhost:8080> (entra con un usuario de demostración; el menú cambia según el rol)
 - **Swagger UI (para probar y demostrar):** <http://localhost:8080/swagger-ui.html>
 - Especificación OpenAPI: <http://localhost:8080/v3/api-docs>
 - Para detenerla: `Ctrl+C` en la terminal donde corre.
 
-Para compilar sin correr las pruebas: `mvn clean package -DskipTests`.
+Para compilar sin correr las pruebas: `.\mvnw.cmd clean package -DskipTests`.
 
-## 5. Abrir el front-end y probar con Swagger
+## 5. Gestión del Front-end (Caso B: Vistas y Recursos Estáticos en Spring Boot)
 
-**Front-end:** con la aplicación en marcha, abre <http://localhost:8080> e ingresa con un usuario de demostración (tabla de abajo; la clave está en el encabezado de `db/seed.sql`). No hay nada que instalar: son archivos estáticos en `src/main/resources/static/` (`index.html` es el login y `app.html` la aplicación) que sirve la misma aplicación Spring Boot, por eso no hay CORS. Si editas un archivo del front, hay que recompilar (`mvn clean package -DskipTests`) y reiniciar, porque van dentro del jar.
+El front-end corresponde al **Caso B** del laboratorio: es una aplicación web (HTML5 + CSS3 + Vanilla JavaScript ES6) empaquetada como recursos estáticos en `src/main/resources/static/`.
+
+- **Sin dependencias externas ni node_modules:** No requiere `npm`, `node_modules` ni archivos de bloqueo `package-lock.json`. Todo el ciclo de vida lo administra Maven y Spring Boot.
+- **Sin URLs quemadas en el código:** Todas las peticiones HTTP realizadas por `js/api.js` utilizan rutas relativas (por ejemplo `/api/auth/login`, `/api/evaluaciones`), adaptándose automáticamente a cualquier host o puerto sin requerir configuración manual.
+- **Sin CDN con versiones "latest":** Todos los estilos, íconos y scripts son recursos locales versionados en el repositorio Git.
 
 **Swagger (botón Authorize):**
 
