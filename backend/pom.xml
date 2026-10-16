@@ -49,6 +49,16 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Migraciones de base de datos Flyway -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+
         <!-- Swagger UI y especificación OpenAPI -->
         <dependency>
             <groupId>org.springdoc</groupId>
