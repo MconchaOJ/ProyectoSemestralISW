@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Crea, carga y verifica la base de datos MySQL del proyecto (isw_practicas).
 
@@ -133,15 +133,17 @@ function Install-Bd {
     Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (16 tablas, trigger)'
     Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'seed.sql'))   'seed.sql (catálogo y datos de demo)'
 
-    # Usuario de la aplicación: solo puede leer y escribir datos, no cambiar la estructura.
+    # Usuario de la aplicación: solo puede leer y escribir datos, no cambiar la estructura,
+    # excepto sobre la tabla de control de versiones de Flyway (flyway_schema_history).
     $claveSql = $claveApp.Replace('\', '\\').Replace("'", "''")
     $sql = @"
 CREATE USER IF NOT EXISTS '$UsuarioApp'@'localhost' IDENTIFIED BY '$claveSql';
 ALTER USER '$UsuarioApp'@'localhost' IDENTIFIED BY '$claveSql';
 GRANT SELECT, INSERT, UPDATE, DELETE ON $BaseDatos.* TO '$UsuarioApp'@'localhost';
+GRANT CREATE, ALTER, DROP, SELECT, INSERT, UPDATE, DELETE ON $BaseDatos.flyway_schema_history TO '$UsuarioApp'@'localhost';
 FLUSH PRIVILEGES;
 "@
-    Assert-Ok (Invoke-Mysql $RootUser $claveRoot $sql) "Usuario $UsuarioApp con permisos SELECT, INSERT, UPDATE, DELETE"
+    Assert-Ok (Invoke-Mysql $RootUser $claveRoot $sql) "Usuario $UsuarioApp con permisos de datos y gestión de Flyway"
 }
 
 # ---------- Verificar --------------------------------------------------------------

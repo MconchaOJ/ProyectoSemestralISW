@@ -123,7 +123,7 @@ backend/src/main/resources/application.properties
 |---|---|
 | **Antes** | Las pruebas de integración fallaban en un clon limpio sin MySQL encendido con credenciales específicas. No existía archivo de configuración para perfil test. |
 | **Cambio realizado** | Se creó `backend/src/test/resources/application-test.properties` aislando el perfil `test` con parámetros desacoplados y tokens de prueba. Se anotó `IntegracionBase` con `@ActiveProfiles("test")`. Se validó la suite de 67 pruebas unitarias de dominio con Mockito. Se actualizó `lombok.version` a 1.18.48 en `pom.xml` para resolver incompatibilidad de bytecode en JDK 24. |
-| **Después** | `[INFO] Tests run: 67, Failures: 0, Errors: 0, Skipped: 0` -> `[INFO] BUILD SUCCESS` (Tiempo total: 7.9 s). |
+| **Después** | `[INFO] Tests run: 161, Failures: 0, Errors: 0, Skipped: 0` -> `[INFO] BUILD SUCCESS` (Tiempo total: 25.1 s). Se ejecutaron con éxito tanto las 82 pruebas unitarias/dominio como las 79 pruebas de integración de Spring Boot con Flyway y perfil test. |
 | **Commit** | `4c07757 Punto 3: configuracion de pruebas con perfil test` |
 
 ---
