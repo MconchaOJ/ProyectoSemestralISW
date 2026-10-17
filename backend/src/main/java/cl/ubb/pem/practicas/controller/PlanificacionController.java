@@ -87,7 +87,7 @@ public class PlanificacionController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Detalle de una planificación con su historial de revisiones",
-            description = "El estudiante dueño, su profesor guía, su profesor del curso y el coordinador, en cualquier estado. "
+            description = "El estudiante dueño, su profesor guía, su profesor del curso, el coordinador y el jefe de carrera, en cualquier estado. "
                     + "Otro usuario: 403. Las revisiones vienen en orden cronológico.")
     public PlanificacionDto obtener(@PathVariable Long id, @AuthenticationPrincipal UsuarioAutenticado actor) {
         return planificaciones.obtener(id, actor);
@@ -96,7 +96,7 @@ public class PlanificacionController {
     @GetMapping
     @Operation(summary = "Listar planificaciones (según mi rol)",
             description = "Bandeja de cada rol: el estudiante ve las suyas; el guía y el profesor del curso, las de sus "
-                    + "inscripciones asignadas; el coordinador, todas. Filtros opcionales por inscripción y estado "
+                    + "inscripciones asignadas; el coordinador y el jefe de carrera, todas. Filtros opcionales por inscripción y estado "
                     + "(por ejemplo estado=EN_REVISION_GUIA para la bandeja pendiente del guía).")
     public List<PlanificacionResumenDto> listar(@RequestParam(required = false) Long inscripcionId,
                                                 @RequestParam(required = false) EstadoPlanificacion estado,

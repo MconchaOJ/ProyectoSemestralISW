@@ -50,9 +50,16 @@ $DbHost     = Get-Entorno 'ISW_DB_HOST' '127.0.0.1'
 $DbPort     = Get-Entorno 'ISW_DB_PORT' '3306'
 $RootUser   = Get-Entorno 'ISW_DB_ROOT_USER' 'root'
 
+. (Join-Path $PSScriptRoot 'VersionMysql.ps1')   # $VersionMinimaMysql y Test-VersionMysql
+
+# Cliente mysql: el del PATH o, si no está, el de cualquier "MySQL Server X.Y" instalado (el más nuevo).
 $mysql = (Get-Command mysql -ErrorAction SilentlyContinue).Source
-if (-not $mysql) { $mysql = 'C:\Program Files\MySQL\MySQL Server 8.4\bin\mysql.exe' }
-if (-not (Test-Path $mysql)) { throw "No se encontró mysql.exe. Abre una terminal nueva o revisa la instalación." }
+if (-not $mysql) {
+    $mysql = Get-ChildItem 'C:\Program Files\MySQL\MySQL Server *\bin\mysql.exe' -ErrorAction SilentlyContinue |
+        Sort-Object { [version]($_.Directory.Parent.Name -replace '^MySQL Server ', '') } -Descending |
+        Select-Object -First 1 -ExpandProperty FullName
+}
+if (-not $mysql -or -not (Test-Path $mysql)) { throw "No se encontró mysql.exe. Abre una terminal nueva o revisa la instalación de MySQL." }
 
 # Ejecuta el cliente mysql. El SQL entra por la entrada estándar (en bytes UTF-8, para
 # no perder tildes) y la clave viaja en MYSQL_PWD del proceso hijo: no queda en la línea
@@ -119,7 +126,16 @@ function Install-Bd {
     Write-Host "Instalando en $DbHost`:$DbPort como $RootUser ..."
     $r = Invoke-Mysql $RootUser $claveRoot 'SELECT VERSION();'
     if ($r.Codigo -ne 0) { throw "No se pudo conectar como $RootUser a ${DbHost}:${DbPort}. Revisa ISW_DB_ROOT_PASSWORD.`n$($r.Error)" }
-    Assert-Ok $r "Conexión como $RootUser (MySQL $(($r.Salida -split "`n")[1].Trim()))"
+    $version = ($r.Salida -split "`n")[1].Trim()
+    Assert-Ok $r "Conexión como $RootUser (MySQL $version)"
+
+    # Antes de tocar nada: con una versión menor los CHECK se aceptan pero NO se cumplen (sin ningún error)
+    if (-not (Test-VersionMysql $version)) {
+        throw "El servidor tiene MySQL '$version' y el proyecto necesita MySQL $VersionMinimaMysql o superior " +
+              "(se recomienda 8.4 LTS). Antes de 8.0.16 las restricciones CHECK se ignoran sin avisar; MariaDB y " +
+              "MySQL 5.7 no son compatibles. No se modificó la base de datos."
+    }
+    Write-Host "  OK  Versión de MySQL compatible ($version >= $VersionMinimaMysql)" -ForegroundColor Green
 
     Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (16 tablas, trigger)'
     Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'seed.sql'))   'seed.sql (catálogo y datos de demo)'
@@ -161,8 +177,12 @@ function Test-Bd {
         @('Inscripción duplicada (mismo estudiante, asignatura y periodo)', 1062, 'uq_inscripcion_estudiante_asignatura_periodo', "INSERT INTO inscripcion (estudiante_id,asignatura_id,periodo,profesor_curso_id) VALUES (1,3,'2026-2',4)"),
         @('Periodo con formato inválido',                         3819, 'ck_inscripcion_periodo',  "INSERT INTO inscripcion (estudiante_id,asignatura_id,periodo,profesor_curso_id) VALUES (5,2,'2026-3',4)"),
         @('Inscripción EN_CURSO con nota final',                  3819, 'ck_inscripcion_nota_cierre', "INSERT INTO inscripcion (estudiante_id,asignatura_id,periodo,profesor_curso_id,estado,nota_final) VALUES (5,2,'2026-2',4,'EN_CURSO',5.0)"),
+        @('Inscripción EN_CURSO con fecha de cierre',             3819, 'ck_inscripcion_fecha_cierre', "INSERT INTO inscripcion (estudiante_id,asignatura_id,periodo,profesor_curso_id,estado,fecha_cierre) VALUES (5,2,'2026-2',4,'EN_CURSO','2026-07-31')"),
         @('Guía y profesor del curso son la misma persona',       3819, 'ck_inscripcion_profesores_distintos', "INSERT INTO inscripcion (estudiante_id,asignatura_id,periodo,profesor_guia_id,profesor_curso_id) VALUES (5,3,'2026-2',4,4)"),
         @('Chatbot habilitado en una asignatura que no es final', 3819, 'ck_asignatura_chatbot',   "UPDATE asignatura_practica SET chatbot_habilitado = TRUE WHERE id = 1"),
+        @('Tutor que es también el guía de la inscripción (HU-07)', 3819, 'ck_inscripcion_tutor_distinto', "UPDATE inscripcion SET tutor_id = profesor_guia_id WHERE id = 17"),
+        @('Tutor en una asignatura que no va a un colegio (HU-07)', 3819, 'ck_asignatura_tutor',  "UPDATE asignatura_practica SET lleva_tutor = TRUE WHERE id = 1"),
+        @('Pauta de Especialidad sin número de observación (HU-07)', 3819, 'ck_pauta_numero_observacion', "UPDATE pauta SET numero_observacion = NULL WHERE id = 2"),
         @('Puntaje fuera de la escala 1-7 de la pauta',           1644, 'fuera de la escala',      "$unEvaluacion; INSERT INTO respuesta_indicador (evaluacion_id,indicador_id,puntaje) VALUES (@ev,1,9)"),
         @('Segundo puntaje para el mismo indicador',              1062, 'uq_respuesta_evaluacion_indicador', "$unEvaluacion; INSERT INTO respuesta_indicador (evaluacion_id,indicador_id,puntaje) VALUES (@ev,1,5); INSERT INTO respuesta_indicador (evaluacion_id,indicador_id,puntaje) VALUES (@ev,1,6)"),
         @('Indicador que no pertenece a la pauta de la evaluación', 1644, 'no pertenece a la pauta', "INSERT INTO pauta (asignatura_id,nombre,tipo_evaluador,ambito,escala_min,escala_max) VALUES (4,'Otra pauta','ACADEMICO','OBSERVACION_CLASE',1,7); SET @pa = LAST_INSERT_ID(); INSERT INTO dimension_pauta (pauta_id,nombre,orden) VALUES (@pa,'D',1); SET @di = LAST_INSERT_ID(); INSERT INTO indicador (dimension_id,numero,descripcion) VALUES (@di,1,'I'); SET @in = LAST_INSERT_ID(); $unEvaluacion; INSERT INTO respuesta_indicador (evaluacion_id,indicador_id,puntaje) VALUES (@ev,@in,5)"),

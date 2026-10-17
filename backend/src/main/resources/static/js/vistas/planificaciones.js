@@ -17,6 +17,20 @@ const PENDIENTE = {
   EN_AUTORIZACION: 'PROFESOR_CURSO', AUTORIZADA: null,
 };
 const ETAPAS = { GUIA: 'Revisión del profesor guía', CURSO: 'Autorización del profesor del curso' };
+const QUIEN_REVISA = { GUIA: 'El profesor guía', CURSO: 'El profesor del curso' };
+
+/** Nombres para el usuario de los elementos que el servidor informa como faltantes ("[objetivo, documentoFormal]"). */
+const NOMBRE_ELEMENTO = {
+  fechaClase: 'fecha de la clase', objetivo: 'objetivo', recursos: 'recursos', tiempos: 'tiempos',
+  duracionMinutos: 'duración', evaluacionAprendizaje: 'evaluación del aprendizaje',
+  interaccionParticipantes: 'interacción de los participantes', documentoFormal: 'la planificación formal (Word o PDF) adjunta',
+};
+function traducirFaltantes(e) {
+  if (typeof e?.message === 'string') {
+    e.message = e.message.replace(/\[([^\]]+)\]/, (_, lista) => lista.split(',').map((x) => NOMBRE_ELEMENTO[x.trim()] ?? x.trim()).join(', '));
+  }
+  return e;
+}
 
 export async function render(cont, ctx) {
   const [a, b] = ctx.args;
@@ -29,8 +43,12 @@ export async function render(cont, ctx) {
 // ============================ LISTA ============================
 async function lista(cont, ctx) {
   ctx.titulo('Planificaciones');
-  const esEstudiante = ctx.rol === 'ESTUDIANTE';
+  const esEstudiante = ctx.tiene('ESTUDIANTE');
   const inscripciones = await api.get('/api/inscripciones');
+  const porId = new Map(inscripciones.map((i) => [i.id, i]));
+  // "Requiere tu acción" solo si le toca a esta cuenta en ESA inscripción: el jefe de carrera que también es guía
+  // ve todas las planificaciones, pero solo revisa las de sus estudiantes asignados.
+  const meToca = (p) => ctx.actuaComo(PENDIENTE[p.estado], porId.get(p.inscripcionId));
 
   cont.innerHTML = html`
     ${cabecera({
@@ -63,7 +81,7 @@ async function lista(cont, ctx) {
       const datos = await api.get('/api/planificaciones', { estado: fEstado.value, inscripcionId: fInsc.value });
       if (mio !== pedido) return;
       // Primero lo que espera tu acción, luego lo más reciente
-      datos.sort((x, y) => (Number(PENDIENTE[y.estado] === ctx.rol) - Number(PENDIENTE[x.estado] === ctx.rol))
+      datos.sort((x, y) => (Number(meToca(y)) - Number(meToca(x)))
         || String(y.fechaActualizacion).localeCompare(String(x.fechaActualizacion)));
       zona.innerHTML = datos.length === 0
         ? vacio('No hay planificaciones para mostrar',
@@ -78,7 +96,7 @@ async function lista(cont, ctx) {
                 <td>${fecha(p.fechaClase)}</td>
                 <td>${badge(p.estado)}</td>
                 <td>${pendiente ? nombreRol(pendiente) : html`<small>Nadie: ya está autorizada</small>`}
-                  ${pendiente === ctx.rol ? html` <span class="badge badge-dorado">Requiere tu acción</span>` : ''}</td>
+                  ${meToca(p) ? html` <span class="badge badge-dorado">Requiere tu acción</span>` : ''}</td>
                 <td><small>${fechaHora(p.fechaActualizacion)}</small></td>
                 <td class="acciones"><a class="btn btn-chico" href="#/planificaciones/${p.id}">Abrir</a></td>
               </tr>`;
@@ -98,7 +116,7 @@ async function formulario(cont, ctx, idEdicion) {
   ctx.titulo(editando ? 'Editar planificación' : 'Nueva planificación');
   const volver = html`<a class="btn btn-fantasma" href="${editando ? `#/planificaciones/${idEdicion}` : '#/planificaciones'}">${icono('back')} Volver</a>`;
 
-  if (ctx.rol !== 'ESTUDIANTE') {
+  if (!ctx.tiene('ESTUDIANTE')) {
     cont.innerHTML = html`${cabecera({ hu: 'HU-04', titulo: 'Planificación', acciones: volver })}
       ${alerta('error', html`<strong>No tienes permiso para esta acción.</strong> Solo el estudiante dueño de la inscripción escribe su planificación.`)}`.toString();
     return;
@@ -191,7 +209,8 @@ async function formulario(cont, ctx, idEdicion) {
       ctx.ir(`#/planificaciones/${idActual}`);
     } catch (e) {
       if (e.status === 401) return;
-      alertaForm(form, e);
+      alertaForm(form, traducirFaltantes(e));
+      form.querySelector('[data-alerta-form]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       if (guardada) toast('El borrador se guardó, pero no se pudo enviar. Corrige y vuelve a intentarlo.', 'error');
     }
   });
@@ -200,7 +219,7 @@ async function formulario(cont, ctx, idEdicion) {
 function ultimaObservacion(p) {
   const ult = [...p.revisiones].reverse().find((r) => r.decision === 'OBSERVADA');
   if (!ult) return '';
-  return alerta('aviso', html`<strong>${ETAPAS[ult.etapa]} dejó observaciones</strong> (${ult.revisor.nombreCompleto}, ${fechaHora(ult.fecha)}):<br><em>“${ult.comentario}”</em>`);
+  return alerta('aviso', html`<strong>${QUIEN_REVISA[ult.etapa]} dejó observaciones</strong> (${ult.revisor.nombreCompleto}, ${fechaHora(ult.fecha)}):<br><em>“${ult.comentario}”</em>`);
 }
 
 // ============================ DETALLE ============================
@@ -275,23 +294,23 @@ async function detalle(cont, ctx, id) {
       </aside>
     </div>`.toString();
 
-  pintarAcciones(cont, ctx, p);
+  pintarAcciones(cont, ctx, p, insc);
   montarDocumentos(cont.querySelector('#documentos'), {
     base: `/api/planificaciones/${p.id}/documentos`,
-    puedeSubir: ctx.rol === 'ESTUDIANTE',
+    puedeSubir: ctx.tiene('ESTUDIANTE'),
     ayuda: ['BORRADOR', 'CON_OBSERVACIONES'].includes(p.estado)
       ? 'Word (.docx) o PDF, máximo 10 MB. Obligatorio al menos uno para poder enviar a revisión.'
       : 'Word (.docx) o PDF, máximo 10 MB.',
   });
 }
 
-function pintarAcciones(cont, ctx, p) {
+function pintarAcciones(cont, ctx, p, insc) {
   const zona = cont.querySelector('#acciones');
   const avisos = cont.querySelector('#avisos');
   const recargar = () => ctx.recargar();
 
   // ----- Estudiante: editar y enviar -----
-  if (ctx.rol === 'ESTUDIANTE' && ['BORRADOR', 'CON_OBSERVACIONES'].includes(p.estado)) {
+  if (ctx.tiene('ESTUDIANTE') && ['BORRADOR', 'CON_OBSERVACIONES'].includes(p.estado)) {
     zona.innerHTML = html`<div class="acciones-panel">
       <a class="btn" href="#/planificaciones/${p.id}/editar">${icono('edit')} Editar</a>
       <button type="button" class="btn btn-primario" id="enviar" data-cargando="Enviando…">${icono('send')} Enviar a revisión</button>
@@ -305,16 +324,15 @@ function pintarAcciones(cont, ctx, p) {
         await conCarga(boton, () => api.post(`/api/planificaciones/${p.id}/enviar`));
         toast('Planificación enviada a revisión.');
         recargar();
-      } catch (err) { if (err.status !== 401) avisos.innerHTML = alertaError(err).toString(); }
+      } catch (err) { if (err.status !== 401) avisos.innerHTML = alertaError(traducirFaltantes(err)).toString(); }
     });
     return;
   }
 
-  // ----- Guía o profesor del curso: decidir -----
-  const decide = (ctx.rol === 'PROFESOR_GUIA' && p.estado === 'EN_REVISION_GUIA')
-    || (ctx.rol === 'PROFESOR_CURSO' && p.estado === 'EN_AUTORIZACION');
+  // ----- Guía o profesor del curso: decidir (solo el asignado a ESTA inscripción) -----
+  const esGuia = ctx.actuaComo('PROFESOR_GUIA', insc) && p.estado === 'EN_REVISION_GUIA';
+  const decide = esGuia || (ctx.actuaComo('PROFESOR_CURSO', insc) && p.estado === 'EN_AUTORIZACION');
   if (decide) {
-    const esGuia = ctx.rol === 'PROFESOR_GUIA';
     const ruta = esGuia ? 'revision-guia' : 'revision-curso';
     zona.innerHTML = html`<form id="decision" novalidate>
       <div class="campo">
@@ -361,11 +379,11 @@ function pintarAcciones(cont, ctx, p) {
   }
 
   // ----- Sin acciones -----
-  if (ctx.rol === 'PROFESOR_GUIA' && p.estado === 'AUTORIZADA') {
-    zona.innerHTML = html`<div class="acciones-panel"><a class="btn btn-primario" href="#/evaluaciones/nueva?inscripcionId=${p.inscripcionId}">${icono('check')} Evaluar esta clase</a></div>`.toString();
+  if (ctx.actuaComo('PROFESOR_GUIA', insc) && p.estado === 'AUTORIZADA') {
+    zona.innerHTML = html`<div class="acciones-panel"><a class="btn btn-primario" href="#/evaluaciones/nueva?inscripcionId=${p.inscripcionId}&planificacionId=${p.id}">${icono('check')} Evaluar esta clase</a></div>`.toString();
     return;
   }
-  zona.innerHTML = html`<p class="subtitulo">${PENDIENTE[p.estado] && PENDIENTE[p.estado] !== ctx.rol
+  zona.innerHTML = html`<p class="subtitulo">${PENDIENTE[p.estado] && !ctx.actuaComo(PENDIENTE[p.estado], insc)
     ? `No tienes acciones pendientes: espera al ${nombreRol(PENDIENTE[p.estado]).toLowerCase()}.`
     : 'No tienes acciones disponibles en este estado.'}</p>`.toString();
 }

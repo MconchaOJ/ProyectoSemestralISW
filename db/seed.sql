@@ -27,8 +27,10 @@ SET NAMES utf8mb4;
 INSERT INTO rol (id, nombre, descripcion) VALUES
     (1, 'ESTUDIANTE',     'Estudiante de Pedagogía en Educación Matemática que cursa las prácticas'),
     (2, 'PROFESOR_GUIA',  'Profesor colaborador del colegio que guía al estudiante y evalúa sus clases'),
-    (3, 'PROFESOR_CURSO', 'Académico de la universidad que autoriza las clases (supuesto S-05)'),
-    (4, 'COORDINADOR',    'Coordinador de prácticas: registra estudiantes, profesores e inscripciones');
+    (3, 'PROFESOR_CURSO', 'Académico de la universidad que autoriza las clases planificadas'),
+    (4, 'COORDINADOR',    'Coordinador de prácticas: registra estudiantes, profesores e inscripciones'),
+    (5, 'JEFE_CARRERA',   'Jefe de carrera: lectura de todo (como el coordinador, sin modificar) y cartola de prácticas (acreditación)'),
+    (6, 'TUTOR',          'Tutor de la universidad: observa y evalúa la Práctica Profesional con sus propias pautas');
 
 -- Las 6 asignaturas de práctica (HU-02).
 -- Códigos internos del proyecto, no oficiales de la UBB. El chatbot aplica solo a las dos finales.
@@ -37,13 +39,13 @@ INSERT INTO rol (id, nombre, descripcion) VALUES
 --   * Ambientes de Aprendizaje: parejas y SÍ entrega planificaciones.
 --   * Ninguna de las dos va a un colegio, por eso no tienen profesor guía (colaborador).
 INSERT INTO asignatura_practica
-    (id, codigo, nombre, orden, ciclo, modalidad, requiere_centro_educativo, chatbot_habilitado, requiere_planificacion) VALUES
-    (1, 'PEM-P1', 'Aproximación al Sistema Escolar',    1, 'INICIAL',    'GRUPO',      FALSE, FALSE, FALSE),
-    (2, 'PEM-P2', 'Ambientes de Aprendizaje',           2, 'INICIAL',    'DUPLA',      FALSE, FALSE, TRUE),
-    (3, 'PEM-P3', 'Trabajo Colaborativo en el Aula',    3, 'INTERMEDIO', 'DUPLA',      TRUE,  FALSE, TRUE),
-    (4, 'PEM-P4', 'Investigación en el Aula',           4, 'INTERMEDIO', 'DUPLA',      TRUE,  FALSE, TRUE),
-    (5, 'PEM-P5', 'Práctica Pedagógica',                5, 'AVANZADO',   'INDIVIDUAL', TRUE,  TRUE,  TRUE),
-    (6, 'PEM-P6', 'Práctica Profesional',               6, 'AVANZADO',   'INDIVIDUAL', TRUE,  TRUE,  TRUE);
+    (id, codigo, nombre, orden, ciclo, modalidad, requiere_centro_educativo, chatbot_habilitado, requiere_planificacion, lleva_tutor) VALUES
+    (1, 'PEM-P1', 'Aproximación al Sistema Escolar',    1, 'INICIAL',    'GRUPO',      FALSE, FALSE, FALSE, FALSE),
+    (2, 'PEM-P2', 'Ambientes de Aprendizaje',           2, 'INICIAL',    'DUPLA',      FALSE, FALSE, TRUE, FALSE),
+    (3, 'PEM-P3', 'Trabajo Colaborativo en el Aula',    3, 'INTERMEDIO', 'DUPLA',      TRUE,  FALSE, TRUE, FALSE),
+    (4, 'PEM-P4', 'Investigación en el Aula',           4, 'INTERMEDIO', 'DUPLA',      TRUE,  FALSE, TRUE, FALSE),
+    (5, 'PEM-P5', 'Práctica Pedagógica',                5, 'AVANZADO',   'INDIVIDUAL', TRUE,  TRUE,  TRUE, FALSE),
+    (6, 'PEM-P6', 'Práctica Profesional',               6, 'AVANZADO',   'INDIVIDUAL', TRUE,  TRUE,  TRUE, TRUE);
 
 -- Pauta de observación de clase del profesor colaborador (S-07, HU-03).
 -- Fuente: "Pauta de Observación de la clase - Prof Colaborador/a - Trabajo colaborativo 2026".
@@ -80,6 +82,68 @@ INSERT INTO indicador (id, dimension_id, numero, descripcion) VALUES
     (18, 3, 18, 'El profesor/a promueve la autoestima, evitando el rechazo, fobia o miedo a la matemática.'),
     (19, 3, 19, 'El profesor/a promueve el diálogo y comunicación entre estudiantes favoreciendo la inclusión en la clase.'),
     (20, 3, 20, 'El profesor/a realiza observación sistemática del proceso cognitivo de los estudiantes durante toda la clase.');
+
+-- HU-07 (2026-10-16): pautas de Especialidad de la primera observación de Práctica Profesional, para el profesor
+-- colaborador (guía) y para el tutor. Fuente: "Pautas de evaluación Práctica Profesional 2025-2" (PRIMERA PAUTA DE
+-- EVALUACIÓN ESPECIALIDAD COLABORADOR-A / TUTOR-A). Escala 2 a 7 sin decimales, dimensiones A a D, 19 indicadores
+-- (puntaje total 133, igual que la pauta impresa). La pauta impresa numera de nuevo en cada dimensión (A1..A4, B1..);
+-- aquí van corridos del 1 al 19, como los numera el editor de pautas (HU-06; supuesto S-56). Las otras 6 pautas
+-- (Orientación y segunda observación) quedan pendientes de cargar.
+INSERT INTO pauta (id, asignatura_id, nombre, tipo_evaluador, ambito, numero_observacion, escala_min, escala_max, activa) VALUES
+    (2, 6, 'Pauta de Especialidad, 1.ª observación - Profesor/a colaborador/a (Práctica Profesional 2025-2)',
+        'COLABORADOR', 'ESPECIALIDAD', 1, 2, 7, TRUE),
+    (3, 6, 'Pauta de Especialidad, 1.ª observación - Tutor/a (Práctica Profesional 2025-2)',
+        'TUTOR', 'ESPECIALIDAD', 1, 2, 7, TRUE);
+
+INSERT INTO dimension_pauta (id, pauta_id, nombre, orden) VALUES
+    ( 4, 2, 'A. Conocimiento y preparación de la enseñanza', 1),
+    ( 5, 2, 'B. Convivencia al interior del aula', 2),
+    ( 6, 2, 'C. Transposición didáctica', 3),
+    ( 7, 2, 'D. Responsabilidad y ética profesional', 4),
+    ( 8, 3, 'A. Conocimiento y preparación de la enseñanza', 1),
+    ( 9, 3, 'B. Convivencia al interior del aula', 2),
+    (10, 3, 'C. Transposición didáctica', 3),
+    (11, 3, 'D. Responsabilidad y ética profesional', 4);
+
+INSERT INTO indicador (id, dimension_id, numero, descripcion) VALUES
+    (21,  4,  1, 'Comprende las bases curriculares y su respectivo programa de estudio de la disciplina que enseña.'),
+    (22,  4,  2, 'Conoce las características del desarrollo correspondiente a las edades de sus estudiantes y sus necesidades educativas.'),
+    (23,  4,  3, 'Incorpora en sus planificaciones variadas estrategias de enseñanza.'),
+    (24,  4,  4, 'Elabora secuencias de contenidos coherentes con los objetivos de aprendizaje del marco curricular.'),
+    (25,  5,  5, 'Establece un clima de relaciones interpersonales respetuosas y empáticas con sus estudiantes.'),
+    (26,  5,  6, 'Presenta situaciones didácticas que motivan la participación de sus estudiantes.'),
+    (27,  5,  7, 'Establece normas de comportamiento que son conocidas y comprensibles para sus estudiantes.'),
+    (28,  5,  8, 'Utiliza estrategias para crear y mantener un ambiente sano y seguro al interior del aula.'),
+    (29,  6,  9, 'Comunica a las/os estudiantes los propósitos de la clase y los aprendizajes a lograr.'),
+    (30,  6, 10, 'Desarrolla los contenidos a través de una estrategia de enseñanza clara y definida.'),
+    (31,  6, 11, 'Desarrolla los contenidos en forma clara, precisa y adecuada al nivel de las/os estudiantes.'),
+    (32,  6, 12, 'Desarrolla los contenidos con una secuencia adecuada a la comprensión de las/os estudiantes.'),
+    (33,  6, 13, 'Formula preguntas, problemas, y concede el tiempo necesario para resolverlos.'),
+    (34,  6, 14, 'Utiliza estrategias pertinentes para evaluar el logro de los objetivos de aprendizaje definidos para sus clases.'),
+    (35,  7, 15, 'Evalúa el grado en que los estudiantes alcanzaron los aprendizajes esperados.'),
+    (36,  7, 16, 'Dialoga con su profesor/a colaborador/a sobre aspectos pedagógicos y didácticos del proceso enseñanza - aprendizaje.'),
+    (37,  7, 17, 'Identifica las fortalezas de sus estudiantes y procura potenciarlas.'),
+    (38,  7, 18, 'Demuestra sentido de responsabilidad frente a las tareas asignadas asociadas a su práctica profesional.'),
+    (39,  7, 19, 'Presenta anticipadamente la planificación de su clase.'),
+    (40,  8,  1, 'Comprende las bases curriculares y su respectivo programa de estudio de la disciplina que enseña.'),
+    (41,  8,  2, 'Conoce las características del desarrollo correspondiente a las edades de sus estudiantes y sus necesidades educativas.'),
+    (42,  8,  3, 'Incorpora en sus planificaciones variadas estrategias de enseñanza.'),
+    (43,  8,  4, 'Elabora secuencias de contenidos coherentes con los objetivos de aprendizaje del marco curricular.'),
+    (44,  9,  5, 'Establece un clima de relaciones interpersonales respetuosas y empáticas con sus estudiantes.'),
+    (45,  9,  6, 'Presenta situaciones didácticas que motivan la participación de sus estudiantes.'),
+    (46,  9,  7, 'Establece normas de comportamiento que son conocidas y comprensibles para sus estudiantes.'),
+    (47,  9,  8, 'Utiliza estrategias para crear y mantener un ambiente sano y seguro al interior del aula.'),
+    (48, 10,  9, 'Comunica a las/os estudiantes los propósitos de la clase y los aprendizajes a lograr.'),
+    (49, 10, 10, 'Desarrolla los contenidos a través de una estrategia de enseñanza clara y definida.'),
+    (50, 10, 11, 'Desarrolla los contenidos en forma clara, precisa y adecuada al nivel de las/os estudiantes.'),
+    (51, 10, 12, 'Desarrolla los contenidos con una secuencia adecuada a la comprensión de las/os estudiantes.'),
+    (52, 10, 13, 'Formula preguntas, problemas, y concede el tiempo necesario para resolverlos.'),
+    (53, 10, 14, 'Utiliza estrategias pertinentes para evaluar el logro de los objetivos de aprendizaje definidos para sus clases.'),
+    (54, 11, 15, 'Evalúa el grado en que los estudiantes alcanzaron los aprendizajes esperados.'),
+    (55, 11, 16, 'Dialoga con su profesor/a colaborador/a sobre aspectos pedagógicos y didácticos del proceso enseñanza - aprendizaje.'),
+    (56, 11, 17, 'Identifica las fortalezas de sus estudiantes y procura potenciarlas.'),
+    (57, 11, 18, 'Demuestra sentido de responsabilidad frente a las tareas asignadas asociadas a su práctica profesional.'),
+    (58, 11, 19, 'Presenta anticipadamente la planificación de su clase.');
 
 -- =============================================================================
 -- PARTE 2 - DEMO (datos ficticios, S-15)
@@ -234,6 +298,31 @@ INSERT INTO inscripcion (id, estudiante_id, asignatura_id, periodo, profesor_gui
     (53, 20, 3, '2024-2', 3, 15, 'APROBADA', 6.3),
     (54, 20, 4, '2025-1', 13, 16, 'APROBADA', 6.4),
     (55, 20, 5, '2025-2', 14, 4, 'EN_CURSO', NULL);
+
+-- Fecha de cierre de las inscripciones cerradas (HU-31, migración 003). La aplicación guarda el día real en que
+-- el coordinador cierra; para estos datos de demostración se deduce del periodo. SUPUESTO S-48: el semestre 1
+-- cierra el 31 de julio y el 2 el 31 de diciembre.
+UPDATE inscripcion
+SET fecha_cierre = IF(RIGHT(periodo, 1) = '1',
+                      CONCAT(LEFT(periodo, 4), '-07-31'),
+                      CONCAT(LEFT(periodo, 4), '-12-31'))
+WHERE estado <> 'EN_CURSO';
+
+-- Jefe de carrera (HU-31, 2026-10-10; ampliado el 2026-10-11, confirmado por el cliente): lee todo como el
+-- coordinador y pide la cartola. Cuenta especial con SEGUNDO ROL (migración 004): también es profesor guía.
+INSERT INTO usuario (id, rol_id, rol_secundario_id, nombre, apellidos, email, password_hash, activo, fecha_creacion) VALUES
+    (32, 5, 2, 'Gonzalo', 'Riquelme Sanhueza', 'jefe.carrera@demo.example', @pw_demo, TRUE, '2026-10-10 09:00:00');
+
+-- Como guía toma la inscripción 40 (Isidora Bustos, Trabajo Colaborativo 2026-2, antes guía 13): cambio de guía
+-- a mitad de semestre. La revisión y la evaluación FINALIZADA que ya hizo el guía 13 quedan a su nombre, como
+-- registro histórico. Solo una para no dejar a otro guía con menos de 2 estudiantes (verificacion.sql, punto 18).
+UPDATE inscripcion SET profesor_guia_id = 32 WHERE id = 40;
+
+-- Tutor de Práctica Profesional (HU-07, 2026-10-16, migración 006): tutor de la inscripción 17 (Sebastián Vargas,
+-- Práctica Profesional 2026-2, guía Lorena Vidal). Sin evaluaciones todavía: se crean desde la página.
+INSERT INTO usuario (id, rol_id, nombre, apellidos, email, password_hash, activo, fecha_creacion) VALUES
+    (33, 6, 'Rodrigo', 'Saavedra Figueroa', 'tutor1@demo.example', @pw_demo, TRUE, '2026-10-16 09:00:00');
+UPDATE inscripcion SET tutor_id = 33 WHERE id = 17;
 
 -- -----------------------------------------------------------------------------
 -- Planificaciones: hay una en cada estado del flujo para poder mostrarlas todas

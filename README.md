@@ -23,7 +23,7 @@ Instrucciones detalladas para trabajar en el código: [`CLAUDE.md`](CLAUDE.md).
    .\db\bd.ps1
    ```
 
-3. **Backend** (compila, corre las 161 pruebas y deja el `.jar`):
+3. **Backend** (compila, corre las 175 pruebas y deja el `.jar`):
    ```powershell
    cd backend
    mvn clean package
@@ -45,6 +45,9 @@ Sprint1/     Product Backlog, Sprint Backlog, MER, diagramas BPMN (as-is/to-be) 
 
 ## Estado del proyecto
 
-Backend, base de datos y front-end del Sprint 1 están terminados y probados (161 pruebas automáticas). El detalle de
-cada historia, los endpoints y los supuestos abiertos están en [`backend/PROGRESO.md`](backend/PROGRESO.md); el
-Product Backlog y el Sprint Backlog, en [`Sprint1/`](Sprint1/).
+**Sprint 1 entregado y presentado (25-sep-2026):** backend, base de datos y front-end terminados y probados (161
+pruebas automáticas). El detalle de cada historia, los endpoints y los supuestos abiertos están en
+[`backend/PROGRESO.md`](backend/PROGRESO.md); el Product Backlog y el Sprint Backlog, en [`Sprint1/`](Sprint1/).
+
+**Sprint 2 (en curso):** publicar el sistema en un servidor de la universidad, operativo 24/7
+([`DESPLIEGUE.md`](DESPLIEGUE.md)), y avanzar con las historias pendientes ([`objetivosAFUTURO.md`](objetivosAFUTURO.md)).

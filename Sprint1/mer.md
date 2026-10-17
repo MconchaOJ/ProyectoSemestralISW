@@ -49,6 +49,7 @@ erDiagram
     ASIGNATURA_PRACTICA ||--o{ INSCRIPCION : "se ofrece en"
     USUARIO |o--o{ INSCRIPCION : "es guia de"
     USUARIO ||--o{ INSCRIPCION : "es profesor del curso de"
+    USUARIO |o--o{ INSCRIPCION : "es tutor de"
 
     USUARIO {
         string nombre
@@ -68,6 +69,7 @@ erDiagram
         string periodo
         string estado
         decimal nota_final
+        date fecha_cierre
     }
 ```
 
@@ -172,16 +174,19 @@ Este es el diagrama con todos los campos, tipos y claves (`PK` clave primaria, `
 ```mermaid
 erDiagram
     ROL ||--o{ USUARIO : "clasifica"
+    ROL |o--o{ USUARIO : "segundo rol opcional"
     USUARIO ||--o| ESTUDIANTE : "se especializa en"
     ESTUDIANTE ||--o{ INSCRIPCION : "cursa"
     ASIGNATURA_PRACTICA ||--o{ INSCRIPCION : "se ofrece en"
     USUARIO |o--o{ INSCRIPCION : "es profesor guia de"
     USUARIO ||--o{ INSCRIPCION : "es profesor del curso de"
+    USUARIO |o--o{ INSCRIPCION : "es tutor de"
     ASIGNATURA_PRACTICA ||--o{ PAUTA : "define"
     PAUTA ||--|{ DIMENSION_PAUTA : "se compone de"
     DIMENSION_PAUTA ||--|{ INDICADOR : "agrupa"
     INSCRIPCION ||--o{ EVALUACION : "recibe"
     PAUTA ||--o{ EVALUACION : "se aplica en"
+    PAUTA |o--o| PAUTA : "version anterior (HU-06)"
     USUARIO ||--o{ EVALUACION : "realiza como evaluador"
     PLANIFICACION |o--o{ EVALUACION : "se observa en"
     EVALUACION ||--|{ RESPUESTA_INDICADOR : "contiene"
@@ -198,12 +203,13 @@ erDiagram
 
     ROL {
         int id PK
-        varchar nombre UK "ESTUDIANTE, PROFESOR_GUIA, PROFESOR_CURSO, COORDINADOR"
+        varchar nombre UK "ESTUDIANTE, PROFESOR_GUIA, PROFESOR_CURSO, COORDINADOR, JEFE_CARRERA"
         varchar descripcion
     }
     USUARIO {
         bigint id PK
         int rol_id FK
+        int rol_secundario_id FK "opcional, migracion 004"
         varchar nombre
         varchar apellidos
         varchar email UK
@@ -228,6 +234,7 @@ erDiagram
         boolean requiere_centro_educativo
         boolean chatbot_habilitado "solo las dos finales"
         boolean requiere_planificacion "false solo en Aproximacion"
+        boolean lleva_tutor "true solo en Practica Profesional (HU-07)"
     }
     INSCRIPCION {
         bigint id PK
@@ -236,18 +243,24 @@ erDiagram
         varchar periodo "ej. 2026-2"
         bigint profesor_guia_id FK "puede ser nulo"
         bigint profesor_curso_id FK
+        bigint tutor_id FK "nulo = sin tutor (HU-07)"
         varchar estado "EN_CURSO, APROBADA, REPROBADA"
         decimal nota_final "nulo hasta el cierre"
+        date fecha_cierre "nula mientras esta EN_CURSO (HU-31)"
     }
     PAUTA {
         int id PK
         int asignatura_id FK
         varchar nombre
+        int version "HU-06, migracion 005"
+        int version_anterior_id FK "nula en la version 1"
         varchar tipo_evaluador "COLABORADOR, TUTOR, ACADEMICO"
         varchar ambito "OBSERVACION_CLASE, ESPECIALIDAD, ORIENTACION"
+        int numero_observacion "1 o 2; nulo en OBSERVACION_CLASE (HU-07)"
         int escala_min
         int escala_max
         boolean activa
+        datetime fecha_creacion
     }
     DIMENSION_PAUTA {
         int id PK
@@ -356,12 +369,12 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 
 | Entidad | Qué representa (en simple) | Puntos clave | HU |
 |---|---|---|---|
-| `ROL` | Catálogo de los tipos de usuario: estudiante, profesor guía, profesor del curso y coordinador | Es una tabla y no un texto libre para que nadie invente un rol | HU-01 |
-| `USUARIO` | Cualquier persona que entra al sistema | Guarda la contraseña **cifrada** (`password_hash`), nunca en texto plano. Cada usuario tiene un rol (S-11) | HU-01 |
+| `ROL` | Catálogo de los tipos de usuario: estudiante, profesor guía, profesor del curso, coordinador y jefe de carrera (este último desde el 10-oct, HU-31, solo lectura) | Es una tabla y no un texto libre para que nadie invente un rol Desde el 16-oct (HU-07, migración 006) también `TUTOR` (6 roles). | HU-01 |
+| `USUARIO` | Cualquier persona que entra al sistema | Guarda la contraseña **cifrada** (`password_hash`), nunca en texto plano. Cada usuario tiene un rol (S-11) y, solo en cuentas especiales, un segundo rol opcional `rol_secundario_id` (migración 004, 2026-10-11, confirmado por el cliente: el jefe de carrera que también es guía) | HU-01 |
 | `ESTUDIANTE` | Los datos propios de un usuario que es estudiante | Se separa de `USUARIO` porque solo los estudiantes tienen RUT, semestre y año de ingreso. `semestre_actual` es parte del contexto del chatbot (S-14) | HU-02 |
-| `ASIGNATURA_PRACTICA` | Cada una de las 6 asignaturas de práctica | `chatbot_habilitado` es verdadero solo en las dos finales. `ciclo` y `modalidad` reflejan la estructura del cliente: Aproximación al Sistema Escolar es `GRUPO` (de 4) y Ambientes de Aprendizaje `DUPLA` (S-16, según un estudiante). `requiere_planificacion` es falso solo en Aproximación (solo trabajos en clase) | HU-02 |
-| `INSCRIPCION` | Un estudiante cursando una asignatura en un periodo | Es el centro del modelo. Guarda quién es su guía (nulo en el ciclo inicial, que no va al colegio) y quién es su profesor del curso. Las asignaturas aprobadas se obtienen de aquí (`estado = APROBADA`) | HU-02, HU-05 |
-| `PAUTA` | Un instrumento de evaluación (por ejemplo, la pauta de observación de clase) | Define su escala (`escala_min`, `escala_max`) y quién la aplica (`tipo_evaluador`) | HU-03 |
+| `ASIGNATURA_PRACTICA` | Cada una de las 6 asignaturas de práctica | `chatbot_habilitado` es verdadero solo en las dos finales. `ciclo` y `modalidad` reflejan la estructura del cliente: Aproximación al Sistema Escolar es `GRUPO` (de 4) y Ambientes de Aprendizaje `DUPLA` (S-16, según un estudiante). `requiere_planificacion` es falso solo en Aproximación (solo trabajos en clase) `lleva_tutor` (HU-07) es verdadero solo en Práctica Profesional. | HU-02 |
+| `INSCRIPCION` | Un estudiante cursando una asignatura en un periodo | Es el centro del modelo. Guarda quién es su guía (nulo en el ciclo inicial, que no va al colegio) y quién es su profesor del curso. Las asignaturas aprobadas se obtienen de aquí (`estado = APROBADA`). `fecha_cierre` guarda el día en que se cerró: la cartola de prácticas filtra por ella (migración 003, S-48) Desde HU-07 guarda también su tutor (`tutor_id`, solo Práctica Profesional; CHECK: distinto del guía y del profesor del curso). | HU-02, HU-05, HU-31 |
+| `PAUTA` | Un instrumento de evaluación (por ejemplo, la pauta de observación de clase) | Define su escala (`escala_min`, `escala_max`) y quién la aplica (`tipo_evaluador`). Desde HU-06 (migración 005) la crea y edita el coordinador; una pauta ya usada no se modifica: se crea otra fila con `version` + 1 que apunta a la anterior (`version_anterior_id`), y cada evaluación conserva la versión con que se hizo HU-07: `numero_observacion` (1 o 2) en las pautas de Especialidad y Orientación, porque la primera y la segunda observación son instrumentos distintos (S-55); nulo en la de observación de clase. | HU-03, HU-06 |
 | `DIMENSION_PAUTA` | Un grupo de indicadores de una pauta | En la pauta real son 3: estructura de la clase, tareas matemáticas, y ambiente de aula y recursos | HU-03 |
 | `INDICADOR` | Cada criterio que se puntúa | La pauta real tiene 20 | HU-03 |
 | `EVALUACION` | Una clase evaluada con una pauta | Guarda los datos de la cabecera de la pauta en papel (establecimiento, curso, fecha, horas, objetivo, observaciones generales). Al finalizar se calcula y guarda el puntaje. Puede enlazar la planificación de esa clase | HU-03 |
@@ -383,11 +396,13 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 | `ASIGNATURA_PRACTICA` — `INSCRIPCION` | 1 a N | Una asignatura tiene muchas inscripciones, una por estudiante y periodo |
 | `USUARIO` — `INSCRIPCION` (profesor guía) | 0..1 a N | Un guía acompaña a muchos estudiantes. El guía es opcional porque el ciclo inicial no va al colegio |
 | `USUARIO` — `INSCRIPCION` (profesor del curso) | 1 a N | Cada inscripción tiene un profesor del curso que autoriza las clases |
+| `USUARIO` — `INSCRIPCION` (tutor) | 0..1 a N | HU-07 (migración 006, 2026-10-16): solo en Práctica Profesional (`lleva_tutor`), un tutor de la universidad observa y evalúa con sus propias pautas. Opcional y distinto del guía y del profesor del curso |
 | `ASIGNATURA_PRACTICA` — `PAUTA` | 1 a N | Una asignatura puede tener varias pautas (por ejemplo, de colaborador y de tutor) |
 | `PAUTA` — `DIMENSION_PAUTA` | 1 a 1..N | Una pauta se organiza en una o más dimensiones |
 | `DIMENSION_PAUTA` — `INDICADOR` | 1 a 1..N | Una dimensión agrupa uno o más indicadores |
 | `INSCRIPCION` — `EVALUACION` | 1 a N | Una inscripción recibe varias evaluaciones (varias clases observadas) |
 | `PAUTA` — `EVALUACION` | 1 a N | Cada evaluación usa una pauta; una pauta se usa en muchas evaluaciones |
+| `PAUTA` — `PAUTA` (versión anterior) | 0..1 a 0..1 | Una versión reemplaza a lo más a una anterior, y cada versión tiene a lo más una siguiente (HU-06) |
 | `USUARIO` — `EVALUACION` | 1 a N | El evaluador (por ejemplo, el profesor guía) realiza muchas evaluaciones |
 | `PLANIFICACION` — `EVALUACION` | 0..1 a N | La clase observada puede vincularse con la planificación que la autorizó. Es opcional para no bloquear evaluaciones sin planificación previa |
 | `EVALUACION` — `RESPUESTA_INDICADOR` | 1 a 1..N | Una evaluación contiene los puntajes de sus indicadores (20 en la pauta real) |
@@ -448,7 +463,7 @@ stateDiagram-v2
 |---|---|
 | S-05 | El profesor del curso es el académico UBB; se modela como un usuario con rol propio, así que si fuera del colegio no cambia la estructura |
 | S-09 | **Resuelto el 22-sep:** el formato oficial ya se conoce (`FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx`) y trae más campos que los cinco de la entrevista. El modelo sigue con los cinco elementos por ahora: migrar `planificacion` queda para un sprint futuro (S-45) |
-| S-11 | Un usuario tiene un solo rol, y cada evaluación pertenece a una inscripción (un estudiante): **un estudiante reportó que en pareja cada alumno tiene su propia pauta**, que es justo lo que el modelo hace. Las duplas y grupos se modelarán en HU-10 con una tabla de agrupación |
+| S-11 | ~~Un usuario tiene un solo rol~~ (desde el 2026-10-11, confirmado por el cliente: puede tener un segundo rol opcional en cuentas especiales, migración 004), y cada evaluación pertenece a una inscripción (un estudiante): **un estudiante reportó que en pareja cada alumno tiene su propia pauta**, que es justo lo que el modelo hace. Las duplas y grupos se modelarán en HU-10 con una tabla de agrupación |
 | S-13 | No se modela la duración de las prácticas (semanas y horas), porque los documentos del cliente se contradicen (un estudiante reportó 2 semanas en Investigación en el Aula, como dice la ficha) |
 | S-14 | El semestre y las asignaturas aprobadas se guardan aquí (los ingresa el coordinador); hoy la carrera los ve en la malla de la Intranet, y una importación desde ahí queda como mejora futura |
 | S-16 | Aproximación al Sistema Escolar: `GRUPO` (de 4) y sin planificaciones; Ambientes de Aprendizaje: `DUPLA` con planificaciones; ninguna va a un colegio, así que no tienen guía. Fuente: un estudiante de PEM (2026-09-20), pendiente de confirmar. Cambió el modelo con la migración `db/migraciones/001` |

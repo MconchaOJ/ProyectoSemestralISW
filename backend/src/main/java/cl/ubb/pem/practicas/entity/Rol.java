@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Catálogo de roles (tabla rol): ESTUDIANTE, PROFESOR_GUIA, PROFESOR_CURSO, COORDINADOR. */
+/** Catálogo de roles (tabla rol): ESTUDIANTE, PROFESOR_GUIA, PROFESOR_CURSO, COORDINADOR y JEFE_CARRERA (HU-31). */
 @Entity
 @Table(name = "rol")
 @Getter

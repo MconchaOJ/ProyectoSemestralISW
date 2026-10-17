@@ -2,6 +2,7 @@ package cl.ubb.pem.practicas.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -40,6 +41,11 @@ public class Inscripcion {
     @JoinColumn(name = "profesor_curso_id")
     private Usuario profesorCurso;
 
+    /** Tutor de la universidad (HU-07): solo en Práctica Profesional; nulo = sin tutor. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tutor_id")
+    private Usuario tutor;
+
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 20)
@@ -47,4 +53,8 @@ public class Inscripcion {
 
     @Column(name = "nota_final", precision = 3, scale = 1)
     private BigDecimal notaFinal;
+
+    /** Día en que se cerró (APROBADA o REPROBADA); nulo mientras está EN_CURSO. La cartola (HU-31) filtra por ella. */
+    @Column(name = "fecha_cierre")
+    private LocalDate fechaCierre;
 }

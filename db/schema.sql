@@ -57,7 +57,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE rol (
     id          INT          NOT NULL AUTO_INCREMENT,
-    nombre      VARCHAR(30)  NOT NULL COMMENT 'ESTUDIANTE, PROFESOR_GUIA, PROFESOR_CURSO, COORDINADOR',
+    nombre      VARCHAR(30)  NOT NULL COMMENT 'ESTUDIANTE, PROFESOR_GUIA, PROFESOR_CURSO, COORDINADOR, JEFE_CARRERA, TUTOR',
     descripcion VARCHAR(255) NULL,
     CONSTRAINT pk_rol        PRIMARY KEY (id),
     CONSTRAINT uq_rol_nombre UNIQUE (nombre)
@@ -66,6 +66,7 @@ CREATE TABLE rol (
 CREATE TABLE usuario (
     id             BIGINT       NOT NULL AUTO_INCREMENT,
     rol_id         INT          NOT NULL,
+    rol_secundario_id INT       NULL COMMENT 'Segundo rol opcional (cuentas especiales, migración 004). Nulo = un solo rol',
     nombre         VARCHAR(80)  NOT NULL,
     apellidos      VARCHAR(120) NOT NULL,
     email          VARCHAR(150) NOT NULL,
@@ -75,6 +76,9 @@ CREATE TABLE usuario (
     CONSTRAINT pk_usuario       PRIMARY KEY (id),
     CONSTRAINT uq_usuario_email UNIQUE (email),
     CONSTRAINT fk_usuario_rol   FOREIGN KEY (rol_id) REFERENCES rol (id),
+    -- Cuentas especiales (2026-10-11, confirmado por el cliente): como máximo un segundo rol, distinto del principal
+    CONSTRAINT fk_usuario_rol_secundario FOREIGN KEY (rol_secundario_id) REFERENCES rol (id),
+    CONSTRAINT ck_usuario_rol_secundario_distinto CHECK (rol_secundario_id IS NULL OR rol_secundario_id <> rol_id),
     CONSTRAINT ck_usuario_email CHECK (email LIKE '%_@_%._%'),
     -- Formato BCrypt: $2a$/$2b$/$2y$ + costo de 2 dígitos + $ + 53 caracteres
     CONSTRAINT ck_usuario_password_bcrypt CHECK (password_hash REGEXP '^[$]2[aby][$][0-9]{2}[$].{53}$')
@@ -109,6 +113,7 @@ CREATE TABLE asignatura_practica (
     requiere_centro_educativo BOOLEAN      NOT NULL DEFAULT TRUE,
     chatbot_habilitado        BOOLEAN      NOT NULL DEFAULT FALSE COMMENT 'Solo las dos prácticas finales',
     requiere_planificacion    BOOLEAN      NOT NULL DEFAULT TRUE COMMENT 'FALSE si la asignatura no entrega planificaciones de clase (Aproximación al Sistema Escolar)',
+    lleva_tutor               BOOLEAN      NOT NULL DEFAULT FALSE COMMENT 'TRUE si la práctica tiene tutor de la universidad (solo Práctica Profesional, HU-07, migración 006)',
     CONSTRAINT pk_asignatura        PRIMARY KEY (id),
     CONSTRAINT uq_asignatura_codigo UNIQUE (codigo),
     CONSTRAINT uq_asignatura_orden  UNIQUE (orden),
@@ -116,7 +121,9 @@ CREATE TABLE asignatura_practica (
     CONSTRAINT ck_asignatura_ciclo     CHECK (ciclo IN ('INICIAL', 'INTERMEDIO', 'AVANZADO')),
     CONSTRAINT ck_asignatura_modalidad CHECK (modalidad IN ('INDIVIDUAL', 'DUPLA', 'GRUPO')),
     -- El chatbot aplica solo a las dos prácticas finales, que son las del ciclo AVANZADO
-    CONSTRAINT ck_asignatura_chatbot   CHECK (chatbot_habilitado = FALSE OR ciclo = 'AVANZADO')
+    CONSTRAINT ck_asignatura_chatbot   CHECK (chatbot_habilitado = FALSE OR ciclo = 'AVANZADO'),
+    -- El tutor observa clases en el colegio: solo existe donde se va a un centro educativo
+    CONSTRAINT ck_asignatura_tutor     CHECK (lleva_tutor = FALSE OR requiere_centro_educativo = TRUE)
 ) ENGINE = InnoDB COMMENT = 'Las 6 asignaturas de práctica de la carrera';
 
 CREATE TABLE inscripcion (
@@ -126,8 +133,10 @@ CREATE TABLE inscripcion (
     periodo           VARCHAR(6)   NOT NULL COMMENT 'Ej. 2026-2',
     profesor_guia_id  BIGINT       NULL     COMMENT 'Nulo en el ciclo inicial (no va al colegio)',
     profesor_curso_id BIGINT       NOT NULL COMMENT 'Quien autoriza las clases (S-05)',
+    tutor_id          BIGINT       NULL     COMMENT 'Tutor de la universidad (solo Práctica Profesional); nulo = sin tutor (HU-07, migración 006)',
     estado            VARCHAR(20)  NOT NULL DEFAULT 'EN_CURSO' COMMENT 'EN_CURSO, APROBADA, REPROBADA',
     nota_final        DECIMAL(3,1) NULL     COMMENT 'Nulo hasta el cierre',
+    fecha_cierre      DATE         NULL     COMMENT 'Día en que se cerró (APROBADA o REPROBADA); nulo mientras está EN_CURSO (HU-31, migración 003)',
     CONSTRAINT pk_inscripcion PRIMARY KEY (id),
     -- Un estudiante no se inscribe dos veces en la misma asignatura y periodo.
     -- Este índice también sirve para el historial (HU-05): estudiante -> periodo.
@@ -136,12 +145,19 @@ CREATE TABLE inscripcion (
     CONSTRAINT fk_inscripcion_asignatura FOREIGN KEY (asignatura_id)     REFERENCES asignatura_practica (id),
     CONSTRAINT fk_inscripcion_guia       FOREIGN KEY (profesor_guia_id)  REFERENCES usuario (id),
     CONSTRAINT fk_inscripcion_curso      FOREIGN KEY (profesor_curso_id) REFERENCES usuario (id),
+    CONSTRAINT fk_inscripcion_tutor      FOREIGN KEY (tutor_id)          REFERENCES usuario (id),
     CONSTRAINT ck_inscripcion_periodo CHECK (periodo REGEXP '^[0-9]{4}-[12]$'),
     CONSTRAINT ck_inscripcion_estado  CHECK (estado IN ('EN_CURSO', 'APROBADA', 'REPROBADA')),
     CONSTRAINT ck_inscripcion_nota    CHECK (nota_final IS NULL OR nota_final BETWEEN 1.0 AND 7.0),
     CONSTRAINT ck_inscripcion_nota_cierre CHECK (estado <> 'EN_CURSO' OR nota_final IS NULL),
     CONSTRAINT ck_inscripcion_profesores_distintos CHECK (profesor_guia_id IS NULL OR profesor_guia_id <> profesor_curso_id),
-    INDEX ix_inscripcion_asignatura_periodo (asignatura_id, periodo)
+    CONSTRAINT ck_inscripcion_fecha_cierre CHECK (estado <> 'EN_CURSO' OR fecha_cierre IS NULL),
+    CONSTRAINT ck_inscripcion_tutor_distinto CHECK (tutor_id IS NULL
+        OR (tutor_id <> profesor_curso_id AND (profesor_guia_id IS NULL OR tutor_id <> profesor_guia_id))),
+    INDEX ix_inscripcion_tutor (tutor_id),
+    INDEX ix_inscripcion_asignatura_periodo (asignatura_id, periodo),
+    -- La cartola de prácticas (HU-31) filtra por rango de fecha de cierre.
+    INDEX ix_inscripcion_fecha_cierre (fecha_cierre)
 ) ENGINE = InnoDB COMMENT = 'Un estudiante cursando una asignatura en un periodo (centro del modelo)';
 
 -- =============================================================================
@@ -152,17 +168,29 @@ CREATE TABLE pauta (
     id             INT          NOT NULL AUTO_INCREMENT,
     asignatura_id  INT          NOT NULL,
     nombre         VARCHAR(200) NOT NULL,
+    version        INT          NOT NULL DEFAULT 1 COMMENT 'Versión de la pauta (HU-06, migración 005): 1, 2, 3...',
+    version_anterior_id INT     NULL COMMENT 'Versión que esta reemplaza; nula en la versión 1',
     tipo_evaluador VARCHAR(20)  NOT NULL COMMENT 'COLABORADOR, TUTOR, ACADEMICO',
     ambito         VARCHAR(30)  NOT NULL COMMENT 'OBSERVACION_CLASE, ESPECIALIDAD, ORIENTACION',
+    numero_observacion INT      NULL COMMENT '1 o 2: primera o segunda observación (Especialidad y Orientación, HU-07, migración 006); nulo en la observación de clase',
     escala_min     INT          NOT NULL,
     escala_max     INT          NOT NULL,
     activa         BOOLEAN      NOT NULL DEFAULT TRUE,
+    fecha_creacion DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_pauta PRIMARY KEY (id),
-    CONSTRAINT uq_pauta_asignatura_nombre UNIQUE (asignatura_id, nombre),
+    -- HU-06: una pauta usada no se edita; se crea otra fila con version + 1 que apunta a la anterior
+    CONSTRAINT uq_pauta_asignatura_nombre_version UNIQUE (asignatura_id, nombre, version),
+    CONSTRAINT uq_pauta_version_anterior UNIQUE (version_anterior_id),
     CONSTRAINT fk_pauta_asignatura FOREIGN KEY (asignatura_id) REFERENCES asignatura_practica (id),
+    CONSTRAINT fk_pauta_version_anterior FOREIGN KEY (version_anterior_id) REFERENCES pauta (id),
+    CONSTRAINT ck_pauta_version CHECK (version >= 1 AND ((version = 1) = (version_anterior_id IS NULL))),
     CONSTRAINT ck_pauta_tipo_evaluador CHECK (tipo_evaluador IN ('COLABORADOR', 'TUTOR', 'ACADEMICO')),
     CONSTRAINT ck_pauta_ambito         CHECK (ambito IN ('OBSERVACION_CLASE', 'ESPECIALIDAD', 'ORIENTACION')),
-    CONSTRAINT ck_pauta_escala         CHECK (escala_min >= 0 AND escala_max > escala_min)
+    CONSTRAINT ck_pauta_escala         CHECK (escala_min >= 0 AND escala_max > escala_min),
+    -- HU-07: la primera y la segunda observación son pautas distintas (S-55)
+    CONSTRAINT ck_pauta_numero_observacion CHECK (
+        (ambito = 'OBSERVACION_CLASE' AND numero_observacion IS NULL)
+     OR (ambito <> 'OBSERVACION_CLASE' AND numero_observacion IS NOT NULL AND numero_observacion IN (1, 2)))
 ) ENGINE = InnoDB COMMENT = 'Instrumento de evaluación con su escala y quién lo aplica';
 
 CREATE TABLE dimension_pauta (

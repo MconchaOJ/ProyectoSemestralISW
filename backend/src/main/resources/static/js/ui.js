@@ -86,6 +86,8 @@ export const ROLES = {
   PROFESOR_GUIA: 'Profesor guía',
   PROFESOR_CURSO: 'Profesor del curso',
   COORDINADOR: 'Coordinador',
+  JEFE_CARRERA: 'Jefe de carrera',
+  TUTOR: 'Tutor',
 };
 export const nombreRol = (rol) => ROLES[rol] ?? rol;
 
@@ -155,7 +157,12 @@ export function describirError(e) {
   const estado = e?.status;
   const detalles = (e?.errores ?? []).map((x) => `${x.campo}: ${x.mensaje}`);
   if (estado === 400) return { texto: e.message || 'Hay datos que corregir.', detalles };
-  if (estado === 403) return { texto: 'No tienes permiso para esta acción.', detalles: e.message && !/rol no tiene permiso/i.test(e.message) ? [e.message] : [] };
+  // 403 con un motivo concreto del servidor ("No tienes acceso a esta evaluación."): se muestra solo ese motivo,
+  // sin repetir antes "No tienes permiso". El genérico de Spring se cambia por el texto de siempre.
+  if (estado === 403) {
+    const concreto = e.message && !/rol no tiene permiso/i.test(e.message);
+    return { texto: concreto ? e.message : 'No tienes permiso para esta acción.', detalles: [] };
+  }
   if (estado === 404) return { texto: e.message || 'No se encontró lo que buscas.', detalles: [] };
   if (estado === 409) return { texto: e.message || 'La acción no se puede realizar en el estado actual.', detalles: [] };
   if (estado === 401) return { texto: 'Tu sesión expiró. Ingresa nuevamente.', detalles: [] };

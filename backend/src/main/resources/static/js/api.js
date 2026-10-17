@@ -142,6 +142,7 @@ export const api = {
   get: (ruta, params) => pedir('GET', ruta, { params }),
   post: (ruta, cuerpo) => pedir('POST', ruta, { cuerpo: cuerpo ?? {} }),
   put: (ruta, cuerpo) => pedir('PUT', ruta, { cuerpo: cuerpo ?? {} }),
+  del: (ruta) => pedir('DELETE', ruta),
   login: (email, password) => pedir('POST', '/api/auth/login', { cuerpo: { email, password }, publico: true }),
   subir: (ruta, formData) => subirFormData(ruta, formData),
   archivo: (ruta) => obtenerArchivo(ruta),

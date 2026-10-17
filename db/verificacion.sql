@@ -16,7 +16,7 @@ SELECT COUNT(*) AS tablas
   FROM information_schema.tables
  WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
-SELECT '2. FILAS POR TABLA (esperado: rol 4, usuario 31, estudiante 20, asignatura 6, inscripcion 55, pauta 1, dimension 3, indicador 20, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0)' AS verificacion;
+SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, inscripcion 55, pauta 3, dimension 11, indicador 58, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0)' AS verificacion;
 SELECT 'rol' AS tabla, COUNT(*) AS filas FROM rol
 UNION ALL SELECT 'usuario',                COUNT(*) FROM usuario
 UNION ALL SELECT 'estudiante',             COUNT(*) FROM estudiante
@@ -34,7 +34,7 @@ UNION ALL SELECT 'mensaje_chatbot',        COUNT(*) FROM mensaje_chatbot
 UNION ALL SELECT 'documento_planificacion', COUNT(*) FROM documento_planificacion
 UNION ALL SELECT 'documento_evaluacion',    COUNT(*) FROM documento_evaluacion;
 
-SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 16, FOREIGN KEY 24, UNIQUE 13, CHECK 34)' AS verificacion;
+SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 16, FOREIGN KEY 27, UNIQUE 14, CHECK 40)' AS verificacion;
 SELECT constraint_type AS tipo, COUNT(*) AS cantidad
   FROM information_schema.table_constraints
  WHERE table_schema = DATABASE()
@@ -51,33 +51,45 @@ SELECT table_name AS tabla,
  ORDER BY table_name;
 
 -- -----------------------------------------------------------------------------
-SELECT '5. CATÁLOGO: las 6 asignaturas (esperado: el chatbot solo en las dos últimas)' AS verificacion;
+SELECT '5. CATÁLOGO: las 6 asignaturas (esperado: el chatbot solo en las dos últimas y el tutor solo en Práctica Profesional)' AS verificacion;
 SELECT orden, codigo, nombre, ciclo, modalidad, requiere_centro_educativo AS centro, chatbot_habilitado AS chatbot,
-       requiere_planificacion AS planifica
+       requiere_planificacion AS planifica, lleva_tutor AS tutor
   FROM asignatura_practica
  ORDER BY orden;
 
-SELECT '6. CATÁLOGO: la pauta tiene 3 dimensiones y 20 indicadores (esperado: 6, 6 y 8 indicadores)' AS verificacion;
+SELECT '6. CATÁLOGO: la pauta de observación de clase (id 1) tiene 3 dimensiones y 20 indicadores (esperado: 6, 6 y 8 indicadores)' AS verificacion;
 SELECT d.orden, d.nombre AS dimension, COUNT(i.id) AS indicadores,
        MIN(i.numero) AS desde, MAX(i.numero) AS hasta
   FROM dimension_pauta d
   JOIN indicador i ON i.dimension_id = d.id
+ WHERE d.pauta_id = 1
  GROUP BY d.id, d.orden, d.nombre
  ORDER BY d.orden;
 
+SELECT '6b. CATÁLOGO HU-07: pautas de Práctica Profesional (esperado: 2 pautas, colaborador y tutor, Especialidad 1.ª observación, escala 2 a 7, 4 dimensiones, 19 indicadores, puntaje máximo 133)' AS verificacion;
+SELECT p.id, p.tipo_evaluador, p.ambito, p.numero_observacion AS observacion, p.escala_min, p.escala_max,
+       COUNT(DISTINCT d.id) AS dimensiones, COUNT(i.id) AS indicadores, COUNT(i.id) * p.escala_max AS puntaje_maximo
+  FROM pauta p
+  JOIN dimension_pauta d ON d.pauta_id = p.id
+  JOIN indicador i ON i.dimension_id = d.id
+ WHERE p.asignatura_id = 6
+ GROUP BY p.id, p.tipo_evaluador, p.ambito, p.numero_observacion, p.escala_min, p.escala_max
+ ORDER BY p.id;
+
 -- -----------------------------------------------------------------------------
 SELECT '7. INTEGRIDAD: reglas del MER que la base debe cumplir (esperado: 0 violaciones en cada fila)' AS verificacion;
+-- Desde la migración 004 un usuario puede tener un segundo rol: "tiene el rol" = principal o secundario.
 SELECT 'Guía de una inscripción sin rol PROFESOR_GUIA' AS control, COUNT(*) AS violaciones
   FROM inscripcion i JOIN usuario u ON u.id = i.profesor_guia_id
- WHERE u.rol_id <> (SELECT id FROM rol WHERE nombre = 'PROFESOR_GUIA')
+ WHERE (SELECT id FROM rol WHERE nombre = 'PROFESOR_GUIA') NOT IN (u.rol_id, COALESCE(u.rol_secundario_id, 0))
 UNION ALL
 SELECT 'Profesor del curso sin rol PROFESOR_CURSO', COUNT(*)
   FROM inscripcion i JOIN usuario u ON u.id = i.profesor_curso_id
- WHERE u.rol_id <> (SELECT id FROM rol WHERE nombre = 'PROFESOR_CURSO')
+ WHERE (SELECT id FROM rol WHERE nombre = 'PROFESOR_CURSO') NOT IN (u.rol_id, COALESCE(u.rol_secundario_id, 0))
 UNION ALL
 SELECT 'Ficha de estudiante cuyo usuario no tiene rol ESTUDIANTE', COUNT(*)
   FROM estudiante e JOIN usuario u ON u.id = e.usuario_id
- WHERE u.rol_id <> (SELECT id FROM rol WHERE nombre = 'ESTUDIANTE')
+ WHERE (SELECT id FROM rol WHERE nombre = 'ESTUDIANTE') NOT IN (u.rol_id, COALESCE(u.rol_secundario_id, 0))
 UNION ALL
 SELECT 'Inscripción en asignatura con colegio pero sin guía', COUNT(*)
   FROM inscripcion i JOIN asignatura_practica a ON a.id = i.asignatura_id
@@ -85,11 +97,14 @@ SELECT 'Inscripción en asignatura con colegio pero sin guía', COUNT(*)
 UNION ALL
 SELECT 'Evaluador sin rol PROFESOR_GUIA en pauta de COLABORADOR', COUNT(*)
   FROM evaluacion e JOIN pauta p ON p.id = e.pauta_id JOIN usuario u ON u.id = e.evaluador_id
- WHERE p.tipo_evaluador = 'COLABORADOR' AND u.rol_id <> (SELECT id FROM rol WHERE nombre = 'PROFESOR_GUIA')
+ WHERE p.tipo_evaluador = 'COLABORADOR'
+   AND (SELECT id FROM rol WHERE nombre = 'PROFESOR_GUIA') NOT IN (u.rol_id, COALESCE(u.rol_secundario_id, 0))
 UNION ALL
-SELECT 'Evaluación de un guía que no es el guía de esa inscripción', COUNT(*)
+-- Tras un cambio de guía (demo: inscripción 40), las evaluaciones FINALIZADAS del guía anterior quedan como
+-- registro histórico; un BORRADOR sí sería un problema, porque su autor ya no podría terminarlo.
+SELECT 'Evaluación en BORRADOR de un guía que ya no es el guía de esa inscripción', COUNT(*)
   FROM evaluacion e JOIN inscripcion i ON i.id = e.inscripcion_id
- WHERE e.evaluador_id <> i.profesor_guia_id
+ WHERE e.estado = 'BORRADOR' AND e.evaluador_id <> i.profesor_guia_id
 UNION ALL
 SELECT 'Evaluación FINALIZADA con indicadores sin puntuar o total mal calculado', COUNT(*)
   FROM evaluacion e
@@ -121,12 +136,21 @@ SELECT 'Planificación en una asignatura que no entrega planificaciones', COUNT(
   JOIN asignatura_practica a ON a.id = i.asignatura_id
  WHERE NOT a.requiere_planificacion
 UNION ALL
-SELECT 'Revisión hecha por alguien que no es el guía/profesor del curso de la inscripción', COUNT(*)
+-- Una revisión es un registro histórico: tras un cambio de guía (demo: inscripción 40) la del guía anterior sigue
+-- valiendo. Lo que nunca puede pasar es que la etapa la haya firmado alguien sin el rol que corresponde.
+SELECT 'Revisión firmada por alguien sin el rol de su etapa (GUIA: PROFESOR_GUIA; CURSO: PROFESOR_CURSO)', COUNT(*)
+  FROM revision_planificacion r
+  JOIN usuario u ON u.id = r.revisor_id
+ WHERE (SELECT id FROM rol WHERE nombre = IF(r.etapa = 'GUIA', 'PROFESOR_GUIA', 'PROFESOR_CURSO'))
+       NOT IN (u.rol_id, COALESCE(u.rol_secundario_id, 0))
+UNION ALL
+SELECT 'Revisión de un guía o profesor del curso que ya no lo es, salvo la histórica de la inscripción 40', COUNT(*)
   FROM revision_planificacion r
   JOIN planificacion p ON p.id = r.planificacion_id
   JOIN inscripcion i ON i.id = p.inscripcion_id
- WHERE (r.etapa = 'GUIA'  AND r.revisor_id <> i.profesor_guia_id)
-    OR (r.etapa = 'CURSO' AND r.revisor_id <> i.profesor_curso_id);
+ WHERE ((r.etapa = 'GUIA'  AND r.revisor_id <> i.profesor_guia_id)
+     OR (r.etapa = 'CURSO' AND r.revisor_id <> i.profesor_curso_id))
+   AND i.id <> 40;
 
 -- -----------------------------------------------------------------------------
 SELECT '8. HU-05 HISTORIAL: recorrido de Sebastián Vargas (RUT 44444444-4). Esperado: 6 inscripciones en orden cronológico, las 5 primeras APROBADA y la última EN_CURSO' AS verificacion;
@@ -241,9 +265,12 @@ SELECT 'Profesor guía activo (con estudiantes asignados) sin ninguna revisión 
    AND EXISTS (SELECT 1 FROM inscripcion i WHERE i.profesor_guia_id = u.id)
    AND NOT EXISTS (SELECT 1 FROM revision_planificacion r WHERE r.revisor_id = u.id AND r.etapa = 'GUIA')
 UNION ALL
+-- Solo guías de rol principal: el jefe de carrera es guía por su segundo rol y tiene 1 estudiante a propósito
 SELECT 'Profesor guía activo con menos de 2 estudiantes distintos asignados', COUNT(*)
   FROM (SELECT i.profesor_guia_id, COUNT(DISTINCT i.estudiante_id) AS n
-          FROM inscripcion i WHERE i.profesor_guia_id IS NOT NULL GROUP BY i.profesor_guia_id) x
+          FROM inscripcion i JOIN usuario u ON u.id = i.profesor_guia_id
+         WHERE u.rol_id = (SELECT id FROM rol WHERE nombre = 'PROFESOR_GUIA')
+         GROUP BY i.profesor_guia_id) x
  WHERE x.n < 2
 UNION ALL
 SELECT 'Profesor guía activo con más de 20 estudiantes distintos asignados', COUNT(*)
@@ -278,3 +305,48 @@ SELECT CONCAT(u.nombre, ' ', u.apellidos) AS profesor_del_curso,
   JOIN inscripcion i ON i.profesor_curso_id = u.id
  GROUP BY u.id, u.nombre, u.apellidos
  ORDER BY estudiantes DESC;
+
+-- -----------------------------------------------------------------------------
+SELECT '20. CARTOLA DE PRÁCTICAS (HU-31, migración 003; esperado: 0 violaciones en cada fila)' AS verificacion;
+SELECT 'Inscripción cerrada (APROBADA o REPROBADA) sin fecha de cierre' AS control, COUNT(*) AS violaciones
+  FROM inscripcion WHERE estado <> 'EN_CURSO' AND fecha_cierre IS NULL
+UNION ALL
+SELECT 'Inscripción EN_CURSO con fecha de cierre', COUNT(*)
+  FROM inscripcion WHERE estado = 'EN_CURSO' AND fecha_cierre IS NOT NULL
+UNION ALL
+SELECT 'Usuario con segundo rol igual a su rol principal', COUNT(*)
+  FROM usuario WHERE rol_secundario_id = rol_id;
+
+SELECT '21. CUENTAS CON SEGUNDO ROL (migración 004; esperado: 1, el jefe de carrera con PROFESOR_GUIA, guía de 1 inscripción)' AS verificacion;
+SELECT u.email, r1.nombre AS rol_principal, r2.nombre AS rol_secundario,
+       (SELECT COUNT(*) FROM inscripcion i WHERE i.profesor_guia_id = u.id) AS inscripciones_como_guia
+  FROM usuario u
+  JOIN rol r1 ON r1.id = u.rol_id
+  JOIN rol r2 ON r2.id = u.rol_secundario_id;
+
+SELECT 'Inscripciones cerradas por año de cierre (para revisar a ojo)' AS verificacion;
+SELECT YEAR(fecha_cierre) AS anio, COUNT(*) AS cerradas
+  FROM inscripcion WHERE fecha_cierre IS NOT NULL
+ GROUP BY YEAR(fecha_cierre) ORDER BY anio;
+
+-- -----------------------------------------------------------------------------
+SELECT '22. TUTOR DE PRÁCTICA PROFESIONAL (HU-07, migración 006; esperado: 0 violaciones en cada fila)' AS verificacion;
+SELECT 'Tutor de una inscripción sin rol TUTOR' AS control, COUNT(*) AS violaciones
+  FROM inscripcion i JOIN usuario u ON u.id = i.tutor_id
+ WHERE (SELECT id FROM rol WHERE nombre = 'TUTOR') NOT IN (u.rol_id, COALESCE(u.rol_secundario_id, 0))
+UNION ALL
+SELECT 'Inscripción con tutor en una asignatura que no lleva tutor', COUNT(*)
+  FROM inscripcion i JOIN asignatura_practica a ON a.id = i.asignatura_id
+ WHERE i.tutor_id IS NOT NULL AND NOT a.lleva_tutor
+UNION ALL
+SELECT 'Evaluación con pauta de TUTOR hecha por alguien que no es el tutor de la inscripción', COUNT(*)
+  FROM evaluacion e JOIN pauta p ON p.id = e.pauta_id JOIN inscripcion i ON i.id = e.inscripcion_id
+ WHERE p.tipo_evaluador = 'TUTOR' AND NOT (e.evaluador_id <=> i.tutor_id);
+
+SELECT '23. TUTORES y sus inscripciones (esperado en la demo: tutor1@demo.example con la inscripción 17, Sebastián Vargas)' AS verificacion;
+SELECT u.email, i.id AS inscripcion, CONCAT(ue.nombre, ' ', ue.apellidos) AS estudiante, a.nombre AS asignatura, i.periodo
+  FROM inscripcion i
+  JOIN usuario u ON u.id = i.tutor_id
+  JOIN estudiante es ON es.id = i.estudiante_id
+  JOIN usuario ue ON ue.id = es.usuario_id
+  JOIN asignatura_practica a ON a.id = i.asignatura_id;

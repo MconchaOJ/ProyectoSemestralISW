@@ -44,9 +44,9 @@ public class NotaVozController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('PROFESOR_GUIA')")
+    @PreAuthorize("hasAnyRole('PROFESOR_GUIA', 'TUTOR')")
     @Operation(summary = "Grabar la nota de voz de la evaluación",
-            description = "Solo el profesor guía evaluador (403 para cualquier otro). Audio más el texto ya "
+            description = "Solo el evaluador (guía o tutor; 403 para cualquier otro). Audio más el texto ya "
                     + "transcrito por el navegador. Como máximo una por evaluación: si ya existe, 409 (usa PUT). "
                     + "Se puede grabar con la evaluación en BORRADOR o ya FINALIZADA (SUPUESTO S-42).")
     public NotaVozDto crear(@PathVariable Long evaluacionId, @RequestParam("audio") MultipartFile audio,
@@ -57,9 +57,9 @@ public class NotaVozController {
     }
 
     @PutMapping
-    @PreAuthorize("hasRole('PROFESOR_GUIA')")
+    @PreAuthorize("hasAnyRole('PROFESOR_GUIA', 'TUTOR')")
     @Operation(summary = "Corregir el texto transcrito",
-            description = "Solo el profesor guía evaluador. Marca transcripcionCorregida = true.")
+            description = "Solo el evaluador (guía o tutor). Marca transcripcionCorregida = true.")
     public NotaVozDto corregir(@PathVariable Long evaluacionId, @Valid @RequestBody NotaVozCorregirRequest request,
                                @AuthenticationPrincipal UsuarioAutenticado actor) {
         return notasVoz.corregirTranscripcion(evaluacionId, request.transcripcion(), actor);

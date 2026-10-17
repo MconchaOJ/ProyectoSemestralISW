@@ -23,7 +23,7 @@ public class RolController {
 
     @GetMapping
     @PreAuthorize("hasRole('COORDINADOR')")
-    @Operation(summary = "Listar los 4 roles del sistema",
+    @Operation(summary = "Listar los 5 roles del sistema",
             description = "Solo COORDINADOR. Sirve también para demostrar el 403 con cualquier otro rol.")
     public List<RolDto> listar() {
         return roles.findAllByOrderByIdAsc().stream().map(RolDto::desde).toList();

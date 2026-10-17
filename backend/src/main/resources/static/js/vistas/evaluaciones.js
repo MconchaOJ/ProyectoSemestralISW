@@ -11,6 +11,13 @@ import {
   enlazarFormulario, fecha, fechaHora, hora, html, icono, modalFormulario, promedio, toast, vacio,
 } from '../ui.js';
 
+/** HU-07: evalúa el guía (pautas de COLABORADOR) o el tutor (pautas de TUTOR), cada uno en sus inscripciones. */
+const evaluaEn = (ctx, i) => ctx.actuaComo('PROFESOR_GUIA', i) || ctx.actuaComo('TUTOR', i);
+const TIPO_DE_PAUTA = (ctx, i) => (ctx.actuaComo('TUTOR', i) ? 'TUTOR' : 'COLABORADOR');
+// Se agrega al nombre de la pauta solo si el nombre no lo dice ya ("Pauta de Especialidad, 1.ª observación - ...")
+const conObservacion = (pauta) => (pauta?.numeroObservacion && !/observaci[oó]n/i.test(pauta.nombre ?? '')
+  ? ` · ${pauta.numeroObservacion}.ª observación` : '');
+
 export async function render(cont, ctx) {
   const [id] = ctx.args;
   if (!id) return lista(cont, ctx);
@@ -20,22 +27,32 @@ export async function render(cont, ctx) {
 
 // ============================ LISTA ============================
 async function lista(cont, ctx) {
-  const esGuia = ctx.rol === 'PROFESOR_GUIA';
-  const titulo = esGuia ? 'Evaluar una clase con la pauta digital (indicadores 1 a 7)'
-    : ctx.rol === 'ESTUDIANTE' ? 'Mis evaluaciones' : 'Evaluaciones de clases';
+  const esGuia = ctx.tiene('PROFESOR_GUIA') || ctx.tiene('TUTOR');   // quien evalúa (guía o tutor)
+  const esEstudiante = ctx.tiene('ESTUDIANTE');
+  // Cuenta con dos roles (jefe de carrera que también es guía): título neutro y un subtítulo que explica ambos.
+  const guiaQueVeTodo = esGuia && ctx.veTodo;
+  const titulo = guiaQueVeTodo ? 'Evaluaciones de clases'
+    : ctx.tiene('TUTOR') ? 'Evaluar una clase con las pautas de tutor'
+    : esGuia ? 'Evaluar una clase con la pauta digital (indicadores 1 a 7)'
+      : esEstudiante ? 'Mis evaluaciones' : 'Evaluaciones de clases';
   ctx.titulo('Evaluaciones');
   const inscripciones = await api.get('/api/inscripciones');
   const porId = new Map(inscripciones.map((i) => [i.id, i]));
+  const subtitulo = guiaQueVeTodo
+    ? 'Ves las evaluaciones de todos los estudiantes, incluidos los borradores, en modo lectura. Como profesor guía, en las inscripciones que tienes asignadas creas y completas la pauta de 20 indicadores (escala 1 a 7).'
+    : ctx.tiene('TUTOR') ? 'Observa la clase y completa la pauta de tutor (Especialidad u Orientación, escala 2 a 7) de los estudiantes de los que eres tutor. El borrador es privado; al finalizar se calcula el puntaje y ya no se puede modificar.'
+    : esGuia ? 'Observa la clase y completa la pauta de 20 indicadores (escala 1 a 7). El borrador es privado; al finalizar se calcula el puntaje y ya no se puede modificar.'
+      : ctx.veTodo ? 'Ves las evaluaciones de todos los estudiantes, incluidos los borradores. Solo lectura.'
+        : esEstudiante ? 'Ves tus evaluaciones finalizadas: mientras el profesor guía la completa, la evaluación es un borrador privado y no aparece aquí.'
+          : 'Solo ves las evaluaciones finalizadas de los estudiantes que tienes asociados.';
 
   cont.innerHTML = html`
     ${cabecera({
-      hu: 'HU-03', titulo,
-      subtitulo: esGuia ? 'Observa la clase y completa la pauta de 20 indicadores (escala 1 a 7). El borrador es privado; al finalizar se calcula el puntaje y ya no se puede modificar.'
-        : 'Solo ves las evaluaciones finalizadas de los estudiantes que tienes asociados.',
+      hu: 'HU-03', titulo, subtitulo,
       acciones: esGuia ? html`<a class="btn btn-primario" href="#/evaluaciones/nueva">${icono('plus')} Nueva evaluación</a>` : '',
     })}
     <div class="barra-herramientas">
-      <label class="filtro">Estado
+      <label class="filtro" ${esEstudiante ? html`hidden` : ''}>Estado
         <select id="f-estado"><option value="">Todos</option><option value="BORRADOR">Borrador</option><option value="FINALIZADA">Finalizada</option></select></label>
       <label class="filtro">Inscripción
         <select id="f-inscripcion"><option value="">Todas</option>${opcionesInscripcion(inscripciones).map((o) => html`<option value="${o.valor}">${o.texto}</option>`)}</select></label>
@@ -67,7 +84,7 @@ async function lista(cont, ctx) {
                 <td>${badge(e.estado)}</td>
                 <td class="num">${e.puntajeTotal ?? '—'}</td>
                 <td class="num"><strong>${promedio(e.promedio)}</strong></td>
-                <td class="acciones"><a class="btn btn-chico" href="#/evaluaciones/${e.id}">${e.estado === 'BORRADOR' && esGuia ? 'Continuar' : 'Ver'}</a></td>
+                <td class="acciones"><a class="btn btn-chico" href="#/evaluaciones/${e.id}">${e.estado === 'BORRADOR' && evaluaEn(ctx, insc) ? 'Continuar' : 'Ver'}</a></td>
               </tr>`;
             })}</tbody></table></div>
           <p class="pie-tabla">${datos.length} evaluaci${datos.length === 1 ? 'ón' : 'ones'}</p>`.toString();
@@ -105,13 +122,15 @@ async function planificacionesAutorizadas(inscripcionId) {
 async function nueva(cont, ctx) {
   ctx.titulo('Nueva evaluación');
   const volver = html`<a class="btn btn-fantasma" href="#/evaluaciones">${icono('back')} Volver a evaluaciones</a>`;
-  if (ctx.rol !== 'PROFESOR_GUIA') {
+  if (!ctx.tiene('PROFESOR_GUIA') && !ctx.tiene('TUTOR')) {
     cont.innerHTML = html`${cabecera({ hu: 'HU-03', titulo: 'Nueva evaluación', acciones: volver })}
-      ${alerta('error', html`<strong>No tienes permiso para esta acción.</strong> Solo el profesor guía asignado puede evaluar una clase.`)}`.toString();
+      ${alerta('error', html`<strong>No tienes permiso para esta acción.</strong> Solo el profesor guía o el tutor asignado puede evaluar una clase.`)}`.toString();
     return;
   }
 
-  const inscripciones = (await api.get('/api/inscripciones')).filter((i) => i.estado === 'EN_CURSO');
+  // Solo donde es el guía asignado: el jefe de carrera que también es guía recibe todas las inscripciones
+  const inscripciones = (await api.get('/api/inscripciones'))
+    .filter((i) => i.estado === 'EN_CURSO' && evaluaEn(ctx, i));
   if (inscripciones.length === 0) {
     cont.innerHTML = html`${cabecera({ hu: 'HU-03', titulo: 'Nueva evaluación', acciones: volver })}
       ${vacio('No tienes estudiantes con una práctica en curso', 'Solo se puede evaluar una inscripción EN_CURSO que el coordinador te haya asignado.', 'users')}`.toString();
@@ -155,11 +174,12 @@ async function nueva(cont, ctx) {
       planificacionesAutorizadas(insc.id),
     ]);
     if (mio !== cambio) return;
-    const activas = pautas.filter((p) => p.activa);
-    selPauta.innerHTML = html`<option value="">Seleccione…</option>${activas.map((p) => html`<option value="${p.id}">${p.nombre} (${p.totalIndicadores} indicadores)</option>`)}`.toString();
+    // Solo las pautas que aplica quien evalúa en ESTA inscripción (HU-07, criterio 3: el tutor solo usa pautas de tutor)
+    const activas = pautas.filter((p) => p.activa && p.tipoEvaluador === TIPO_DE_PAUTA(ctx, insc));
+    selPauta.innerHTML = html`<option value="">Seleccione…</option>${activas.map((p) => html`<option value="${p.id}">${p.nombre} (${p.totalIndicadores} indicadores, escala ${p.escalaMin} a ${p.escalaMax})</option>`)}`.toString();
     if (activas.length === 1) selPauta.value = String(activas[0].id);
     if (activas.length === 0) {
-      aviso.innerHTML = alerta('aviso', html`Todavía no hay una pauta digital para <strong>${insc.asignatura.nombre}</strong>. En el Sprint 1 solo está la pauta de Trabajo Colaborativo en el Aula (supuesto S-07).`).toString();
+      aviso.innerHTML = alerta('aviso', html`Todavía no hay una pauta digital activa para <strong>${insc.asignatura.nombre}</strong> que puedas aplicar ${TIPO_DE_PAUTA(ctx, insc) === 'TUTOR' ? 'como tutor' : 'como profesor guía'}. El coordinador las crea en «Pautas de evaluación».`).toString();
     }
     selPlan.innerHTML = html`<option value="">Sin planificación vinculada</option>${planes.map((p) => html`<option value="${p.id}" data-fecha="${p.fechaClase ?? ''}">${p.titulo} (${fecha(p.fechaClase)})</option>`)}`.toString();
   }
@@ -188,6 +208,12 @@ async function nueva(cont, ctx) {
   });
 
   if (selInsc.value) await alCambiarInscripcion();
+  // Desde "Evaluar esta clase" llega también la planificación: se deja vinculada (adelanta fecha y objetivo).
+  const planPedida = ctx.consulta.get('planificacionId');
+  if (planPedida && [...selPlan.options].some((o) => o.value === planPedida)) {
+    selPlan.value = planPedida;
+    selPlan.dispatchEvent(new Event('change'));
+  }
 }
 
 // ============================ DETALLE ============================
@@ -196,7 +222,7 @@ async function detalle(cont, ctx, id) {
   let ev = await api.get(`/api/evaluaciones/${id}`);
   const pauta = await api.get(`/api/pautas/${ev.pauta.id}`);
 
-  const esAutor = () => ctx.rol === 'PROFESOR_GUIA' && ev.evaluador.id === ctx.usuario.id;
+  const esAutor = () => ev.evaluador.id === ctx.usuario.id;   // el guía o el tutor que la creó
   const editable = () => ev.estado === 'BORRADOR' && esAutor();
   const respondidas = new Map(ev.respuestas.map((r) => [r.indicadorId, r]));
   const escala = [];
@@ -206,9 +232,9 @@ async function detalle(cont, ctx, id) {
     cont.innerHTML = html`
       ${cabecera({
         hu: 'HU-03', titulo: `Evaluación de ${ev.estudiante.nombreCompleto}`,
-        subtitulo: ev.pauta.nombre,
+        subtitulo: `${ev.pauta.nombre}${conObservacion(ev.pauta)}`,
         acciones: html`<a class="btn btn-fantasma" href="#/evaluaciones">${icono('back')} Volver</a>
-          <a class="btn" href="#/historial${ctx.rol === 'ESTUDIANTE' ? '' : `/${ev.estudiante.id}`}">${icono('clock')} Historial</a>`,
+          <a class="btn" href="#/historial${ctx.tiene('ESTUDIANTE') ? '' : `/${ev.estudiante.id}`}">${icono('clock')} Historial</a>`,
       })}
       <div id="avisos"></div>
       <div id="datos"></div>
@@ -216,7 +242,7 @@ async function detalle(cont, ctx, id) {
       <div id="nota-voz"></div>
       <div class="tarjeta pauta" id="pauta">
         <h2>Indicadores de la pauta <span class="contador" id="contador-titulo"></span></h2>
-        ${!editable() && ev.estado === 'BORRADOR' ? alerta('info', 'Borrador: solo lo ven su autor y el coordinador. Al finalizar lo verán el estudiante y el profesor del curso.') : ''}
+        ${!editable() && ev.estado === 'BORRADOR' ? alerta('info', 'Borrador: solo lo ven su autor, el coordinador y el jefe de carrera. Al finalizar lo verán el estudiante y el profesor del curso.') : ''}
         ${pauta.dimensiones.map((d) => html`
           <section class="dimension">
             <h3>${d.nombre}</h3>

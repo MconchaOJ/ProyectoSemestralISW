@@ -1,0 +1,47 @@
+# =============================================================================
+# Servicio systemd del Sistema de Prácticas PEM-UBB (Sprint 2, DESPLIEGUE.md).
+# Lo instala deploy/install.sh en /etc/systemd/system/isw-practicas.service.
+#
+# Arranca solo al prender el servidor y se reinicia si el proceso muere
+# (Restart=always): eso es lo que deja la página 24/7.
+#
+#   sudo systemctl status isw-practicas      # ¿está corriendo?
+#   sudo systemctl restart isw-practicas     # después de copiar un .jar nuevo
+#   sudo journalctl -u isw-practicas -n 50   # errores al arrancar
+#   sudo tail -f /var/log/isw-practicas/isw-practicas.log   # registro completo
+#
+# Las claves NO están aquí: vienen de /etc/isw-practicas/isw-practicas.env
+# (dueño root, grupo isw, permisos 640).
+# =============================================================================
+
+[Unit]
+Description=Sistema de Practicas PEM-UBB (Spring Boot)
+Documentation=file:///opt/isw-practicas/GUIA_DESPLIEGUE_EQUIPO.md
+After=network-online.target mysql.service
+Wants=network-online.target
+# Si falla al arrancar 10 veces en 5 minutos (por ejemplo, falta una clave), deja de insistir y queda "failed"
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+[Service]
+Type=simple
+User=isw
+Group=isw
+WorkingDirectory=/opt/isw-practicas
+EnvironmentFile=/etc/isw-practicas/isw-practicas.env
+ExecStart=/usr/bin/java -Xms256m -Xmx768m -jar /opt/isw-practicas/practicas.jar --spring.profiles.active=prod
+# Java termina con 143 cuando systemd lo detiene con SIGTERM: es un apagado normal, no un fallo
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+
+# Endurecimiento: el proceso solo puede escribir en sus carpetas de datos y registros
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/isw-practicas /var/log/isw-practicas
+
+[Install]
+WantedBy=multi-user.target

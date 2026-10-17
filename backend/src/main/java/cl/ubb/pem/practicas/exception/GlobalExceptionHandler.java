@@ -6,6 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -30,6 +31,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CredencialesInvalidasException.class)
     ResponseEntity<ApiError> credenciales(CredencialesInvalidasException ex, HttpServletRequest req) {
         return responder(HttpStatus.UNAUTHORIZED, ex.getMessage(), req);
+    }
+
+    /** Límite de intentos de login superado: 429 con Retry-After (segundos que faltan). */
+    @ExceptionHandler(LoginBloqueadoException.class)
+    ResponseEntity<ApiError> loginBloqueado(LoginBloqueadoException ex, HttpServletRequest req) {
+        HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+        return ResponseEntity.status(status)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getSegundosRestantes()))
+                .body(ApiError.de(status.value(), status.getReasonPhrase(), ex.getMessage(), req.getRequestURI()));
     }
 
     @ExceptionHandler(RecursoNoEncontradoException.class)

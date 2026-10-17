@@ -4,7 +4,7 @@
 |---|---|
 | **Proyecto** | Sistema web para evaluar y monitorear las 6 prácticas de Pedagogía en Educación Matemática (UBB) |
 | **Cliente** | La carrera PEM: Dr. Rodrigo Panes Chavarría y el coordinador de prácticas, Dr. Víctor Parra González |
-| **Versión** | 1.2, actualizada el 22 de septiembre de 2026 (Fase E) |
+| **Versión** | 1.3, actualizada el 10 de octubre de 2026 (Sprint 2: HU-31 y rol `JEFE_CARRERA`) |
 | **De dónde sale** | La entrevista con el cliente, los protocolos y las pautas de la carpeta `Documents/`, las respuestas de un estudiante de PEM, el formato oficial de planificación (`FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx`) y la propuesta del chatbot "RetroPlani Mate" que ya usa el coordinador (`ChatBot (1).rar`) |
 | **Por qué existe** | El criterio 3 de acreditación pide que la carrera *diseñe, implemente y monitoree un sistema para la formación práctica* que muestre un desarrollo creciente de la efectividad docente de sus estudiantes |
 
@@ -20,6 +20,7 @@
 | **Profesor guía** | El profesor colaborador del colegio que lo recibe y lo evalúa | Revisa planificaciones y evalúa las clases con la pauta. En la entrevista lo llaman "guía" y en los documentos "colaborador": es la misma persona |
 | **Profesor del curso** | El académico de la UBB a cargo de la asignatura | Autoriza las clases (supuesto S-05: podría ser alguien del colegio; el modelo lo permite porque es un rol aparte) |
 | **Coordinador de prácticas** | El Dr. Víctor Parra | Administra el sistema y ve a todos los estudiantes |
+| **Jefe de carrera** | El jefe de carrera de PEM | Solo lectura: consulta la cartola de prácticas (HU-31) como evidencia de acreditación. Rol propio desde el 10-oct (resuelve la duda de S-38 sobre su rol) |
 | **Tutor** | Profesor contratado por la UBB para Práctica Profesional | Recién aparece en el Sprint 2 (HU-07) |
 
 ## 2. Cómo se ordena
@@ -66,6 +67,7 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-28 | Exportar el historial del estudiante en PDF | Monitoreo | Media | por estimar | 2 o más | Pendiente |
 | HU-29 | Cargar la base de conocimiento del chatbot | Chatbot | Media | por estimar | 4 | Pendiente |
 | HU-30 | Validar el chatbot con jueces expertos y estudiantes | Chatbot | Baja | por estimar | 5 o más | Pendiente |
+| HU-31 | Cartola de prácticas en PDF para el jefe de carrera | Monitoreo | Alta | por estimar | **2** | **Construida y probada (10-oct)** |
 
 Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada uno con lo que aprendamos y lo que confirme el cliente. El chatbot queda para más adelante a propósito (supuesto S-02); la nota de voz y la transcripción (HU-11 y HU-12) se adelantaron al Sprint 1 el 22 de septiembre (Fase E), junto con los documentos adjuntos, la búsqueda de estudiantes y los accesos rápidos del menú (HU-21 a HU-24). `sprint-backlog.md`, sección 7, anota que se ampliaron los criterios de aceptación de HU-03 para incluir la nota de voz.
 
@@ -76,7 +78,7 @@ Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada un
 ### Sprint 1
 
 #### HU-01 · Iniciar sesión con roles
-**Como** usuario del sistema (estudiante, profesor guía, profesor del curso o coordinador), **quiero** entrar con mi correo y mi contraseña y que el sistema solo me deje hacer lo que mi rol permite, **para** que la información de los estudiantes esté protegida y cada persona vea solo lo suyo.
+**Como** usuario del sistema (estudiante, profesor guía, profesor del curso, coordinador o jefe de carrera), **quiero** entrar con mi correo y mi contraseña y que el sistema solo me deje hacer lo que mi rol permite, **para** que la información de los estudiantes esté protegida y cada persona vea solo lo suyo.
 
 **Prioridad:** Alta · **Viene de:** el requerimiento 6 (los guías acceden a lo que hace el estudiante) y la necesidad de separar a los actores.
 
@@ -84,7 +86,7 @@ Los sprints 2 en adelante son **tentativos**: se replanifican al empezar cada un
 1. Un usuario activo con sus credenciales correctas recibe un token que lo identifica a él y a su rol.
 2. Con credenciales incorrectas recibe un error 401 que no dice si falló el correo o la contraseña.
 3. Las contraseñas se guardan cifradas (BCrypt), nunca en texto plano ni en las respuestas.
-4. Existen cuatro roles: `ESTUDIANTE`, `PROFESOR_GUIA`, `PROFESOR_CURSO` y `COORDINADOR`.
+4. Existen cinco roles: `ESTUDIANTE`, `PROFESOR_GUIA`, `PROFESOR_CURSO`, `COORDINADOR` y `JEFE_CARRERA` (este último agregado el 10-oct con HU-31).
 5. Si el rol no tiene permiso para un recurso, recibe 403. Si no manda token, recibe 401.
 6. Un usuario inactivo no puede entrar.
 7. El token vence a las 8 horas (supuesto S-06).
@@ -194,6 +196,23 @@ Estas seis historias iban para sprints futuros en la planificación original, pe
 
 ---
 
+### Sprint 2
+
+#### HU-31 · Cartola de prácticas
+**Como** jefe de carrera, **quiero** descargar en PDF una cartola, al estilo de una cartola bancaria, con todas las inscripciones de práctica que se cerraron en un rango de fechas, **para** tener evidencia agregada del sistema de formación práctica ante la acreditación (criterio 3) sin hacer el trabajo operativo del coordinador.
+- **Prioridad:** Alta · **Sprint:** 2 · **Estado:** Construida y probada (10-oct) · **Depende de** HU-02 y HU-03 · **Viene de:** la necesidad de evidencia para la acreditación; es el diferenciador del equipo para el Sprint 2.
+
+**Criterios de aceptación**
+1. Existe el rol `JEFE_CARRERA`, de solo lectura. Su único acceso es la cartola: cualquier otra función del sistema le responde 403 (resuelve la duda de S-38 sobre su rol).
+2. `GET /api/reportes/cartola-practicas?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` responde solo al `JEFE_CARRERA`; los otros 4 roles reciben 403 y sin token, 401.
+3. Entran las inscripciones cuya **fecha de cierre** está entre `desde` y `hasta`, ambas incluidas. Las que siguen `EN_CURSO` no tienen fecha de cierre y no aparecen. Si `desde` es posterior a `hasta`, o una fecha está mal escrita, responde 400.
+4. Cada fila trae: estudiante (nombre y RUT), asignatura, periodo, profesor guía ("Sin guía" en el ciclo inicial), profesor del curso, estado, fecha y nota de cierre, cantidad de evaluaciones finalizadas y el promedio de sus promedios.
+5. Es un PDF descargable con encabezado (rango del reporte y fecha de generación), el total de inscripciones y una fila por inscripción. Si el rango no tiene cierres, el PDF lo dice en vez de mostrar una tabla vacía.
+6. Es solo lectura: no crea ni modifica nada.
+7. Al cerrar una inscripción (HU-02), el sistema guarda la fecha del día como fecha de cierre. A las inscripciones cerradas antes de esta historia se les dedujo la fecha a partir del periodo (**S-48**).
+
+---
+
 ### Sprints siguientes (tentativos)
 
 #### HU-06 · Configurar pautas de evaluación
@@ -266,7 +285,7 @@ Estas seis historias iban para sprints futuros en la planificación original, pe
 **Como** jefe de carrera, **quiero** consultar las conversaciones de los estudiantes con el chatbot, **para** llevar un registro y saber cómo ha aportado el chatbot.
 - **Prioridad:** Media · **Sprint:** 4 · **Depende de** HU-15 · **Viene de:** una solicitud del jefe de carrera (20-sep).
 - **Criterios (borrador):** (1) puede listar las conversaciones por estudiante, asignatura y fecha (los mensajes ya se guardan por inscripción); (2) solo lectura; (3) el estudiante ve un aviso de que el jefe de carrera puede leer sus conversaciones; (4) cada acceso queda registrado.
-- **Supuesto S-38:** mientras no se aclare si el jefe de carrera es otra persona, usa el rol `COORDINADOR` (si lo fuera, se agrega un rol nuevo).
+- **S-38, parte del rol: resuelta el 10-oct.** El equipo decidió que el jefe de carrera tiene un rol propio, `JEFE_CARRERA` (creado con HU-31), porque no hace el trabajo operativo del coordinador. Sigue abierta la otra parte de S-38: qué ve cada rol de los chats.
 - **Ojo con la privacidad:** es la misma tensión de HU-16. Hay que definir con el cliente qué se muestra (chat completo, resumen o datos agregados).
 
 #### HU-18 · Registrar informes y productos de la práctica
@@ -309,7 +328,7 @@ Estas seis historias iban para sprints futuros en la planificación original, pe
 
 | # | Lo que pidió el cliente | Historias que lo cubren |
 |---|---|---|
-| 1 | Un solo sistema para evaluar y monitorear las 6 prácticas, con el recorrido completo | HU-02, HU-05, HU-08, HU-14, HU-23, HU-28 |
+| 1 | Un solo sistema para evaluar y monitorear las 6 prácticas, con el recorrido completo | HU-02, HU-05, HU-08, HU-14, HU-23, HU-28, HU-31 |
 | 2 | Digitalizar la pauta de evaluación | HU-03, HU-06, HU-07, HU-09, HU-22, HU-25 |
 | 3 | Nota de voz con opción de pasarla a texto | HU-11, HU-12 |
 | 4 | Flujo de planificación (estudiante, guía y profesor del curso; sin guía en el ciclo inicial) | HU-04, HU-19, HU-21 |
@@ -337,7 +356,7 @@ Hay que confirmarlos con el cliente o con la profesora. Los números son los mis
 | S-12 | El tutor y las 8 pautas de Práctica Profesional entran en el Sprint 2 |
 | S-14 | El semestre y las asignaturas aprobadas los ingresa el coordinador. Un estudiante contó que hoy se ven en la malla de la Intranet; importarlos de ahí queda como mejora futura |
 | S-16 | Aproximación es en grupos de 4 y sin planificaciones; Ambientes es en parejas y con planificaciones; ninguna va a un colegio, así que no tienen guía (corregido el 20-sep según un estudiante) |
-| S-34 a S-38 | Sin guía la planificación va directo al profesor del curso; se entrega con 3 días de anticipación; una planificación por clase; el flujo en secuencia (guía y luego curso) sigue en discusión; el jefe de carrera usa el rol coordinador. Detalle en `sprint-backlog.md`, sección 7 |
+| S-34 a S-38 | Sin guía la planificación va directo al profesor del curso; se entrega con 3 días de anticipación; una planificación por clase; el flujo en secuencia (guía y luego curso) sigue en discusión; la privacidad de los chats sigue abierta (S-38). **El rol del jefe de carrera se resolvió el 10-oct: es un rol propio, `JEFE_CARRERA` (HU-31)**. Detalle en `sprint-backlog.md`, sección 7 |
 | S-39 | Generación completa de 20 estudiantes de demostración (`db/seed.sql`): perfiles de avance, y a qué guía o profesor del curso se asigna cada uno, son datos inventados por el equipo, no vienen del cliente |
 | S-40 | La transcripción inicial de la nota de voz (HU-12) la genera el navegador del evaluador (Web Speech API de Chrome), sin costo y sin instalar nada: nadie ha confirmado con el cliente qué herramienta de transcripción usar |
 | S-41 | El documento formal de la evaluación (HU-22) se puede subir con la evaluación en `BORRADOR` o ya `FINALIZADA`: no se exige un estado particular, porque el cliente no lo especificó |
@@ -347,5 +366,6 @@ Hay que confirmarlos con el cliente o con la profesora. Los números son los mis
 | S-45 | El Sprint 1 sigue construido y probado con los cinco elementos de planificación de la entrevista (no los del formato oficial real, ver S-09): migrar `planificacion` es trabajo nuevo que queda para un sprint futuro, para no arriesgar una historia ya entregada y sus 146 pruebas |
 | S-46 | HU-15, HU-16, HU-17 y HU-20 se reescribieron con el contenido real de "RetroPlani Mate" (`ChatBot (1).rar`), pero **siguen sin implementarse**: es planificación de un sprint futuro, no código de esta fase |
 | S-47 | **Añadido el 22-sep:** enviar una planificación a revisión ahora también exige al menos un documento adjunto (la planificación formal en Word o PDF, HU-21): los cinco elementos del formulario quedan como resumen y el documento como el respaldo formal. Decisión propia, no confirmada por el cliente |
+| S-48 | Las inscripciones cerradas antes de HU-31 no tenían fecha de cierre: se les dedujo del periodo (el semestre 1 cierra el 31 de julio y el 2 el 31 de diciembre). Desde el 10-oct el sistema guarda la fecha real del cierre |
 
 Los supuestos S-03, S-04, S-13 y S-15 tienen que ver con la organización del sprint y están en `sprint-backlog.md`. Los S-17 a S-33 son decisiones técnicas del backend y están en `backend/PROGRESO.md`.

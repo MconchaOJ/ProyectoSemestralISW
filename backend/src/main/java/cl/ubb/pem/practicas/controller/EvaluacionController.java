@@ -38,9 +38,10 @@ public class EvaluacionController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('PROFESOR_GUIA')")
+    @PreAuthorize("hasAnyRole('PROFESOR_GUIA', 'TUTOR')")
     @Operation(summary = "Crear una evaluación (queda en BORRADOR)",
-            description = "Solo PROFESOR_GUIA, y solo sobre inscripciones que tiene asignadas (otro guía: 403). "
+            description = "PROFESOR_GUIA o TUTOR (HU-07), solo sobre inscripciones donde está asignado (otro: 403). "
+                    + "El guía usa pautas de tipo COLABORADOR y el tutor solo pautas de tipo TUTOR (si no, 400). "
                     + "Datos de la cabecera de la pauta en papel: fecha, establecimiento, curso, horas y objetivo.")
     public EvaluacionDto crear(@Valid @RequestBody EvaluacionCrearRequest request,
                                @AuthenticationPrincipal UsuarioAutenticado actor) {
@@ -48,18 +49,18 @@ public class EvaluacionController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('PROFESOR_GUIA')")
+    @PreAuthorize("hasAnyRole('PROFESOR_GUIA', 'TUTOR')")
     @Operation(summary = "Editar la cabecera y las observaciones generales (solo BORRADOR)",
-            description = "Solo el guía que creó la evaluación. 409 si ya está FINALIZADA.")
+            description = "Solo el evaluador que la creó (guía o tutor). 409 si ya está FINALIZADA.")
     public EvaluacionDto actualizar(@PathVariable Long id, @Valid @RequestBody EvaluacionActualizarRequest request,
                                     @AuthenticationPrincipal UsuarioAutenticado actor) {
         return evaluaciones.actualizar(id, request, actor);
     }
 
     @PutMapping("/{id}/respuestas")
-    @PreAuthorize("hasRole('PROFESOR_GUIA')")
+    @PreAuthorize("hasAnyRole('PROFESOR_GUIA', 'TUTOR')")
     @Operation(summary = "Registrar los puntajes de uno o varios indicadores",
-            description = "Solo el guía que creó la evaluación. Cada puntaje debe ser un entero dentro de la escala de la "
+            description = "Solo el evaluador que la creó (guía o tutor). Cada puntaje debe ser un entero dentro de la escala de la "
                     + "pauta (1 a 7) y el indicador debe ser de la pauta (400). Un indicador ya puntuado se reemplaza. "
                     + "409 si la evaluación está FINALIZADA.")
     public EvaluacionDto registrarRespuestas(@PathVariable Long id, @Valid @RequestBody RespuestasRequest request,
@@ -68,7 +69,7 @@ public class EvaluacionController {
     }
 
     @PostMapping("/{id}/finalizar")
-    @PreAuthorize("hasRole('PROFESOR_GUIA')")
+    @PreAuthorize("hasAnyRole('PROFESOR_GUIA', 'TUTOR')")
     @Operation(summary = "Finalizar la evaluación",
             description = "Exige los 20 indicadores puntuados (400 si faltan), calcula el puntaje total y el promedio, "
                     + "y pasa a FINALIZADA: desde ahí no se puede modificar (409).")
@@ -87,7 +88,7 @@ public class EvaluacionController {
     @GetMapping
     @Operation(summary = "Listar evaluaciones (según mi rol)",
             description = "Filtros opcionales por inscripción y estado. Cada rol ve solo lo suyo; los borradores solo los ve "
-                    + "su autor y el coordinador.")
+                    + "su autor, el coordinador y el jefe de carrera.")
     public List<EvaluacionResumenDto> listar(@RequestParam(required = false) Long inscripcionId,
                                              @RequestParam(required = false) EstadoEvaluacion estado,
                                              @AuthenticationPrincipal UsuarioAutenticado actor) {

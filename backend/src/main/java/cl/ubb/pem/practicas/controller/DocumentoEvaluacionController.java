@@ -36,9 +36,9 @@ public class DocumentoEvaluacionController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('PROFESOR_GUIA')")
+    @PreAuthorize("hasAnyRole('PROFESOR_GUIA', 'TUTOR')")
     @Operation(summary = "Subir la pauta o evaluación formal a la evaluación",
-            description = "Solo el profesor guía evaluador. Word (.docx), Excel (.xlsx) o PDF, máximo 10 MB. "
+            description = "Solo el evaluador (guía o tutor). Word (.docx), Excel (.xlsx) o PDF, máximo 10 MB. "
                     + "Se puede subir al finalizar o después de finalizar la evaluación.")
     public DocumentoDto subir(@PathVariable Long evaluacionId, @RequestParam("archivo") MultipartFile archivo,
                               @AuthenticationPrincipal UsuarioAutenticado actor) {

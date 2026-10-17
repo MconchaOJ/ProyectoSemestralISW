@@ -1,6 +1,6 @@
 // HU-02 · Registrar estudiantes e inscribirlos en una práctica.
 //   Coordinador: pestañas Estudiantes, Profesores e Inscripciones (crear, buscar, cerrar).
-//   Otros roles: "Mis inscripciones" (solo lectura; el servidor entrega a cada uno lo suyo).
+//   Otros roles: "Mis inscripciones" (solo lectura; el servidor entrega a cada uno lo suyo; al jefe de carrera, todas).
 import { api } from '../api.js';
 import { asignaturas } from '../datos.js';
 import {
@@ -15,7 +15,7 @@ const PESTANAS = [
 ];
 
 export async function render(cont, ctx) {
-  if (ctx.rol !== 'COORDINADOR') return renderMisInscripciones(cont, ctx);
+  if (!ctx.tiene('COORDINADOR')) return renderMisInscripciones(cont, ctx);
 
   const activa = PESTANAS.find((p) => p.ruta === ctx.seccion) ?? PESTANAS[0];
   ctx.titulo(activa.texto);
@@ -93,7 +93,7 @@ async function tabProfesores(zona) {
   zona.innerHTML = html`
     <div class="barra-herramientas">
       <label class="filtro">Rol
-        <select id="rol"><option value="">Todos</option><option value="PROFESOR_GUIA">Profesor guía</option><option value="PROFESOR_CURSO">Profesor del curso</option></select>
+        <select id="rol"><option value="">Todos</option><option value="PROFESOR_GUIA">Profesor guía</option><option value="PROFESOR_CURSO">Profesor del curso</option><option value="TUTOR">Tutor</option></select>
       </label>
       <button type="button" class="btn btn-primario" id="nuevo">${icono('plus')} Registrar profesor</button>
     </div>
@@ -111,7 +111,7 @@ async function tabProfesores(zona) {
             <thead><tr><th>Profesor</th><th>Correo</th><th>Rol</th><th>Estado</th></tr></thead>
             <tbody>${datos.map((p) => html`<tr>
               <td><strong>${p.nombre} ${p.apellidos}</strong></td><td>${p.email}</td>
-              <td><span class="badge badge-rol">${nombreRol(p.rol)}</span></td>
+              <td>${[p.rol, p.rolSecundario].filter(Boolean).map((r) => html`<span class="badge badge-rol">${nombreRol(r)}</span> `)}</td>
               <td>${p.activo ? html`<span class="badge badge-AUTORIZADA">Activo</span>` : html`<span class="badge badge-REPROBADA">Inactivo</span>`}</td>
             </tr>`)}</tbody></table></div>
           <p class="pie-tabla">${datos.length} profesor${datos.length === 1 ? '' : 'es'}</p>`.toString();
@@ -130,7 +130,8 @@ async function tabProfesores(zona) {
         campo({ nombre: 'email', etiqueta: 'Correo electrónico', tipo: 'email', requerido: true, atributos: { maxlength: 150, autocomplete: 'off' } }),
         campo({ nombre: 'password', etiqueta: 'Contraseña inicial', tipo: 'password', requerido: true, ayuda: 'De 8 a 72 caracteres.', atributos: { minlength: 8, maxlength: 72, autocomplete: 'new-password' } }),
         campo({ nombre: 'rol', etiqueta: 'Rol', tipo: 'select', requerido: true, completo: true,
-          opciones: [{ valor: 'PROFESOR_GUIA', texto: 'Profesor guía (colaborador del colegio)' }, { valor: 'PROFESOR_CURSO', texto: 'Profesor del curso (académico UBB)' }] }),
+          opciones: [{ valor: 'PROFESOR_GUIA', texto: 'Profesor guía (colaborador del colegio)' }, { valor: 'PROFESOR_CURSO', texto: 'Profesor del curso (académico UBB)' },
+            { valor: 'TUTOR', texto: 'Tutor (UBB, solo Práctica Profesional)' }] }),
       ],
       alEnviar: (datos) => api.post('/api/profesores', datos),
       alListo: (p) => { toast(`Profesor ${p.nombre} ${p.apellidos} registrado.`); cargar(); },
@@ -148,7 +149,8 @@ export function tablaInscripciones(lista, { acciones = null } = {}) {
       <td><strong>${i.estudiante.nombreCompleto}</strong><br><small>${i.estudiante.rut}</small></td>
       <td>${i.asignatura.nombre}<br><small>${MODALIDADES[i.asignatura.modalidad] ?? i.asignatura.modalidad}</small></td>
       <td>${i.periodo}</td>
-      <td>${i.profesorGuia ? i.profesorGuia.nombreCompleto : html`<small>No lleva guía</small>`}</td>
+      <td>${i.profesorGuia ? i.profesorGuia.nombreCompleto : html`<small>No lleva guía</small>`}
+        ${i.tutor ? html`<br><small>Tutor: ${i.tutor.nombreCompleto}</small>` : i.asignatura.llevaTutor ? html`<br><small>Sin tutor asignado</small>` : ''}</td>
       <td>${i.profesorCurso?.nombreCompleto ?? '—'}</td>
       <td>${badge(i.estado)}</td>
       <td class="num">${nota(i.notaFinal)}</td>
@@ -196,6 +198,9 @@ async function tabInscripciones(zona, ctx, { coordinador }) {
       lista.querySelectorAll('[data-cerrar-inscripcion]').forEach((b) => {
         b.addEventListener('click', () => cerrarInscripcion(datos.find((x) => String(x.id) === b.dataset.cerrarInscripcion), cargar));
       });
+      lista.querySelectorAll('[data-tutor-inscripcion]').forEach((b) => {
+        b.addEventListener('click', () => asignarTutor(datos.find((x) => String(x.id) === b.dataset.tutorInscripcion), cargar));
+      });
     } catch (e) {
       if (mio === pedido) lista.innerHTML = alertaError(e).toString();
     }
@@ -210,14 +215,18 @@ async function tabInscripciones(zona, ctx, { coordinador }) {
 }
 
 function accionesInscripcion(i, ctx, coordinador) {
-  const historial = ctx.rol === 'ESTUDIANTE' ? '#/historial' : `#/historial/${i.estudiante.id}`;
+  const historial = ctx.tiene('ESTUDIANTE') ? '#/historial' : `#/historial/${i.estudiante.id}`;
   const enlaces = [html`<a class="btn btn-chico" href="${historial}">${icono('clock')} Historial</a>`];
   if (i.estado === 'EN_CURSO') {
-    if (ctx.rol === 'ESTUDIANTE' && i.asignatura.requierePlanificacion) {
+    if (ctx.tiene('ESTUDIANTE') && i.asignatura.requierePlanificacion) {
       enlaces.push(html` <a class="btn btn-chico" href="#/planificaciones/nueva?inscripcionId=${i.id}">${icono('file')} Planificar</a>`);
     }
-    if (ctx.rol === 'PROFESOR_GUIA') {
+    // solo donde es el guía o el tutor asignado (cuentas con dos roles; HU-07)
+    if (ctx.actuaComo('PROFESOR_GUIA', i) || ctx.actuaComo('TUTOR', i)) {
       enlaces.push(html` <a class="btn btn-chico" href="#/evaluaciones/nueva?inscripcionId=${i.id}">${icono('check')} Evaluar</a>`);
+    }
+    if (coordinador && i.asignatura.llevaTutor) {
+      enlaces.push(html` <button type="button" class="btn btn-chico" data-tutor-inscripcion="${i.id}">Tutor</button>`);
     }
     if (coordinador) {
       enlaces.push(html` <button type="button" class="btn btn-chico" data-cerrar-inscripcion="${i.id}">Cerrar</button>`);
@@ -271,6 +280,24 @@ async function nuevaInscripcion(estudiantes, catalogo, alTerminar) {
   });
 }
 
+/** HU-07: asignar, cambiar o quitar el tutor de una inscripción de Práctica Profesional (solo el coordinador). */
+async function asignarTutor(inscripcion, alTerminar) {
+  if (!inscripcion) return;
+  const tutores = await api.get('/api/profesores', { rol: 'TUTOR' });
+  modalFormulario({
+    titulo: 'Tutor de la práctica', chico: true, textoOk: 'Guardar', textoCarga: 'Guardando…',
+    introduccion: html`<p><strong>${inscripcion.estudiante.nombreCompleto}</strong><br>${inscripcion.asignatura.nombre} · ${inscripcion.periodo}</p>`,
+    campos: [
+      campo({ nombre: 'tutorId', etiqueta: 'Tutor', tipo: 'select', completo: true, atributos: { 'data-numero': true },
+        valor: inscripcion.tutor?.id ?? '', vacioTexto: 'Sin tutor',
+        ayuda: tutores.length ? 'Las evaluaciones que ya hizo un tutor anterior quedan a su nombre.' : 'No hay tutores registrados: regístralos en la pestaña Profesores.',
+        opciones: tutores.filter((t) => t.activo).map((t) => ({ valor: t.id, texto: `${t.nombre} ${t.apellidos}` })) }),
+    ],
+    alEnviar: (datos) => api.put(`/api/inscripciones/${inscripcion.id}/tutor`, { tutorId: datos.tutorId || null }),
+    alListo: (i) => { toast(i.tutor ? `Tutor asignado: ${i.tutor.nombreCompleto}.` : 'La inscripción quedó sin tutor.'); alTerminar(); },
+  });
+}
+
 function cerrarInscripcion(inscripcion, alTerminar) {
   if (!inscripcion) return;
   modalFormulario({
@@ -289,13 +316,16 @@ function cerrarInscripcion(inscripcion, alTerminar) {
 
 // ============================ OTROS ROLES ============================
 async function renderMisInscripciones(cont, ctx) {
-  ctx.titulo('Mis inscripciones');
-  const titulo = ctx.rol === 'ESTUDIANTE' ? 'Mis inscripciones en las prácticas' : 'Inscripciones de mis estudiantes';
+  ctx.titulo(ctx.veTodo ? 'Inscripciones' : 'Mis inscripciones');
+  const titulo = ctx.tiene('ESTUDIANTE') ? 'Mis inscripciones en las prácticas'
+    : ctx.veTodo ? 'Inscripciones de todos los estudiantes' : 'Inscripciones de mis estudiantes';
   cont.innerHTML = html`
     ${cabecera({ hu: 'HU-02', titulo,
-      subtitulo: ctx.rol === 'ESTUDIANTE'
+      subtitulo: ctx.tiene('ESTUDIANTE')
         ? 'Las prácticas que cursas y las que ya aprobaste. La inscripción la registra el coordinador.'
-        : 'Solo ves los estudiantes que el coordinador te asignó. La inscripción la registra el coordinador.' })}
+        : ctx.veTodo
+          ? `Solo lectura: la inscripción la registra el coordinador.${ctx.tiene('PROFESOR_GUIA') ? ' Donde eres el profesor guía aparece el botón «Evaluar».' : ''}`
+          : `Solo ves los estudiantes que el coordinador te asignó. La inscripción la registra el coordinador.${ctx.tiene('TUTOR') ? ' Donde eres tutor aparece el botón «Evaluar».' : ''}` })}
     <div id="zona"></div>`.toString();
   await tabInscripciones(cont.querySelector('#zona'), ctx, { coordinador: false });
 }

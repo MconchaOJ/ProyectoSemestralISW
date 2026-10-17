@@ -1,8 +1,9 @@
 # Resumen del proyecto semestral de ISW (Ingeniería de Software 2026)
 
 > Documento para traspasar contexto a otro asistente que no vio la sesión.
-> Última sesión: 2026-09-22 (Fase E). Idioma de trabajo con el usuario: **español**.
-> Estado (actualizado 2026-09-22): **Fases A a E terminadas.** Documentos de metodología en `Sprint1/` (Product Backlog con **30 HU**); base de datos MySQL en `db/` (16 tablas, 2 migraciones, 20 estudiantes de demostración); **backend Spring Boot en `backend/` con 42 endpoints y 159 pruebas automáticas** (sección 14); front-end web en `backend/src/main/resources/static/` (Fases D y E, rama `frontend`, sin merge a `main`) con documentos adjuntos, nota de voz con transcripción, menú limpio, accesos rápidos y búsqueda de estudiantes; y guía de defensa en `docs/GUIA_DEFENSA.md`. El 2026-09-20 se ajustó el modelo con las respuestas de un estudiante de PEM (sección 13); el 2026-09-22 se sumaron el formato real de planificación y el contenido real del chatbot "RetroPlani Mate" (secciones 3.8, 3.9 y 8). **Pendiente:** presentación, retrospectiva, tablero, recorrido visual en un navegador real de lo hecho el 22-sep, y confirmar los supuestos con el cliente o la profesora.
+> Última sesión: 2026-10-10. Idioma de trabajo con el usuario: **español**.
+> **Estado al 2026-10-10:** el **Sprint 1 se entregó y presentó el viernes 25-sep**. **Sprint 2:** el 10-oct se construyó la **HU-31 Cartola de prácticas** (PDF para el rol nuevo `JEFE_CARRERA`; ahora 31 HU, 5 roles, 43 endpoints, 175 pruebas, 3 migraciones; ver `backend/PROGRESO.md`). Además, la prioridad es la página (el sistema web) y **publicarla en un servidor de la universidad, operativa 24/7** (todo lo necesario en `DESPLIEGUE.md`); la planificación formal del sprint se hace después. Lo pendiente por HU y el orden propuesto están en `objetivosAFUTURO.md`.
+> Lo construido en el Sprint 1 (Fases A a I, hasta el 22-sep): documentos de metodología en `Sprint1/` (Product Backlog con **30 HU**); base de datos MySQL en `db/` (16 tablas, 2 migraciones, 20 estudiantes de demostración); **backend Spring Boot en `backend/` con 42 endpoints y 161 pruebas automáticas** (sección 14); front-end web en `backend/src/main/resources/static/` (ya integrado en `main`) con documentos adjuntos, nota de voz con transcripción, menú limpio, accesos rápidos y búsqueda de estudiantes. `docs/GUIA_DEFENSA.md` se sacó del repositorio; el material de la defensa quedó en `GUIA_ESTUDIO_SPRINT1.md`. **Pendiente:** retrospectiva del Sprint 1, planificar el Sprint 2, pedir el servidor a TI y confirmar los supuestos con el cliente o la profesora.
 
 ---
 
@@ -24,7 +25,10 @@ ProyectoSemestralISW/
 ├── CLAUDE.md                           <- instrucciones cortas para el asistente (léelo primero)
 ├── .gitignore  y  .env.example         <- exclusión de secretos y plantilla de variables de entorno
 ├── backend/                            <- proyecto Spring Boot (Fase C, terminada); leer backend/PROGRESO.md y backend/README.md
-├── docs/GUIA_DEFENSA.md                <- arquitectura, guion de demo por historia y preguntas de defensa
+├── README.md                           <- cómo arrancar todo en 5 minutos
+├── DESPLIEGUE.md                       <- Sprint 2: qué se necesita para publicar en el servidor de la UBB
+├── objetivosAFUTURO.md                 <- HU pendientes, orden propuesto, deuda técnica y riesgos
+├── GUIA_ESTUDIO_SPRINT1.md             <- material de estudio de la defensa del Sprint 1 (reemplaza a docs/GUIA_DEFENSA.md)
 ├── Pautas/
 │   └── Pauta1/ISW - Rúbrica Sprint 1 2026 (1).pdf
 └── Documents/
@@ -36,6 +40,8 @@ ProyectoSemestralISW/
     ├── 6_Práctica Profesional.rar
     ├── Entrevista/Ingenieriasofware.txt
     ├── SugerenciaChatBot/SugerenciaChatBot.ipynb
+    ├── FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx   <- formato oficial de planificación (ver sección 3.9)
+    ├── ChatBot_extraido/               <- contenido ya extraído de ChatBot (1).rar
     └── ChatBot (1).rar                 <- propuesta de Víctor Parra para el GPT "RetroPlani Mate" (ver sección 3.8)
 ```
 
@@ -178,7 +184,7 @@ Acuerdos de trabajo:
 Decisiones tomadas en la Fase A (todas como supuestos numerados S-01 a S-16, listados en `Sprint1/sprint-backlog.md`, sección 7; **pendientes de confirmar con el cliente o la profesora**):
 - Stack: Java 17, Spring Boot 3.x, Maven, MySQL 8. El Sprint 1 es solo backend y BD (API REST, demo con Swagger o Postman), sin interfaz.
 - Chatbot y nota de voz quedan para sprints posteriores (HU-15 y HU-11).
-- 4 roles: ESTUDIANTE, PROFESOR_GUIA, PROFESOR_CURSO, COORDINADOR. El **profesor del curso** (autoriza la clase) se asume académico UBB (S-05, el más importante de confirmar).
+- 4 roles: ESTUDIANTE, PROFESOR_GUIA, PROFESOR_CURSO, COORDINADOR. **Desde el 10-oct son 5:** se sumó `JEFE_CARRERA`, de solo lectura, para la cartola de prácticas (HU-31); resuelve el punto 12 de la sección 8. El **profesor del curso** (autoriza la clase) se asume académico UBB (S-05, el más importante de confirmar).
 - Primera pauta digitalizada: la de observación de clase del profesor colaborador (20 indicadores, 3 dimensiones, escala 1 a 7), leída de `Prácticas Intermedias/3_Trabajo Colaborativo/`.
 - Formato de planificación: 5 elementos de la entrevista (objetivo, recursos, tiempos, evaluación del aprendizaje, interacción de participantes con recursos).
 - Las 5 HU del Sprint 1: HU-01 autenticación con roles, HU-02 estudiantes e inscripción, HU-03 pauta digital, HU-04 planificación con flujo de aprobación, HU-05 historial del estudiante (26 puntos, ≈ 42 h).
@@ -216,7 +222,7 @@ Decisiones tomadas por las respuestas de un estudiante (2026-09-20, S-34 a S-38,
 9. **Datos del chatbot:** de dónde saldrán el semestre y los ramos aprobados de cada estudiante (*un estudiante dice que hoy salen de la malla en la Intranet*), sigue sin confirmar. El **estilo/criterios de retroalimentación de Víctor Parra ya se conocen**: son las instrucciones del GPT "RetroPlani Mate" (`Documents/ChatBot (1).rar`, ver sección 3.8).
 10. **Flujo de planificación en secuencia o en paralelo (S-37):** la entrevista dice guía y luego profesor del curso; un estudiante dice que se manda a ambos. Si es en paralelo, hay que cambiar la máquina de estados de HU-04.
 11. **Acceso a los chats (S-38):** el jefe de carrera quiere verlos; un estudiante no quiere que su guía los lea. Definir qué ve cada rol (chat completo, resumen o lo que el estudiante comparta) y el aviso al estudiante.
-12. **Quién es el "jefe de carrera"** en el sistema: ¿el coordinador de prácticas o el director (Dr. Panes)? Se asumió el rol COORDINADOR.
+12. ~~**Quién es el "jefe de carrera"** en el sistema: ¿el coordinador de prácticas o el director (Dr. Panes)? Se asumió el rol COORDINADOR.~~ **Resuelto por el equipo el 10-oct:** tiene un rol propio, `JEFE_CARRERA`, de solo lectura (HU-31), porque no hace el trabajo operativo del coordinador.
 
 ---
 
@@ -229,9 +235,11 @@ Decisiones tomadas por las respuestas de un estudiante (2026-09-20, S-34 a S-38,
 - **Hecho (Fase D, front-end, 2026-09-21, rama `frontend`):** interfaz HTML + CSS + JS puro en `backend/src/main/resources/static/`, servida por la misma aplicación en <http://localhost:8080>. Solo cambió `SecurityConfig` (recursos estáticos permitidos); las 146 pruebas del backend siguen en verde. Guion de demo en `docs/GUIA_DEFENSA.md`, sección 8. Sin merge a `main`.
 - **Hecho (Fase E, 2026-09-22, misma rama `frontend`):** documentos adjuntos en planificaciones y evaluaciones (HU-21, HU-22), nota de voz con transcripción (HU-11 y HU-12, adelantadas del Sprint 3), menú lateral sin sprints/HU/"Próximamente", accesos rápidos dentro del menú y búsqueda de estudiantes por nombre/RUT/correo (HU-23, HU-24). Migración `db/migraciones/002_documentos_adjuntos.sql` y generación completa de 20 estudiantes de demostración (antes 5). Product Backlog ampliado a 30 HU, con HU-15/16/17/20 corregidas según "RetroPlani Mate". 159 pruebas automáticas (146 + 13), 0 fallos. Detalle en secciones 11, 12 y 14, y en `backend/PROGRESO.md`.
 - **Hecho (Fase F, 2026-09-22, misma rama `frontend`, sin migración):** se amplió `db/seed.sql` para que **todos** los ~20 estudiantes y los 6 profesores guía y 4 profesores del curso tengan actividad real (evaluación y/o planificación), no solo los 4-5 de siempre. 19 planificaciones y 11 evaluaciones en total. `db/verificacion.sql` suma un bloque que confirma que nadie activo queda en cero. Las 159 pruebas siguen en verde (4 se ajustaron por los nuevos conteos). Detalle en la sección 12 y en `backend/PROGRESO.md`.
-- **Pendiente:** presentación (PPT, la arma Persona 4), reunión de retrospectiva, subir el tablero a Trello o GitHub Projects, confirmar los supuestos S-01 a S-46 con el cliente o la profesora (sobre todo S-05, S-09, S-10, S-21, S-29, S-37, S-38 y S-40), y revisar en un navegador real la nota de voz y los documentos adjuntos (esta sesión no tuvo navegador disponible: se probó por HTTP con `curl`).
-- **Antes de la defensa:** `.\db\bd.ps1` (datos limpios) y arrancar el jar; el guion está en `docs/GUIA_DEFENSA.md`.
-- **Archivos del proyecto:** `RESUMEN.md`, `CLAUDE.md`, `Sprint1/` (7 archivos y la carpeta `diagramas/`), `db/` (`schema.sql`, `seed.sql`, `bd.ps1`, `verificacion.sql`, `migraciones/` con 2 migraciones), `backend/` (más de 120 clases Java, `pom.xml`, `README.md`, `PROGRESO.md`, `src/main/resources/static/` con el front-end), `docs/GUIA_DEFENSA.md`, `.gitignore` y `.env.example`. Además hay notas de contexto en la memoria del asistente (fuera del proyecto).
+- **Hecho (Fases G, H e I, 2026-09-22):** MER y BPMN sincronizados; ronda de pruebas por HTTP y navegador con un único hallazgo corregido (S-47, enviar una planificación exige documento adjunto; 161 pruebas); README en la raíz; la rama `frontend` se integró en `main`.
+- **Hecho (2026-09-25):** **entrega y presentación del Sprint 1.**
+- **Sprint 2 (en curso, desde octubre de 2026):** primero la página y su publicación en un servidor de la universidad 24/7 (`DESPLIEGUE.md`); la planificación formal (Sprint Backlog, tablero) viene después. Orden propuesto de HU en `objetivosAFUTURO.md`.
+- **Pendiente:** retrospectiva del Sprint 1 (`Sprint1/retrospectiva.md` sigue como plantilla), planificar el Sprint 2, pedir el servidor a TI, confirmar los supuestos S-01 a S-47 con el cliente o la profesora (sobre todo S-37, S-38, S-40 y S-45).
+- **Archivos del proyecto:** `README.md`, `RESUMEN.md`, `CLAUDE.md`, `DESPLIEGUE.md`, `objetivosAFUTURO.md`, `GUIA_ESTUDIO_SPRINT1.md`, `Sprint1/` (7 archivos y la carpeta `diagramas/`), `db/` (`schema.sql`, `seed.sql`, `bd.ps1`, `verificacion.sql`, `migraciones/` con 2 migraciones), `backend/` (más de 120 clases Java, `pom.xml`, `README.md`, `PROGRESO.md`, `src/main/resources/static/` con el front-end), `.gitignore` y `.env.example`. Además hay notas de contexto en la memoria del asistente (fuera del proyecto).
 - **Entorno de desarrollo:** ya instalado y verificado (ver sección 10).
 
 ---
@@ -416,7 +424,7 @@ Correspondencia con los supuestos: 1 → S-16, 2 → S-05, 3 → S-09, 4 → S-1
 
 ## 14. Fase C: backend Spring Boot (2026-09-20) y Fase E: documentos y nota de voz (2026-09-22)
 
-**Dónde:** `backend/`. **Cómo arrancar y probar:** `backend/README.md`. **Estado, endpoints y supuestos S-17 a S-46:** `backend/PROGRESO.md`. **Demo y preguntas de defensa:** `docs/GUIA_DEFENSA.md`.
+**Dónde:** `backend/`. **Cómo arrancar y probar:** `backend/README.md`. **Estado, endpoints y supuestos S-17 a S-47:** `backend/PROGRESO.md`. **Demo y preguntas de defensa:** `GUIA_ESTUDIO_SPRINT1.md` (`docs/GUIA_DEFENSA.md` ya no está en el repositorio).
 
 **Arquitectura:** Java 17, Spring Boot 3.5, Maven; paquete `cl.ubb.pem.practicas` con `controller, service, repository, entity, dto, security, exception, config`. DTO en lugar de entidades; manejador global de errores en español (`ApiError`); CORS abierto a `http://localhost:*`; Swagger en `/swagger-ui.html` con botón Authorize. Seguridad sin estado: login con BCrypt y token JWT de 8 horas (S-06); `@PreAuthorize` por rol en cada endpoint y `AccesoService` para "quién ve qué". La app usa `isw_app` con `${ISW_DB_PASSWORD}` y `ddl-auto=validate`. El secreto del JWT es `ISW_JWT_SECRET` (opcional; si falta se genera uno temporal).
 

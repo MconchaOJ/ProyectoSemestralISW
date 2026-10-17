@@ -6,7 +6,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -40,8 +39,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .flatMap(usuarioRepository::findById)
                     .filter(u -> Boolean.TRUE.equals(u.getActivo()))
                     .ifPresent(u -> {
-                        var principal = new UsuarioAutenticado(u.getId(), u.getEmail(), u.getRol().getNombre());
-                        var autoridades = List.of(new SimpleGrantedAuthority("ROLE_" + principal.rol()));
+                        var principal = new UsuarioAutenticado(u.getId(), u.getEmail(), u.getRol().getNombre(),
+                                u.getRolSecundario() == null ? null : u.getRolSecundario().getNombre());
+                        // Una autoridad por rol: con dos roles, @PreAuthorize("hasRole(...)") acepta cualquiera de ellos
+                        var autoridades = principal.roles().stream()
+                                .map(r -> new SimpleGrantedAuthority("ROLE_" + r)).toList();
                         SecurityContextHolder.getContext()
                                 .setAuthentication(new UsernamePasswordAuthenticationToken(principal, null, autoridades));
                     });

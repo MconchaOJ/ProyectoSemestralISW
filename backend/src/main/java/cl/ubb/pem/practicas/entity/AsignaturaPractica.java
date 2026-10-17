@@ -46,4 +46,8 @@ public class AsignaturaPractica {
     /** Falso en Aproximación al Sistema Escolar: solo trabajos en clase, sin planificaciones. */
     @Column(name = "requiere_planificacion", nullable = false)
     private Boolean requierePlanificacion = true;
+
+    /** TRUE si la práctica tiene tutor de la universidad: solo Práctica Profesional (HU-07, migración 006). */
+    @Column(name = "lleva_tutor", nullable = false)
+    private Boolean llevaTutor = false;
 }

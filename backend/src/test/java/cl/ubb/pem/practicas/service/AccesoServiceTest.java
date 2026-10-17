@@ -2,7 +2,9 @@ package cl.ubb.pem.practicas.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import cl.ubb.pem.practicas.Datos;
 import cl.ubb.pem.practicas.entity.Estudiante;
@@ -49,9 +51,22 @@ class AccesoServiceTest {
     }
 
     @Test
+    void elTutorVeSoloLasInscripcionesDondeEsTutor() {   // HU-07
+        // La consulta no filtra por tutor: se pide sin filtro y el servicio deja las filas que puedeVerInscripcion acepta.
+        assertThat(acceso.alcanceDe(actor(8, "TUTOR"))).isEqualTo(new AccesoService.Alcance(null, null, null));
+        assertThat(acceso.puedeVerInscripcion(inscripcion, actor(8, "TUTOR"))).isFalse();
+        inscripcion.setTutor(Datos.usuario(8, "TUTOR"));
+        assertThat(acceso.puedeVerInscripcion(inscripcion, actor(8, "TUTOR"))).isTrue();
+        assertThat(acceso.puedeVerInscripcion(inscripcion, actor(9, "TUTOR"))).isFalse();   // otro tutor
+        when(inscripciones.existsByEstudianteIdAndTutorId(1L, 8L)).thenReturn(true);
+        assertThat(acceso.puedeVerHistorial(estudiante, actor(8, "TUTOR"))).isTrue();
+        assertThat(acceso.puedeVerHistorial(estudiante, actor(9, "TUTOR"))).isFalse();
+    }
+
+    @Test
     void unRolDesconocidoNoVeNadaEnLugarDeVerTodo() {
-        assertThatThrownBy(() -> acceso.alcanceDe(actor(9, "TUTOR"))).isInstanceOf(AccesoDenegadoException.class);
-        assertThat(acceso.puedeVerInscripcion(inscripcion, actor(9, "TUTOR"))).isFalse();
+        assertThatThrownBy(() -> acceso.alcanceDe(actor(9, "INVITADO"))).isInstanceOf(AccesoDenegadoException.class);
+        assertThat(acceso.puedeVerInscripcion(inscripcion, actor(9, "INVITADO"))).isFalse();
     }
 
     @Test
@@ -87,6 +102,47 @@ class AccesoServiceTest {
         assertThat(acceso.puedeVerHistorial(estudiante, actor(7, "ESTUDIANTE"))).isFalse();
         assertThat(acceso.puedeVerHistorial(estudiante, actor(3, "PROFESOR_GUIA"))).isFalse();
         assertThat(acceso.puedeVerHistorial(estudiante, actor(5, "PROFESOR_CURSO"))).isFalse();
-        assertThat(acceso.puedeVerHistorial(estudiante, actor(9, "TUTOR"))).isFalse();
+        assertThat(acceso.puedeVerHistorial(estudiante, actor(9, "INVITADO"))).isFalse();
+    }
+
+    // ---------- Cuentas con dos roles (migración 004) y jefe de carrera con lectura total (2026-10-11) ----------
+
+    private static UsuarioAutenticado actor(long id, String rol, String rolSecundario) {
+        return new UsuarioAutenticado(id, "u" + id + "@demo.example", rol, rolSecundario);
+    }
+
+    @Test
+    void elJefeDeCarreraLeeTodoComoElCoordinador() {
+        UsuarioAutenticado jefe = actor(32, "JEFE_CARRERA");
+        assertThat(acceso.alcanceDe(jefe)).isEqualTo(new AccesoService.Alcance(null, null, null));
+        assertThat(acceso.puedeVerInscripcion(inscripcion, jefe)).isTrue();
+        assertThat(acceso.puedeVerHistorial(estudiante, jefe)).isTrue();
+        assertThat(AccesoService.veTodo(jefe)).isTrue();
+        // y no consulta la base para decidirlo
+        verifyNoInteractions(inscripciones);
+    }
+
+    @Test
+    void conDosRolesVeLaSumaDeLoQueVeCadaUno() {
+        // guía 2 de esta inscripción y, además, profesor del curso de otras: la ve por ser su guía
+        UsuarioAutenticado guiaYCurso = actor(2, "PROFESOR_GUIA", "PROFESOR_CURSO");
+        assertThat(acceso.puedeVerInscripcion(inscripcion, guiaYCurso)).isTrue();
+        // usuario 4 como profesor del curso más un rol desconocido: la ve por el rol que sí conoce
+        assertThat(acceso.puedeVerInscripcion(inscripcion, actor(4, "INVITADO", "PROFESOR_CURSO"))).isTrue();
+        // alguien sin relación con la inscripción no la ve aunque tenga dos roles
+        assertThat(acceso.puedeVerInscripcion(inscripcion, actor(3, "PROFESOR_GUIA", "PROFESOR_CURSO"))).isFalse();
+        // dos roles restringidos: la consulta no puede expresar el "o", se pide sin filtro y se filtra fila por fila
+        assertThat(acceso.alcanceDe(guiaYCurso)).isEqualTo(new AccesoService.Alcance(null, null, null));
+        // un rol conocido y uno desconocido: queda el alcance del conocido
+        assertThat(acceso.alcanceDe(actor(4, "INVITADO", "PROFESOR_CURSO"))).isEqualTo(new AccesoService.Alcance(null, 4L, null));
+    }
+
+    @Test
+    void elJefeDeCarreraQueTambienEsGuiaLeeTodo() {
+        UsuarioAutenticado jefeGuia = actor(32, "JEFE_CARRERA", "PROFESOR_GUIA");
+        assertThat(acceso.alcanceDe(jefeGuia)).isEqualTo(new AccesoService.Alcance(null, null, null));
+        assertThat(acceso.puedeVerInscripcion(inscripcion, jefeGuia)).isTrue();
+        assertThat(jefeGuia.tieneRol("PROFESOR_GUIA")).isTrue();
+        assertThat(jefeGuia.tieneRol("COORDINADOR")).isFalse();
     }
 }

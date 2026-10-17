@@ -42,6 +42,7 @@ public abstract class IntegracionBase {
     protected static final String VALENTINA = "valentina.perez@demo.example";  // estudiante 3
     protected static final String SEBASTIAN = "sebastian.vargas@demo.example"; // estudiante 4
     protected static final String JAVIERA = "javiera.herrera@demo.example";    // estudiante 5
+    protected static final String JEFE_CARRERA = "jefe.carrera@demo.example";  // Gonzalo Riquelme (id 32, HU-31)
 
     @Autowired
     protected MockMvc mvc;

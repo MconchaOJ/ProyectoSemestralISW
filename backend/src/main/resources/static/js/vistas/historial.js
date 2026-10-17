@@ -1,5 +1,5 @@
 // HU-05 · Ver el historial del estudiante: recorrido por las prácticas con evaluaciones y planificaciones.
-//   Estudiante: #/historial (el suyo)   ·   Guía, profesor del curso, coordinador: #/historial/{estudianteId}
+//   Estudiante: #/historial (el suyo)   ·   Guía, profesor del curso, coordinador, jefe de carrera: #/historial/{estudianteId}
 import { api } from '../api.js';
 import {
   MODALIDADES, alerta, alertaError, badge, cabecera, debounce, fecha, html, icono, iniciales, nota, promedio, vacio,
@@ -12,7 +12,7 @@ export async function render(cont, ctx) {
   const [id] = ctx.args;
   ctx.titulo('Historial');
 
-  if (ctx.rol === 'ESTUDIANTE') {
+  if (ctx.tiene('ESTUDIANTE')) {
     const h = await api.get('/api/estudiantes/me/historial');
     return pintar(cont, ctx, h, { propio: true });
   }
@@ -23,14 +23,14 @@ export async function render(cont, ctx) {
   return selector(cont, ctx);
 }
 
-/** Guía, profesor del curso y coordinador eligen a un estudiante. */
+/** Guía, profesor del curso, coordinador y jefe de carrera eligen a un estudiante. */
 async function selector(cont, ctx) {
   const encabezado = cabecera({
     hu: 'HU-05', titulo: 'Ver el historial del estudiante',
     subtitulo: 'Elige a un estudiante para ver su recorrido completo por las prácticas y cómo evolucionan sus evaluaciones.',
   });
   let estudiantes;
-  if (ctx.rol === 'COORDINADOR') {
+  if (ctx.veTodo) { // coordinador o jefe de carrera: todos los estudiantes
     const lista = await api.get('/api/estudiantes');
     estudiantes = lista.map((e) => ({
       id: e.id, nombre: `${e.nombre} ${e.apellidos}`, detalle: `${e.rut} · semestre ${e.semestreActual}`,

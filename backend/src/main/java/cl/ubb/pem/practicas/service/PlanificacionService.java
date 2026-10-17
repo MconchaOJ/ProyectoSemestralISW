@@ -163,6 +163,7 @@ public class PlanificacionService {
     public List<PlanificacionResumenDto> listar(Long inscripcionId, EstadoPlanificacion estado, UsuarioAutenticado actor) {
         AccesoService.Alcance a = acceso.alcanceDe(actor);
         return planificaciones.buscar(inscripcionId, estado, a.guiaId(), a.cursoId(), a.usuarioEstudianteId()).stream()
+                .filter(p -> acceso.puedeVerInscripcion(p.getInscripcion(), actor))   // cuentas con dos roles
                 .map(PlanificacionResumenDto::desde).toList();
     }
 

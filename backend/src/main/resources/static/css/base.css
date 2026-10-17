@@ -156,6 +156,13 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: .93rem; }
 .tabla .acciones { text-align: right; white-space: nowrap; }
 .tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
 .tabla small { color: var(--texto-suave); }
+/* Celular: la tabla se desplaza de lado dentro de su recuadro, pero la columna de acciones (Abrir, Ver...) queda
+   fija a la derecha para que el botón siempre esté a la vista. */
+@media (max-width: 640px) {
+  .tabla td.acciones, .tabla:has(td.acciones) thead th:last-child { position: sticky; right: 0; z-index: 1; box-shadow: -8px 0 10px -8px rgba(10, 42, 94, .35); }
+  .tabla td.acciones { background: var(--blanco); }
+  .tabla tbody tr:hover td.acciones { background: #F7FAFE; }
+}
 
 /* ---------- Vacío, alertas ---------- */
 .vacio { text-align: center; padding: 2.5rem 1rem; color: var(--texto-suave); }

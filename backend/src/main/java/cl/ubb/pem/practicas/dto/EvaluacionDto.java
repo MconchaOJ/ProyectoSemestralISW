@@ -1,8 +1,10 @@
 package cl.ubb.pem.practicas.dto;
 
+import cl.ubb.pem.practicas.entity.AmbitoPauta;
 import cl.ubb.pem.practicas.entity.EstadoEvaluacion;
 import cl.ubb.pem.practicas.entity.Evaluacion;
 import cl.ubb.pem.practicas.entity.RespuestaIndicador;
+import cl.ubb.pem.practicas.entity.TipoEvaluador;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,7 +21,9 @@ public record EvaluacionDto(Long id, Long inscripcionId, EstudianteResumenDto es
                             LocalDateTime fechaFinalizacion, int indicadoresRespondidos, int indicadoresTotales,
                             List<RespuestaDto> respuestas) {
 
-    public record PautaRef(Integer id, String nombre, Integer escalaMin, Integer escalaMax) {
+    /** tipoEvaluador y numeroObservacion (HU-07): quién la aplica y si es la primera o la segunda observación. */
+    public record PautaRef(Integer id, String nombre, Integer escalaMin, Integer escalaMax, TipoEvaluador tipoEvaluador,
+                           AmbitoPauta ambito, Integer numeroObservacion) {
     }
 
     public record RespuestaDto(Integer indicadorId, Integer numero, String dimension, String descripcion,
@@ -41,7 +45,8 @@ public record EvaluacionDto(Long id, Long inscripcionId, EstudianteResumenDto es
                 .toList();
         return new EvaluacionDto(e.getId(), e.getInscripcion().getId(),
                 EstudianteResumenDto.desde(e.getInscripcion().getEstudiante()),
-                new PautaRef(pauta.getId(), pauta.getNombre(), pauta.getEscalaMin(), pauta.getEscalaMax()),
+                new PautaRef(pauta.getId(), pauta.getNombre(), pauta.getEscalaMin(), pauta.getEscalaMax(),
+                        pauta.getTipoEvaluador(), pauta.getAmbito(), pauta.getNumeroObservacion()),
                 UsuarioResumenDto.desde(e.getEvaluador()),
                 e.getPlanificacion() == null ? null : e.getPlanificacion().getId(),
                 e.getFechaClase(), e.getEstablecimiento(), e.getCurso(), e.getHoraInicio(), e.getHoraTermino(),

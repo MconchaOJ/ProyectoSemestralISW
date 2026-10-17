@@ -4,6 +4,7 @@ import cl.ubb.pem.practicas.dto.ProfesorCrearRequest;
 import cl.ubb.pem.practicas.dto.RolProfesor;
 import cl.ubb.pem.practicas.dto.UsuarioDto;
 import cl.ubb.pem.practicas.repository.UsuarioRepository;
+import cl.ubb.pem.practicas.security.Roles;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,15 +27,15 @@ public class ProfesorService {
                 usuarioService.crear(r.nombre(), r.apellidos(), r.email(), r.password(), r.rol().name()));
     }
 
-    /** Sin filtro devuelve a todos los profesores (guías y del curso). */
+    /**
+     * Sin filtro devuelve a todos los profesores (guías, del curso y tutores). Cuenta el rol principal y el segundo rol
+     * (migración 004): así el coordinador puede asignar como guía al jefe de carrera que también lo es.
+     */
     @Transactional(readOnly = true)
     public List<UsuarioDto> listar(RolProfesor rol) {
-        if (rol != null) {
-            return usuarios.findByRolNombreOrderByApellidosAscNombreAsc(rol.name()).stream()
-                    .map(UsuarioDto::desde).toList();
-        }
         return usuarios.findAllByOrderByApellidosAscNombreAsc().stream()
-                .filter(u -> u.getRol().getNombre().startsWith("PROFESOR_"))
+                .filter(u -> rol != null ? u.tieneRol(rol.name())
+                        : u.getNombresRoles().stream().anyMatch(r -> r.startsWith("PROFESOR_") || r.equals(Roles.TUTOR)))
                 .map(UsuarioDto::desde).toList();
     }
 }

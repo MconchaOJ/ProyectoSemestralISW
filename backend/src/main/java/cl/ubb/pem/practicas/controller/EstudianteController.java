@@ -42,9 +42,9 @@ public class EstudianteController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('COORDINADOR')")
+    @PreAuthorize("hasAnyRole('COORDINADOR', 'JEFE_CARRERA')")
     @Operation(summary = "Listar y buscar estudiantes",
-            description = "Solo COORDINADOR. `buscar` filtra por nombre, apellidos o RUT (sin distinguir mayúsculas ni tildes).")
+            description = "COORDINADOR o JEFE_CARRERA (lectura). `buscar` filtra por nombre, apellidos o RUT (sin distinguir mayúsculas ni tildes).")
     public List<EstudianteDto> listar(@RequestParam(required = false) String buscar) {
         return estudiantes.listar(buscar);
     }
@@ -57,8 +57,8 @@ public class EstudianteController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('COORDINADOR')")
-    @Operation(summary = "Ficha de un estudiante", description = "Solo COORDINADOR.")
+    @PreAuthorize("hasAnyRole('COORDINADOR', 'JEFE_CARRERA')")
+    @Operation(summary = "Ficha de un estudiante", description = "COORDINADOR o JEFE_CARRERA (lectura).")
     public EstudianteDto obtener(@PathVariable Long id) {
         return estudiantes.obtener(id);
     }

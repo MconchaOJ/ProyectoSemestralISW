@@ -69,9 +69,9 @@ public class EvaluacionService {
     public EvaluacionDto crear(EvaluacionCrearRequest r, UsuarioAutenticado actor) {
         Inscripcion inscripcion = inscripciones.findById(r.inscripcionId()).orElseThrow(
                 () -> new RecursoNoEncontradoException("No existe la inscripción con id " + r.inscripcionId() + "."));
-        // Criterio 6: solo el guía asignado a ESA inscripción puede evaluarla.
-        if (inscripcion.getProfesorGuia() == null || !inscripcion.getProfesorGuia().getId().equals(actor.id())) {
-            throw new AccesoDenegadoException("Solo el profesor guía asignado a la inscripción puede evaluarla.");
+        // Criterio 6 (HU-03) y HU-07: solo evalúa quien está asignado a ESA inscripción, como guía o como tutor.
+        if (!esId(inscripcion.getProfesorGuia(), actor.id()) && !esId(inscripcion.getTutor(), actor.id())) {
+            throw new AccesoDenegadoException("Solo el profesor guía o el tutor asignado a la inscripción puede evaluarla.");
         }
         Pauta pauta = pautas.findById(r.pautaId()).orElseThrow(
                 () -> new RecursoNoEncontradoException("No existe la pauta con id " + r.pautaId() + "."));
@@ -171,7 +171,7 @@ public class EvaluacionService {
         return EvaluacionDto.desde(e);
     }
 
-    /** Cada rol ve lo suyo. Los borradores solo los ven quien evalúa y el coordinador. */
+    /** Cada rol ve lo suyo. Los borradores solo los ven quien evalúa, el coordinador y el jefe de carrera. */
     @Transactional(readOnly = true)
     public List<EvaluacionResumenDto> listar(Long inscripcionId, EstadoEvaluacion estado, UsuarioAutenticado actor) {
         AccesoService.Alcance a = acceso.alcanceDe(actor);
@@ -184,7 +184,8 @@ public class EvaluacionService {
     // ---------------------------------------------------------------------------------------------
 
     /**
-     * Regla de visibilidad. SUPUESTO S-29: una evaluación en BORRADOR es privada del evaluador (y del coordinador);
+     * Regla de visibilidad. SUPUESTO S-29: una evaluación en BORRADOR es privada del evaluador (y de quien lee todo:
+     * el coordinador y, desde el 2026-10-11, el jefe de carrera, con su mismo alcance de lectura);
      * el estudiante y el profesor del curso ven solo las FINALIZADAS.
      */
     boolean puedeVer(Evaluacion e, UsuarioAutenticado actor) {
@@ -194,7 +195,7 @@ public class EvaluacionService {
         if (e.getEstado() == EstadoEvaluacion.FINALIZADA) {
             return true;
         }
-        return actor.tieneRol(Roles.COORDINADOR) || e.getEvaluador().getId().equals(actor.id());
+        return AccesoService.veTodo(actor) || e.getEvaluador().getId().equals(actor.id());
     }
 
     private Evaluacion buscar(Long id) {
@@ -206,7 +207,7 @@ public class EvaluacionService {
     private Evaluacion obtenerPropia(Long id, UsuarioAutenticado actor) {
         Evaluacion e = buscar(id);
         if (!e.getEvaluador().getId().equals(actor.id())) {
-            throw new AccesoDenegadoException("Solo el profesor guía que creó la evaluación puede modificarla.");
+            throw new AccesoDenegadoException("Solo quien creó la evaluación (su evaluador) puede modificarla.");
         }
         return e;
     }
@@ -225,11 +226,22 @@ public class EvaluacionService {
             throw new ReglaNegocioException("La pauta no corresponde a la asignatura de la inscripción ("
                     + inscripcion.getAsignatura().getNombre() + ").");
         }
-        // El evaluador debe corresponder al tipo de evaluador de la pauta (MER, sección 5).
+        // El evaluador debe corresponder al tipo de evaluador de la pauta (MER, sección 5). HU-07, criterio 3: el tutor
+        // solo evalúa con pautas de tutor, y el guía no puede usarlas.
         String rolRequerido = rolDelEvaluador(pauta.getTipoEvaluador());
-        if (rolRequerido == null || !rolRequerido.equals(actor.rol())) {
+        if (!actor.tieneRol(rolRequerido)) {
             throw new ReglaNegocioException("Esta pauta la aplica un evaluador de tipo " + pauta.getTipoEvaluador()
-                    + (rolRequerido == null ? " (aún no disponible: llega en el Sprint 2)." : " (rol " + rolRequerido + ")."));
+                    + " (rol " + rolRequerido + ").");
+        }
+        // Y debe estar asignado a la inscripción en ESE papel (una cuenta con dos roles no cruza sus pautas).
+        Usuario asignado = switch (pauta.getTipoEvaluador()) {
+            case COLABORADOR -> inscripcion.getProfesorGuia();
+            case TUTOR -> inscripcion.getTutor();
+            case ACADEMICO -> inscripcion.getProfesorCurso();
+        };
+        if (!esId(asignado, actor.id())) {
+            throw new AccesoDenegadoException("Esta pauta de tipo " + pauta.getTipoEvaluador()
+                    + " solo la aplica quien está asignado a la inscripción como " + rolRequerido + ".");
         }
     }
 
@@ -237,8 +249,12 @@ public class EvaluacionService {
         return switch (tipo) {
             case COLABORADOR -> Roles.PROFESOR_GUIA;
             case ACADEMICO -> Roles.PROFESOR_CURSO;
-            case TUTOR -> null;   // el tutor se incorpora en el Sprint 2 (S-12)
+            case TUTOR -> Roles.TUTOR;   // HU-07 (migración 006)
         };
+    }
+
+    private static boolean esId(Usuario u, Long id) {
+        return u != null && u.getId().equals(id);
     }
 
     private void validarHoras(LocalTime inicio, LocalTime termino) {

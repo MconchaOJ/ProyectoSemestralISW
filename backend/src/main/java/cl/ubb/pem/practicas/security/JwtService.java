@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-/** Genera y valida los tokens JWT (HS256). El token identifica al usuario y su rol y expira (S-06). */
+/** Genera y valida los tokens JWT (HS256). El token identifica al usuario y sus roles (uno o dos) y expira (S-06). */
 @Service
 public class JwtService {
 
@@ -28,6 +28,12 @@ public class JwtService {
     public JwtService(JwtProperties props) {
         this.duracion = Duration.ofHours(props.expiracionHoras());
         if (props.secret() == null || props.secret().isBlank()) {
+            if (props.secretoObligatorio()) {
+                // Perfil prod: un secreto temporal cerraría la sesión de todos en cada reinicio (DESPLIEGUE.md, punto 5)
+                throw new IllegalStateException("Falta la variable de entorno ISW_JWT_SECRET (mínimo "
+                        + LARGO_MINIMO_SECRETO + " caracteres). Es obligatoria con el perfil prod: "
+                        + "la aplicación no arranca sin ella.");
+            }
             byte[] aleatorio = new byte[LARGO_MINIMO_SECRETO];
             new SecureRandom().nextBytes(aleatorio);
             this.clave = Keys.hmacShaKeyFor(aleatorio);
@@ -49,6 +55,7 @@ public class JwtService {
                 .subject(String.valueOf(usuario.getId()))
                 .claim("email", usuario.getEmail())
                 .claim("rol", usuario.getRol().getNombre())
+                .claim("roles", usuario.getNombresRoles())   // informativo: los permisos se leen de la base en cada petición
                 .issuedAt(Date.from(ahora))
                 .expiration(Date.from(ahora.plus(duracion)))
                 .signWith(clave)

@@ -72,6 +72,16 @@ $RECYCLE.BIN/
 *.log
 logs/
 *.tmp
+
+# Respaldos que genera deploy/backup.sh (volcado de la base y copia de los adjuntos) y otros volcados comprimidos:
+# tienen datos de personas. No se ignora *.sql en general porque db/ guarda ahí el esquema y las migraciones.
+isw_practicas_*.sql
+*.sql.gz
+*.tar.gz
+
+# Certificados y solicitudes de certificado (por ejemplo, los de prueba de deploy/); las claves ya están arriba.
+*.crt
+*.csr
 *.bak
 *.swp
 ~$*

@@ -1,7 +1,7 @@
 // Estructura de la aplicación: cabecera, barra lateral por rol y enrutador por hash (#/inicio, #/planificaciones...).
 import { api, sesion } from './api.js';
 import { alertaError, cargando, html, icono, iniciales, nombreRol, pintarIconos, vacio } from './ui.js';
-import { ACCESOS, FUNCIONES, itemActivo, rutaPermitida, visiblesPara } from './menu.js';
+import { FUNCIONES, accesosPara, itemActivo, rolesDe, rutaPermitida, visiblesPara } from './menu.js';
 
 if (!sesion.vigente()) {
   sesion.limpiar();
@@ -18,6 +18,8 @@ const VISTAS = {
   evaluaciones: () => import('./vistas/evaluaciones.js'),
   planificaciones: () => import('./vistas/planificaciones.js'),
   historial: () => import('./vistas/historial.js'),
+  cartola: () => import('./vistas/cartola.js'),
+  pautas: () => import('./vistas/pautas.js'),
 };
 
 const $ = (id) => document.getElementById(id);
@@ -31,7 +33,7 @@ let vez = 0; // identifica la navegación en curso: una vista lenta no pisa a la
 // ---------- Cabecera ----------
 function pintarCabecera() {
   $('usuario-nombre').textContent = `${usuario.nombre} ${usuario.apellidos}`;
-  $('usuario-rol').textContent = nombreRol(usuario.rol);
+  $('usuario-rol').textContent = rolesDe(usuario).map(nombreRol).join(' · ');
   $('avatar').textContent = iniciales(usuario);
   $('ico-salir').innerHTML = icono('logout').toString();
   $('btn-lateral').innerHTML = icono('menu').toString();
@@ -61,8 +63,8 @@ function accesoHtml(acceso) {
 }
 
 function pintarMenu() {
-  const funciones = visiblesPara(FUNCIONES, usuario.rol);
-  const accesos = ACCESOS[usuario.rol] ?? [];
+  const funciones = visiblesPara(FUNCIONES, rolesDe(usuario));
+  const accesos = accesosPara(rolesDe(usuario));
   menu.innerHTML = html`
     <div class="grupo">
       <a class="item" href="#/inicio" data-ruta="inicio" title="Inicio">
@@ -82,7 +84,7 @@ menu.addEventListener('click', (ev) => {
 });
 
 function marcarActivo(seccion) {
-  const activo = seccion === 'inicio' ? { ruta: 'inicio' } : itemActivo(seccion, usuario.rol);
+  const activo = seccion === 'inicio' ? { ruta: 'inicio' } : itemActivo(seccion, rolesDe(usuario));
   menu.querySelectorAll('a.item[data-ruta]').forEach((a) => {
     const es = Boolean(activo) && a.dataset.ruta === activo.ruta;
     a.classList.toggle('activo', es);
@@ -144,15 +146,28 @@ async function navegar() {
     document.title = 'No encontrada · Sistema de Prácticas PEM';
     return;
   }
-  if (!rutaPermitida(seccion, usuario.rol)) {
-    cont.innerHTML = html`<div class="alerta alerta-error" role="alert">${icono('lock')}<div><strong>No tienes permiso para esta acción.</strong><br>Tu rol (${nombreRol(usuario.rol)}) no puede usar esta función.</div></div>`.toString();
+  const roles = rolesDe(usuario);
+  if (!rutaPermitida(seccion, roles)) {
+    cont.innerHTML = html`<div class="alerta alerta-error" role="alert">${icono('lock')}<div><strong>No tienes permiso para esta acción.</strong><br>Tu rol (${roles.map(nombreRol).join(' · ')}) no puede usar esta función.</div></div>`.toString();
     document.title = 'Sin permiso · Sistema de Prácticas PEM';
     return;
   }
 
   cont.innerHTML = cargando().toString();
+  // Una cuenta puede tener dos roles: las vistas preguntan con tiene(rol), no comparando ctx.rol (el principal).
+  // Con el segundo rol no basta TENER el rol para actuar sobre una inscripción: hay que ser su guía o su profesor
+  // del curso (el jefe de carrera ve todas, pero como guía solo actúa en las suyas). actuaComo lo resuelve.
+  const tiene = (r) => roles.includes(r);
   const contexto = {
-    seccion, args, consulta, usuario, rol: usuario.rol,
+    seccion, args, consulta, usuario, rol: usuario.rol, roles, tiene,
+    veTodo: tiene('COORDINADOR') || tiene('JEFE_CARRERA'),
+    actuaComo: (rol, i) => {
+      if (!tiene(rol) || !i) return false;
+      if (rol === 'PROFESOR_GUIA') return i.profesorGuia?.id === usuario.id;
+      if (rol === 'PROFESOR_CURSO') return i.profesorCurso?.id === usuario.id;
+      if (rol === 'TUTOR') return i.tutor?.id === usuario.id;
+      return true; // ESTUDIANTE: el servidor ya le entrega solo lo suyo
+    },
     ir: (hash) => { location.hash = hash; },
     recargar: () => navegar(),
     vigente: () => mia === vez,
@@ -166,7 +181,9 @@ async function navegar() {
     await modulo.render(cont, contexto);
   } catch (e) {
     if (mia !== vez) return;
-    console.error(e);
+    // Un 4xx de la API (sin permiso, no existe) es una respuesta esperada y ya se muestra en pantalla: a la consola
+    // solo van los errores inesperados (fallos de JavaScript o del servidor).
+    if (!e.status || e.status >= 500) console.error(e);
     cont.innerHTML = alertaError(e.status ? e : { message: 'No se pudo mostrar esta vista.' }).toString();
   }
 }
@@ -183,7 +200,7 @@ if (sesion.vigente()) {
 
   // El rol se lee de la base en cada petición: se confirma con el servidor y se refresca si cambió.
   api.get('/api/auth/me').then((yo) => {
-    const cambio = yo.rol !== usuario.rol || yo.nombre !== usuario.nombre || yo.apellidos !== usuario.apellidos;
+    const cambio = yo.rol !== usuario.rol || yo.rolSecundario !== usuario.rolSecundario || yo.nombre !== usuario.nombre || yo.apellidos !== usuario.apellidos;
     usuario = { ...usuario, ...yo };
     sesion.guardar({ token: sesion.token(), usuario, expiraEnSegundos: Math.max(1, (sesion.expira() - Date.now()) / 1000) });
     if (cambio) { pintarCabecera(); pintarMenu(); navegar(); }

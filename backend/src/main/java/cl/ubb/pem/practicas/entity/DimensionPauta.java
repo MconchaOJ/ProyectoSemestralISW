@@ -28,7 +28,7 @@ public class DimensionPauta {
     @Column(nullable = false)
     private Integer orden;
 
-    @OneToMany(mappedBy = "dimension")
+    @OneToMany(mappedBy = "dimension", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("numero ASC")
     private List<Indicador> indicadores = new ArrayList<>();
 }

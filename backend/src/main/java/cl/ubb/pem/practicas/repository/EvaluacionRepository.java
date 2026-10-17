@@ -10,6 +10,9 @@ import org.springframework.data.repository.query.Param;
 
 public interface EvaluacionRepository extends JpaRepository<Evaluacion, Long> {
 
+    /** Evaluaciones (borradores incluidos) hechas con una pauta: si hay alguna, la pauta ya no se edita (HU-06). */
+    long countByPautaId(Integer pautaId);
+
     /** Listado con filtros opcionales y alcance por rol (parámetro nulo = sin filtro). */
     @Query("""
             select e from Evaluacion e

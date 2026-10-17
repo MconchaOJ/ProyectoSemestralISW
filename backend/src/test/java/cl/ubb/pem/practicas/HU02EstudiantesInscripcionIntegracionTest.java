@@ -94,10 +94,13 @@ class HU02EstudiantesInscripcionIntegracionTest extends IntegracionBase {
 
     @Test
     void seListanLosProfesoresConFiltroPorRol() throws Exception {
-        // Generación completa (S-39): 6 guías (2 originales + 4 nuevos) y 4 profesores del curso (2 + 2 nuevos)
-        consultar("/api/profesores?rol=PROFESOR_GUIA", COORDINADOR).andExpect(jsonPath("$.length()").value(6));
+        // Generación completa (S-39): 6 guías (2 originales + 4 nuevos) y 4 profesores del curso (2 + 2 nuevos),
+        // más el jefe de carrera, que es guía por su segundo rol (migración 004): 7 guías
+        consultar("/api/profesores?rol=PROFESOR_GUIA", COORDINADOR).andExpect(jsonPath("$.length()").value(7));
         consultar("/api/profesores?rol=PROFESOR_CURSO", COORDINADOR).andExpect(jsonPath("$.length()").value(4));
-        consultar("/api/profesores", COORDINADOR).andExpect(jsonPath("$.length()").value(10));
+        // sin filtro también aparece el tutor de demostración (HU-07): 7 + 4 + 1
+        consultar("/api/profesores", COORDINADOR).andExpect(jsonPath("$.length()").value(12));
+        consultar("/api/profesores?rol=TUTOR", COORDINADOR).andExpect(jsonPath("$.length()").value(1));
         consultar("/api/profesores?rol=ESTUDIANTE", COORDINADOR).andExpect(status().isBadRequest());
     }
 

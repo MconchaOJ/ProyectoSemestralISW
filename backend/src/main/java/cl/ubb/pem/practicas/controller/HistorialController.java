@@ -37,7 +37,7 @@ public class HistorialController {
                     + "evaluaciones finalizadas (fecha, pauta, puntaje total, promedio) y sus planificaciones con su estado. "
                     + "Incluye el semestre actual y las asignaturas aprobadas. El detalle indicador por indicador de una "
                     + "evaluación está en GET /api/evaluaciones/{id}. Acceso: el propio estudiante, su guía o profesor del "
-                    + "curso asignados, y el coordinador; cualquier otro recibe 403.")
+                    + "curso asignados, el coordinador y el jefe de carrera; cualquier otro recibe 403.")
     public HistorialDto historialDe(@PathVariable Long id, @AuthenticationPrincipal UsuarioAutenticado actor) {
         return historial.historialDe(id, actor);
     }

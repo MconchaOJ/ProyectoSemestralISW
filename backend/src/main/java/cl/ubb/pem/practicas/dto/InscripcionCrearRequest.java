@@ -12,5 +12,7 @@ public record InscripcionCrearRequest(
         @Schema(description = "Id del profesor guía. Obligatorio si la asignatura se hace en un centro educativo; "
                 + "puede ir vacío en el ciclo inicial", example = "2") Long profesorGuiaId,
         @Schema(description = "Id del profesor del curso, que autoriza las clases", example = "4")
-        @NotNull Long profesorCursoId) {
+        @NotNull Long profesorCursoId,
+        @Schema(description = "Id del tutor de la universidad (HU-07). Opcional y solo en Práctica Profesional", example = "33")
+        Long tutorId) {
 }

@@ -61,4 +61,19 @@ class JwtServiceTest {
         JwtService jwt = new JwtService(new JwtProperties("", 8));
         assertThat(jwt.extraerUsuarioId(jwt.generarToken(usuario(7)))).contains(7L);
     }
+
+    @Test
+    void conSecretoObligatorioYSinSecretoNoArranca() {
+        assertThatThrownBy(() -> new JwtService(new JwtProperties("", 8, true)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("ISW_JWT_SECRET");
+        assertThatThrownBy(() -> new JwtService(new JwtProperties(null, 8, true)))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void conSecretoObligatorioYSecretoValidoFunciona() {
+        JwtService jwt = new JwtService(new JwtProperties(SECRETO, 8, true));
+        assertThat(jwt.extraerUsuarioId(jwt.generarToken(usuario(9)))).contains(9L);
+    }
 }

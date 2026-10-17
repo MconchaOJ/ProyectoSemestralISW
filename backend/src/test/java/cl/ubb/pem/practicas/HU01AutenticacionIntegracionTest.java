@@ -122,13 +122,14 @@ class HU01AutenticacionIntegracionTest extends IntegracionBase {
         consultar("/api/roles", CAMILA).andExpect(status().isForbidden());
         consultar("/api/roles", GUIA1).andExpect(status().isForbidden());
         consultar("/api/roles", CURSO1).andExpect(status().isForbidden());
-        consultar("/api/roles", COORDINADOR).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(4));
+        consultar("/api/roles", JEFE_CARRERA).andExpect(status().isForbidden());
+        consultar("/api/roles", COORDINADOR).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(6));
     }
 
     @Test
-    void existenLosCuatroRolesDelSistema() throws Exception {
+    void existenLosSeisRolesDelSistema() throws Exception {   // TUTOR desde HU-07 (migración 006)
         var nombres = cuerpo(consultar("/api/roles", COORDINADOR)).findValuesAsText("nombre");
-        assertThat(nombres).containsExactly("ESTUDIANTE", "PROFESOR_GUIA", "PROFESOR_CURSO", "COORDINADOR");
+        assertThat(nombres).containsExactly("ESTUDIANTE", "PROFESOR_GUIA", "PROFESOR_CURSO", "COORDINADOR", "JEFE_CARRERA", "TUTOR");
     }
 
     @Test

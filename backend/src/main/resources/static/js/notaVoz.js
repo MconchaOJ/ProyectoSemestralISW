@@ -24,7 +24,7 @@ export async function montarNotaVoz(cont, { evaluacionId, esEvaluador }) {
   if (esEvaluador) return pintarGrabador(cont, { evaluacionId });
   cont.innerHTML = html`<div class="tarjeta nota-voz">
     <h2>${icono('mic')} Retroalimentación en voz</h2>
-    <p class="subtitulo">El profesor guía todavía no ha dejado una nota de voz para esta evaluación.</p>
+    <p class="subtitulo">Quien evaluó la clase todavía no ha dejado una nota de voz para esta evaluación.</p>
   </div>`.toString();
 }
 
@@ -40,7 +40,7 @@ function pintarExistente(cont, { evaluacionId, esEvaluador, nota }) {
         ? html`<textarea id="texto-transcripcion" rows="4" maxlength="8000">${nota.transcripcion ?? ''}</textarea>
             <div class="acciones-panel"><button type="button" class="btn btn-primario" id="guardar-transcripcion" data-cargando="Guardando…">Guardar transcripción corregida</button></div>`
         : html`<p class="transcripcion-lectura">${nota.transcripcion || 'Sin transcripción.'}</p>`}
-      <p class="subtitulo">${nota.transcripcionCorregida ? 'Transcripción corregida por el evaluador.' : 'Transcripción automática, sin corregir.'}
+      <p class="subtitulo">${nota.transcripcionCorregida ? 'Transcripción corregida por el evaluador después de grabar.' : 'Transcripción guardada junto con la grabación.'}
         · grabada el ${fechaHora(nota.fechaGrabacion)} (${nota.duracionSegundos}s)</p>
       <div id="avisos-nota-voz"></div>
     </div>`.toString();
@@ -92,6 +92,7 @@ function pintarGrabador(cont, { evaluacionId }) {
       <div class="acciones-panel">
         <button type="button" class="btn btn-ok" id="guardar-nota-voz" data-cargando="Guardando…" disabled>${icono('check-circle')} Guardar nota de voz</button>
       </div>
+      ${puedeGrabar ? html`<p class="subtitulo" id="ayuda-guardar-nota">El botón se activa cuando detienes la grabación.</p>` : ''}
       <div id="avisos-nota-voz"></div>
     </div>`.toString();
 
@@ -126,6 +127,7 @@ function pintarGrabador(cont, { evaluacionId }) {
           audioPrevia.src = URL.createObjectURL(blobFinal);
           audioPrevia.hidden = false;
           btnGuardar.disabled = false;
+          cont.querySelector('#ayuda-guardar-nota')?.remove();
           stream.getTracks().forEach((t) => t.stop());
         };
         mediaRecorder.start();
