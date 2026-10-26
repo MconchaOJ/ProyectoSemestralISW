@@ -350,3 +350,17 @@ SELECT u.email, i.id AS inscripcion, CONCAT(ue.nombre, ' ', ue.apellidos) AS est
   JOIN estudiante es ON es.id = i.estudiante_id
   JOIN usuario ue ON ue.id = es.usuario_id
   JOIN asignatura_practica a ON a.id = i.asignatura_id;
+
+-- -----------------------------------------------------------------------------
+SELECT '24. CHATBOT (HU-15 y HU-16, migración 007; esperado: 0 violaciones en cada fila)' AS verificacion;
+SELECT 'Mensaje del chatbot en una asignatura sin chatbot habilitado' AS control, COUNT(*) AS violaciones
+  FROM mensaje_chatbot m JOIN inscripcion i ON i.id = m.inscripcion_id
+  JOIN asignatura_practica a ON a.id = i.asignatura_id
+ WHERE NOT a.chatbot_habilitado
+UNION ALL
+SELECT 'Mensaje con una planificación de otra inscripción', COUNT(*)
+  FROM mensaje_chatbot m JOIN planificacion p ON p.id = m.planificacion_id
+ WHERE p.inscripcion_id <> m.inscripcion_id
+UNION ALL
+SELECT 'Respuesta del chatbot con planificación adjunta (solo el estudiante adjunta)', COUNT(*)
+  FROM mensaje_chatbot WHERE autor = 'CHATBOT' AND planificacion_id IS NOT NULL;

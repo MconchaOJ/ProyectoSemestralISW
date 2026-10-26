@@ -17,7 +17,11 @@
 > del 10-oct ("jefe de carrera de solo lectura, su único acceso es la cartola"). **201 pruebas.** Detalle en "Sprint 2: segundo rol".
 > **2026-10-11 (Sprint 2): carpeta `deploy/`** (instalación Linux, nginx, systemd, respaldo y guía del equipo; probada en
 > Ubuntu 26.04 en WSL) y **HU-06 Configurar pautas de evaluación** con versiones (migración 005). **210 pruebas.**
-> **Última actualización: 2026-09-22 — S-47: enviar una planificación a revisión ahora también exige al menos un
+> **2026-10-26 (Sprint 2, rama `feature/chatbot`, tanda 1 de 3): HU-15 chatbot de retroalimentación (PARCIAL) y HU-16
+> el guía lee el chat (TERMINADA).** Proveedor Groq con la clave en `ISW_GROQ_API_KEY` (S-59; hasta el mismo 26-oct era
+> Anthropic, ver "Cambio de proveedor a Groq"), migración 007,
+> **52 endpoints y 239 pruebas** (tras el cambio a Groq). Supuestos S-59 a S-64. Detalle en la sección "Sprint 2: chatbot, tanda 1 de 3".
+> **Última actualización anterior: 2026-09-22 — S-47: enviar una planificación a revisión ahora también exige al menos un
 > documento adjunto (la planificación formal en Word o PDF, HU-21); los cinco campos del formulario quedan como
 > resumen. Encontrado y corregido durante la ronda de pruebas de la Fase H. Sobre la Fase F (actividad real de
 > demostración), la Fase E (documentos, nota de voz, menú limpio, búsqueda), el Sprint 1 (2026-09-20) y el
@@ -38,6 +42,8 @@
 | HU-31 Cartola de prácticas y rol JEFE_CARRERA (Sprint 2) | TERMINADA | 14 (8 integración + 6 servicio) | PDF 200 para el jefe, 403 para los otros 4 roles, 400 con fechas invertidas: OK |
 | Segundo rol opcional y jefe de carrera con lectura total (Sprint 2, confirmado por el cliente) | TERMINADO | 9 (6 integración + 3 `AccesoService`) | por HTTP con `jefe.carrera@demo.example`: perfil con los 2 roles, lecturas 200, `/api/profesores` 403, cartola 200 |
 | HU-06 Configurar pautas de evaluación (Sprint 2) | TERMINADA | 9 (integración) | pantalla del coordinador recorrida en Chrome headless: crear, error de escala, editar una pauta usada (versión 2), lista con versiones; sin errores de JavaScript |
+| HU-15 Chatbot de retroalimentación (Sprint 2, 26-oct) | PARCIAL (criterios 3 a 8 por instrucciones al modelo, sin probar con el modelo real) | 8 integración + 5 `ModeloLenguajeGroq` + 2 `TextoDocx` + 2 `TextoPdf` | sin clave del proveedor: 503 claro y nada guardado; navegador con mensajes de ejemplo |
+| HU-16 El guía lee el chat (Sprint 2, 26-oct) | TERMINADA | 3 integración + 1 `AccesoService` | guía 200 solo lectura, coordinador 403 |
 | Carpeta `deploy/` (Sprint 2) | TERMINADA | — | instalación completa en Ubuntu 26.04 (WSL): reinicio tras `kill -9`, 29 MB pasa y 31 MB da 413, 80 → 301 a HTTPS, respaldo con fecha y restaurado en una base de prueba, reinstalación sin tocar datos |
 | Transversal: control de acceso (`AccesoService`) | TERMINADO | 8 | — |
 | Guía de defensa (`docs/GUIA_DEFENSA.md`) y `backend/README.md` | TERMINADAS | — | guion completo ensayado por HTTP: 59 de 59 OK |
@@ -438,6 +444,12 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 | S-57 | (2026-10-16, HU-07) El tutor se asigna, cambia o quita solo con la inscripción EN_CURSO; las evaluaciones que ya hizo un tutor anterior quedan a su nombre (como el cambio de guía de la migración 004) | HU-07 |
 | S-58 | (2026-10-16, HU-07) El tutor ve, solo lectura, las inscripciones, planificaciones, evaluaciones finalizadas (y sus propios borradores) e historial completo de los estudiantes de los que es tutor (como S-21 para guía y curso). No participa en el flujo de aprobación de planificaciones | HU-07 |
 | S-50 | Al cambiar la contraseña (HU-26) el token en uso sigue valiendo hasta que expire (8 horas): el JWT no tiene estado y revocarlo exigiría guardar una versión del token por usuario | HU-26 |
+| S-59 | (2026-10-26, HU-15; proveedor cambiado el mismo día por decisión del usuario: antes Anthropic, ahora Groq) El modelo de lenguaje lo provee **Groq** (capa gratuita, API compatible con "chat completions" de OpenAI; modelo en `app.chatbot.modelo`), con la clave solo en la variable de entorno `ISW_GROQ_API_KEY`. Lo eligió el equipo; el cliente no ha confirmado proveedor ni costo (S-46). La capa gratuita tiene límites de uso por minuto y por día: con muchos estudiantes a la vez el chatbot respondería "alcanzó su límite de uso" (503). **Privacidad:** cada mensaje envía a ese proveedor externo el nombre del estudiante, su historial de prácticas (notas, promedios) y la planificación con sus documentos. Hay que confirmarlo con el cliente antes de usarlo con estudiantes reales | HU-15 |
+| S-60 | (2026-10-26, HU-15/HU-16) El chat lo leen **solo el estudiante dueño y el profesor guía de esa inscripción**. No lo leen el coordinador, el profesor del curso, el tutor ni el jefe de carrera (este último llega con HU-20). Es la opción más privada mientras S-38 siga abierto. El estudiante ve un aviso con el nombre de su guía (HU-16, criterio 2) | HU-15, HU-16 |
+| S-61 | (2026-10-26, HU-15) "Adjuntar la planificación" = **elegir una de sus planificaciones del sistema** en el chat: el chatbot lee el formulario y los documentos ya subidos (HU-21). Word y PDF se convierten a texto, porque Groq solo recibe texto (se pierden imágenes, gráficos, tablas complejas y ecuaciones de Word; un PDF escaneado no tiene texto). Todos los documentos juntos se recortan a 14 000 caracteres por la cuota de tokens. No se sube un archivo nuevo en el chat ni se aceptan imágenes (.png/.jpg), porque las planificaciones solo aceptan Word y PDF. Si no eligió ninguna, el chatbot pide que la elija (criterio 2) | HU-15 |
+| S-62 | (2026-10-26, HU-15) Las reglas del flujo de RetroPlani Mate (verificación documental, máximo 5 preguntas, no diseñar, nunca poner nota, máximo 2 retroalimentaciones por clase) van en las **instrucciones del modelo**: el código no puede garantizarlas al 100 %. El texto del mensaje fijo de límite (criterio 3) lo redactó el equipo (la propuesta original no está en el repositorio) | HU-15 |
+| S-63 | (2026-10-26, HU-15) Se escribe al chatbot solo con la inscripción EN_CURSO; cerrada, la conversación queda para consulta (409 al escribir) | HU-15 |
+| S-64 | (2026-10-26, HU-15) "Asignaturas aprobadas" del contexto = las **prácticas** aprobadas registradas en el sistema (S-14), no la malla completa de la carrera | HU-15 |
 
 ## Problemas conocidos y limitaciones
 
@@ -459,6 +471,12 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 - Migrar `Planificacion` al formato oficial real (S-45), cuando se decida el impacto en el formulario y en las 146 pruebas que ya lo usan.
 
 ## Migraciones de base de datos
+
+**`db/migraciones/007_chatbot_planificacion.sql`** (2026-10-26, HU-15): columna `mensaje_chatbot.planificacion_id`
+(nula, FK a `planificacion`, índice): la planificación que el estudiante adjuntó a ese mensaje. La tabla
+`mensaje_chatbot` ya existía desde el Sprint 1 (vacía, sin API). Que la planificación sea de la misma inscripción lo
+controlan `ChatbotService` y el bloque 24 nuevo de `verificacion.sql`. Una sola vez y como root; `schema.sql` ya la trae.
+**Probada solo en una base nueva** (`.\db\bd.ps1`); en el servidor real todavía no hay base que migrar.
 
 **`db/migraciones/001_grupo_y_planificacion_por_asignatura.sql`** (2026-09-20, por las respuestas de un estudiante): agrega la modalidad `GRUPO` al CHECK de `asignatura_practica` y la columna `requiere_planificacion` (BOOLEAN, por defecto TRUE); Aproximación pasa a `GRUPO` sin planificaciones y Ambientes a `DUPLA`.
 - Se ejecuta **una sola vez y como root** (`isw_app` no puede alterar tablas). Probada sobre la base anterior y comparada con una instalación nueva: el resultado es idéntico.
@@ -821,3 +839,153 @@ Se corrigieron los hallazgos 1 y 2 de arriba. El 3 y el 4 quedan como estaban (d
   `db/schema.sql`, `seed.sql`, `datos-iniciales.sql` y las migraciones **no**.
 - Después: `mvn clean package` **218 pruebas, 0 fallos** (no cambió código Java) y `.\db\bd.ps1` para dejar la base
   limpia.
+
+## Sprint 2: chatbot, tanda 1 de 3 — HU-15 y HU-16 (2026-10-26, rama `feature/chatbot`)
+
+**Plan acordado con el usuario:** las 6 HU del chatbot (HU-15, 16, 17, 20, 29, 30) en 3 tandas de 2, con un commit del
+usuario después de cada una. Esta es la primera. Sin cambios en git (ni `add`, ni `commit`, ni `push`).
+
+**Qué se construyó.** El estudiante de Práctica Pedagógica o Profesional (las asignaturas con `chatbot_habilitado`)
+conversa con un asistente que retroalimenta una planificación que **él ya escribió**. Elige la planificación en el chat;
+el asistente lee su formulario y sus documentos (Word convertido a texto, PDF tal cual) y tiene como contexto el
+historial del estudiante (HU-05: semestre, prácticas aprobadas con nota, evaluaciones y planificaciones de la práctica
+en curso). Su profesor guía lee la conversación (HU-16).
+
+**Backend:**
+- `ChatbotController`: `GET /api/inscripciones/{id}/chatbot` (conversación; estudiante dueño o su guía) y
+  `POST /api/inscripciones/{id}/chatbot/mensajes` (solo el estudiante dueño; 201 con los dos mensajes). **52 endpoints**
+  (50 + 2).
+- `ChatbotService`: reglas (403 si no es el dueño, 409 si la asignatura no tiene chatbot o la inscripción está cerrada,
+  400 si la planificación es de otra inscripción, 404 si no existe), armado del contexto con
+  `HistorialService.historialDe` (las mismas reglas de acceso del endpoint de historial) y de la planificación. **La
+  llamada al modelo va fuera de toda transacción** (no deja una conexión a la base tomada mientras espera) y los dos
+  mensajes se guardan después, juntos: si el proveedor falla no queda un mensaje huérfano.
+- `ModeloLenguaje` (interfaz) y `ModeloLenguajeAnthropic` (SDK oficial `com.anthropic:anthropic-java` 2.34.0, modelo
+  `claude-opus-5-5`, esfuerzo medio, tope 16 000 tokens, 90 s, 2 reintentos). **Reemplazado el mismo día por
+  `ModeloLenguajeGroq`: ver "Cambio de proveedor a Groq" más abajo; lo que sigue de este punto ya no aplica.** Toda falla del proveedor (sin red, clave
+  mala, cuota, 5xx, respuesta vacía) se convierte en `ServicioExternoException` → **503** con un mensaje en español; la
+  aplicación sigue funcionando. Sin clave, la aplicación arranca igual y el chatbot responde 503 "no está configurado".
+  Si el modelo rechaza la petición por sus filtros de seguridad, se pide al proveedor que reintente con otro modelo
+  (`app.chatbot.respaldo-por-rechazo`, función beta "fallbacks"; si diera problemas se apaga en `application.properties`).
+- `InstruccionesChatbot`: las reglas de RetroPlani Mate de los criterios 2 a 8 y el contexto del estudiante.
+- `TextoDocx`: texto de un `.docx` con `java.util.zip` (sin librerías nuevas; tope de 5 MB descomprimidos).
+- `AccesoService.puedeVerChat`: misma regla de pertenencia que `puedeVerInscripcion` (se extrajo a `participaComo`),
+  pero solo para los roles `ESTUDIANTE` y `PROFESOR_GUIA` (S-60).
+- Configuración `app.chatbot.*` (`ChatbotProperties`); la clave sale **solo** de `ISW_ANTHROPIC_API_KEY`.
+
+**Front-end:** ítem "Asistente de planificación" (estudiante y guía), vista `vistas/chatbot.js` (lista de prácticas o
+estudiantes con asistente; chat con burbujas, selector "Planificación a revisar", aviso "Tu profesor guía, X, puede leer
+esta conversación"; el guía lo ve en solo lectura), botón «Asistente» en "Mis inscripciones" y estilos en `vistas.css`.
+
+**Criterios de aceptación:**
+
+| HU | Criterio | Estado |
+|---|---|---|
+| HU-15 | 1. Solo en las dos prácticas finales; contexto = semestre y asignaturas aprobadas (HU-05) | **Cumplido** (409 en las demás; el contexto viaja en las instrucciones). Las "aprobadas" son las prácticas del sistema (S-64) |
+| HU-15 | 2. Adjunta la planificación como archivo; si la pega como texto, pide el archivo | **Parcial:** se adjunta eligiendo una planificación del sistema con sus documentos Word/PDF (S-61); no acepta imágenes. Pedir el archivo si la pega como texto es una instrucción al modelo (S-62) |
+| HU-15 | 3. Nunca diseña; mensaje fijo de límite | **Por instrucciones** (S-62): texto fijo redactado por el equipo; sin garantía determinista |
+| HU-15 | 4. Verificación documental antes de retroalimentar | **Por instrucciones** (S-62); el sistema le entrega la lista real de documentos adjuntos |
+| HU-15 | 5. Hasta 5 preguntas diagnósticas e integra las respuestas | **Por instrucciones** (S-62); la conversación completa se le envía en cada mensaje |
+| HU-15 | 6. Revisa coherencia, 3 momentos, DUA, evaluación, recursos, errores; nunca pone nota | **Por instrucciones** (S-62) |
+| HU-15 | 7. Preguntas de reflexión; máximo 2 retroalimentaciones por clase | **Por instrucciones** (S-62); el código no cuenta las retroalimentaciones |
+| HU-15 | 8. Español, tono formativo, avisa si falta información | **Por instrucciones** |
+| HU-15 | 9. Guarda cada mensaje por inscripción | **Cumplido** (`mensaje_chatbot`, con la planificación adjunta) |
+| HU-16 | 1. El guía ve el chat de sus estudiantes asignados y de nadie más | **Cumplido** (403 a otro guía, al profesor del curso, al coordinador, al jefe de carrera y al tutor; S-60) |
+| HU-16 | 2. El estudiante sabe que su guía puede verlo | **Cumplido** (aviso con el nombre del guía en el chat) |
+
+**Estado honesto: HU-16 TERMINADA; HU-15 PARCIAL.** HU-15 funciona de punta a punta, pero (a) los criterios 3 a 8 dependen
+del modelo y **no se han probado con el modelo real**: no hay clave del proveedor en este equipo, así que todas las
+pruebas usan un doble y la página se probó con el chatbot sin configurar (503) y con mensajes insertados a mano; (b) el
+criterio 2 se cumple con una variante (elegir la planificación del sistema, sin imágenes); (c) el proveedor y la
+privacidad de enviar datos del estudiante a un tercero no están confirmados con el cliente (S-59).
+
+**Pruebas: 235, 0 fallos** (eran 218; **+17**): `HU15ChatbotIntegracionTest` (8: caso feliz con el historial como
+contexto, la conversación sigue con la misma planificación, estudiante sin historial, sin acceso, solo prácticas finales
+y EN_CURSO, falla de la API externa → 503 sin guardar nada y la aplicación sigue respondiendo, planificación ajena 400 y
+lectura de Word y PDF, mensaje vacío o largo 400), `HU16ChatGuiaIntegracionTest` (3), `AccesoServiceTest` (+1),
+`ModeloLenguajeAnthropicTest` (3: sin clave, proveedor caído con un puerto local cerrado y armado de los turnos; nunca
+llama a la API real) y `TextoDocxTest` (2). Las pruebas de integración reemplazan el modelo con `@MockitoBean`.
+
+**Prueba real (HTTP, `java -jar` sin clave del proveedor): 12 de 12** — conversación vacía 200, aviso con el guía, 503
+"no está configurado" al escribir, nada guardado después, `/api/auth/me` sigue en 200, el guía lee sin poder escribir,
+el coordinador 403, Trabajo Colaborativo 409, Swagger con 52 operaciones y los archivos nuevos se sirven. **Navegador
+(Chrome headless):** chat del estudiante con mensajes de ejemplo insertados a mano (borrados después con `bd.ps1`), el
+503 se muestra dentro del formulario sin romper la vista, vista móvil de 390 px, lista y lectura del guía, Camila sin
+práctica final ve "Aún no tienes acceso al asistente", el coordinador no tiene la función; **0 errores de JavaScript**.
+
+**Falta / riesgos para las tandas siguientes:**
+1. Probar con una clave real (`ISW_ANTHROPIC_API_KEY`) los criterios 3 a 8 con conversaciones de verdad, idealmente con
+   el coordinador (es la base de HU-17 y HU-30). Tiene costo por uso.
+2. Confirmar con el cliente: proveedor, costo y privacidad (S-59); quién lee el chat (S-60, sigue S-38).
+3. El mensaje del estudiante no se muestra mientras el asistente responde (aparece junto con la respuesta, de 5 a 30 s):
+   el botón muestra "El asistente está respondiendo…". Sin respuesta en streaming.
+4. HU-17 y HU-29 (calibrar el estilo y cargar la base de conocimiento) necesitarán guardar las instrucciones y los
+   documentos de referencia en la base: hoy las reglas están en el código (`InstruccionesChatbot`).
+
+### Cambio de proveedor a Groq (2026-10-26, pedido por el usuario)
+
+**Por qué:** Groq tiene capa gratuita; Anthropic cobra por uso. Groq expone la API "chat completions" de OpenAI en
+`https://api.groq.com/openai/v1`.
+
+**Qué cambió:**
+- `ModeloLenguajeAnthropic` y la dependencia `com.anthropic:anthropic-java` **salieron**. Entró `ModeloLenguajeGroq`, que
+  llama a `POST /chat/completions` con el `RestClient` de Spring (ya estaba en el proyecto: sin SDK nuevo). Instrucciones
+  como mensaje `system`, turnos alternados `user`/`assistant`, `temperature` 0,3 y `max_completion_tokens` 1 500.
+- Errores: **429** (límite de la capa gratuita) → 503 "alcanzó su límite de uso, inténtalo de nuevo en N segundos/minutos"
+  (según `retry-after`) **sin reintentar**, porque reintentar solo agota más la cuota; **5xx o sin red** → hasta 2
+  reintentos y después 503; **401/400** → 503 sin reintentar. Cada respuesta deja en el log los tokens usados y lo que
+  queda de cuota (cabeceras `x-ratelimit-remaining-*`).
+- **Groq solo recibe texto:** los PDF ahora también se convierten a texto (`TextoPdf`, con `PdfTextExtractor` de OpenPDF,
+  la librería de la cartola; máximo 30 páginas). Todos los documentos juntos se recortan a 14 000 caracteres.
+- `app.chatbot.*`: clave en `ISW_GROQ_API_KEY`, `url-base`, `modelo`, `temperatura`; `.env.example` con el marcador.
+- **`app.chatbot.respaldo-por-rechazo` se eliminó.** Era la función beta "fallbacks" de la API de Anthropic: cuando el
+  modelo se niega a responder por sus filtros de seguridad, el propio servidor reintenta con otro modelo. Groq no tiene
+  nada equivalente ni ese tipo de rechazo. Lo parecido en Groq sería cambiar a un modelo más chico cuando se agota la
+  cuota (429), pero se descartó: la calidad de la retroalimentación cambiaría sin aviso y cada modelo tiene su propia
+  cuota, así que solo aplaza el problema.
+- Pruebas: `ModeloLenguajeAnthropicTest` (3) se reemplazó por `ModeloLenguajeGroqTest` (5, contra un servidor HTTP local
+  que imita a Groq: cuerpo y cabecera enviados, 429 sin reintento, 5xx con reintentos, 401, sin conexión) y se agregó
+  `TextoPdfTest` (2). La prueba de HU-15 que adjunta un PDF ahora genera un PDF real y comprueba que su texto llega.
+
+**Prueba con el modelo real:** ver la sección siguiente.
+
+### Prueba con el modelo real de Groq (2026-10-26)
+
+Con `ISW_GROQ_API_KEY` definida, `java -jar` y un guion HTTP como Valentina (inscripción 11). Se subió a su
+planificación 8 un Word con errores puestos a propósito: "si a es negativo la parábola se abre hacia arriba", "toda
+parábola corta siempre al eje X en dos puntos", sin DUA, cierre sin evidencia y evaluación (factorización) desalineada
+del objetivo.
+
+**1. El modelo configurado ya no existía.** Groq respondió 404 a `llama-3.3-70b-versatile` (la consulta `GET /models`
+de esta cuenta ya no lo lista). El sistema se comportó como debía: 503, nada guardado, la app siguió respondiendo.
+**Cambio:** `app.chatbot.modelo=openai/gpt-oss-120b` (el modelo de texto más grande disponible, contexto de 131 000
+tokens) y `app.chatbot.max-tokens` de 1 500 a **3 000**, porque gpt-oss razona antes de contestar y esos tokens cuentan
+en el tope (la retroalimentación completa usó 1 640). Mismo cambio en `ChatbotProperties` y `ModeloLenguajeGroqTest`.
+Si Groq retira también este modelo, basta cambiar la propiedad (no el código).
+
+**2. Criterios de HU-15 con el modelo real:**
+
+| Criterio | Resultado |
+|---|---|
+| 2. Pega la planificación como texto → pedir el archivo | **A medias:** respondió con el mensaje fijo de límite, que termina pidiendo elegir la planificación en "Planificación a revisar"; no la retroalimentó como texto, pero tampoco usó una respuesta propia para este caso |
+| 3. Pide escribir una actividad de inicio | **Cumple:** mensaje fijo, palabra por palabra |
+| 4. Verificación documental | **Cumple:** notó que la "guía de exploración" está en los recursos pero no adjunta, y la pidió |
+| 5. Hasta 5 preguntas diagnósticas e integra las respuestas | **Cumple:** exactamente 5; la retroalimentación usó lo respondido (36 estudiantes, 3 con NEE, TDAH y lectura, GeoGebra pedido por la guía) |
+| 6. Coherencia, 3 momentos, DUA, evaluación, recursos, errores; sin nota | **Cumple:** detectó **los dos errores matemáticos** y la evaluación desalineada; tablas por momento; DUA por principios. Pedirle nota del 1 al 7: se negó y explicó por qué |
+| 7. Preguntas de reflexión; máximo 2 retroalimentaciones | **Cumple:** 3 preguntas de reflexión en cada una; a la tercera petición se negó y derivó a la profesora guía por su nombre |
+| 8. Español, tono formativo | **Cumple** |
+
+**Para calibrar con el coordinador (HU-17):** algunas sugerencias rozan el "no diseña" (proponer una tarjeta de apoyo,
+"pedir que modifiquen el término constante", una sección "Sugerencias concretas paso a paso"). No entrega material listo
+para copiar, pero el límite entre sugerir y diseñar lo debe fijar el cliente.
+
+**3. Límite de la capa gratuita (riesgo nuevo para el despliegue).** `openai/gpt-oss-120b` permite **8 000 tokens por
+minuto para toda la cuenta** (1 000 peticiones al día). Groq descuenta la entrada más el tope reservado de salida, así
+que cada mensaje gasta de 4 000 a 6 000: en la práctica **uno o dos mensajes por minuto para todo el sistema**. En la
+prueba, el 5.º y 6.º mensaje enviados seguidos dieron 429 → 503 "alcanzó su límite de uso, inténtalo de nuevo en 28
+segundos", sin guardar nada; repetidos con un minuto de pausa respondieron bien. Sirve para la demostración y para
+pocos estudiantes; para un curso completo escribiendo a la vez hace falta el plan de pago de Groq u otro proveedor
+(S-59, a decidir con el cliente).
+
+**Otros datos:** respuestas de 0,7 a 4 s. Sin cortes por largo. El guía (`guia2@demo.example`) leyó los 8 mensajes.
+**239 pruebas, 0 fallos** con el modelo nuevo; la base se recreó con `bd.ps1` después de la prueba.

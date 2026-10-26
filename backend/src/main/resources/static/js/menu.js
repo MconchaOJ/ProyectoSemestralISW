@@ -30,6 +30,8 @@ export const FUNCIONES = [
   { ruta: 'evaluaciones', icono: 'check', nombre: 'Evaluaciones con pauta digital', roles: LECTURA },
   { ruta: 'planificaciones', icono: 'file', nombre: 'Planificación de clases', roles: LECTURA },
   { ruta: 'historial', icono: 'clock', nombre: 'Historial del estudiante', roles: LECTURA },
+  // HU-15 (el estudiante conversa) y HU-16 (su profesor guía lee). SUPUESTO S-60: nadie más ve los chats.
+  { ruta: 'chatbot', icono: 'chat', nombre: 'Asistente de planificación', roles: ['ESTUDIANTE', 'PROFESOR_GUIA'] },
 ];
 
 const tieneAlguno = (item, roles) => item.roles.some((r) => roles.includes(r));

@@ -52,8 +52,8 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-13 | Exportar notas finales para Adecca | Integración | Media | por estimar | 3 | Pendiente |
 | HU-14 | Panel de monitoreo del coordinador | Monitoreo | Media | por estimar | 3 | Pendiente |
 | HU-19 | Avisos por correo de cambios de estado | Planificación | Media (subió desde Baja) | por estimar | 3 (tentativo) | Pendiente |
-| HU-15 | Chatbot de retroalimentación según el contexto del estudiante | Chatbot | Alta | por estimar | 4 | Pendiente (contenido corregido con RetroPlani Mate, 22-sep) |
-| HU-16 | El profesor guía ve el chat y la actividad del estudiante | Chatbot | Alta | por estimar | 4 | Pendiente (contenido corregido, 22-sep) |
+| HU-15 | Chatbot de retroalimentación según el contexto del estudiante | Chatbot | Alta | por estimar | **2** (adelantada) | **Casi completa (26-oct):** probada con el modelo real de Groq (`openai/gpt-oss-120b`); criterios 3 a 8 cumplidos, criterio 2 (pegar la planificación como texto) a medias — ver `backend/PROGRESO.md`. Capa gratuita de Groq: 1-2 mensajes/min para todo el sistema, a decidir con el cliente (S-59) |
+| HU-16 | El profesor guía ve el chat y la actividad del estudiante | Chatbot | Alta | por estimar | **2** (adelantada) | **Construida y probada (26-oct)**; solo el guía de esa inscripción lee el chat (S-60) |
 | HU-17 | Calibrar el estilo del chatbot con el coordinador | Chatbot | Media | por estimar | 4 | Pendiente (contenido corregido, 22-sep) |
 | HU-20 | El jefe de carrera consulta los chats | Chatbot | Media | por estimar | 4 | Pendiente (contenido corregido, 22-sep) |
 | HU-18 | Registrar informes y productos de la práctica | Documentos | Baja | por estimar | 5 o más | Pendiente |

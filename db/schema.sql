@@ -420,7 +420,8 @@ CREATE TABLE documento_evaluacion (
 
 -- =============================================================================
 -- 7. Tablas de sprints posteriores (existen para que el modelo esté completo)
---    NOTA_VOZ: HU-11 y HU-12 (API ya construida en la Fase E). MENSAJE_CHATBOT: HU-15 y HU-16.
+--    NOTA_VOZ: HU-11 y HU-12 (API ya construida en la Fase E). MENSAJE_CHATBOT: HU-15 y HU-16
+--    (API construida en el Sprint 2, 2026-10-26; migración 007 agregó planificacion_id).
 -- =============================================================================
 
 CREATE TABLE nota_voz (
@@ -439,14 +440,17 @@ CREATE TABLE nota_voz (
 ) ENGINE = InnoDB COMMENT = 'Audio del evaluador al terminar la clase, con su transcripción';
 
 CREATE TABLE mensaje_chatbot (
-    id             BIGINT      NOT NULL AUTO_INCREMENT,
-    inscripcion_id BIGINT      NOT NULL,
-    autor          VARCHAR(12) NOT NULL COMMENT 'ESTUDIANTE, CHATBOT',
-    contenido      TEXT        NOT NULL,
-    fecha          DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    id               BIGINT      NOT NULL AUTO_INCREMENT,
+    inscripcion_id   BIGINT      NOT NULL,
+    planificacion_id BIGINT      NULL     COMMENT 'Planificación que el estudiante adjuntó a este mensaje (HU-15, migración 007); nulo = sin planificación',
+    autor            VARCHAR(12) NOT NULL COMMENT 'ESTUDIANTE, CHATBOT',
+    contenido        TEXT        NOT NULL,
+    fecha            DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     CONSTRAINT pk_mensaje_chatbot PRIMARY KEY (id),
     CONSTRAINT fk_mensaje_inscripcion FOREIGN KEY (inscripcion_id) REFERENCES inscripcion (id),
+    CONSTRAINT fk_mensaje_planificacion FOREIGN KEY (planificacion_id) REFERENCES planificacion (id),
     CONSTRAINT ck_mensaje_autor CHECK (autor IN ('ESTUDIANTE', 'CHATBOT')),
     -- Conversación de una inscripción en orden
-    INDEX ix_mensaje_inscripcion_fecha (inscripcion_id, fecha)
-) ENGINE = InnoDB COMMENT = 'Mensajes entre el estudiante y el chatbot, por inscripción';
+    INDEX ix_mensaje_inscripcion_fecha (inscripcion_id, fecha),
+    INDEX ix_mensaje_planificacion (planificacion_id)
+) ENGINE = InnoDB COMMENT = 'Mensajes entre el estudiante y el chatbot, por inscripción (HU-15; el guía los lee, HU-16)';

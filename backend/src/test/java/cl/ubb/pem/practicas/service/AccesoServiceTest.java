@@ -145,4 +145,23 @@ class AccesoServiceTest {
         assertThat(jefeGuia.tieneRol("PROFESOR_GUIA")).isTrue();
         assertThat(jefeGuia.tieneRol("COORDINADOR")).isFalse();
     }
+
+    @Test
+    void elChatLoLeenSoloElEstudianteYSuGuia() {   // HU-15/HU-16, SUPUESTO S-60
+        assertThat(acceso.puedeVerChat(inscripcion, actor(6, "ESTUDIANTE"))).isTrue();
+        assertThat(acceso.puedeVerChat(inscripcion, actor(2, "PROFESOR_GUIA"))).isTrue();
+        assertThat(acceso.puedeVerChat(inscripcion, actor(7, "ESTUDIANTE"))).isFalse();      // otro estudiante
+        assertThat(acceso.puedeVerChat(inscripcion, actor(3, "PROFESOR_GUIA"))).isFalse();   // otro guía
+        // ven la inscripción, pero no el chat: la privacidad de los chats sigue abierta con el cliente (S-38)
+        inscripcion.setTutor(Datos.usuario(8, "TUTOR"));
+        for (UsuarioAutenticado sinChat : new UsuarioAutenticado[] {actor(4, "PROFESOR_CURSO"), actor(8, "TUTOR"),
+                actor(1, "COORDINADOR"), actor(32, "JEFE_CARRERA")}) {
+            assertThat(acceso.puedeVerInscripcion(inscripcion, sinChat)).isTrue();
+            assertThat(acceso.puedeVerChat(inscripcion, sinChat)).isFalse();
+        }
+        // el jefe de carrera que además es el guía de ESTA inscripción lo lee por su segundo rol
+        assertThat(acceso.puedeVerChat(inscripcion, actor(2, "JEFE_CARRERA", "PROFESOR_GUIA"))).isTrue();
+        assertThatThrownBy(() -> acceso.exigirVerChat(inscripcion, actor(4, "PROFESOR_CURSO")))
+                .isInstanceOf(AccesoDenegadoException.class);
+    }
 }

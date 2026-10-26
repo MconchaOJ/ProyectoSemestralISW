@@ -107,7 +107,7 @@ function pintar(cont, ctx, h, { propio }) {
     </div>
 
     ${aprobadas > 0 ? html`<div class="tarjeta">
-      <h2>Asignaturas aprobadas <small class="subtitulo">(contexto que usará el chatbot en un sprint futuro)</small></h2>
+      <h2>Asignaturas aprobadas <small class="subtitulo">(contexto que usa el asistente de planificación)</small></h2>
       <ul class="chips">${h.asignaturasAprobadas.map((a) => html`<li class="chip"><strong>${a.nombre}</strong> <span>${a.periodo} · nota ${nota(a.notaFinal)}</span></li>`)}</ul>
     </div>` : ''}
 

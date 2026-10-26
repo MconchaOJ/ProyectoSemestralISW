@@ -20,6 +20,7 @@ const VISTAS = {
   historial: () => import('./vistas/historial.js'),
   cartola: () => import('./vistas/cartola.js'),
   pautas: () => import('./vistas/pautas.js'),
+  chatbot: () => import('./vistas/chatbot.js'),
 };
 
 const $ = (id) => document.getElementById(id);
