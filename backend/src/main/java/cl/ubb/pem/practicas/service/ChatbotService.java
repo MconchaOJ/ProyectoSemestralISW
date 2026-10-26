@@ -43,7 +43,9 @@ import org.springframework.transaction.support.TransactionTemplate;
  * Reglas del sistema (las del flujo dialógico las sigue el modelo, ver {@link InstruccionesChatbot}):
  * - Solo en las asignaturas con chatbot habilitado (las dos prácticas finales) y con la inscripción EN_CURSO; cerrada,
  *   la conversación queda para consulta (SUPUESTO S-63).
- * - Escribe solo el estudiante dueño. Leen el estudiante y su profesor guía (S-60, {@link AccesoService#puedeVerChat}).
+ * - Escribe solo el estudiante dueño. Leen el estudiante, su profesor guía (S-60) y el jefe de carrera (HU-20, S-66),
+ *   ver {@link AccesoService#puedeVerChat}.
+ * - Las reglas y el estilo los calibra el coordinador (HU-17, {@link CalibracionChatbotService}).
  * - El estudiante "adjunta" su planificación eligiéndola: el chatbot lee su formulario y sus documentos (HU-21); los
  *   Word y PDF se convierten a texto, porque el proveedor solo recibe texto (SUPUESTO S-61).
  * - Si el proveedor del modelo falla, responde 503 y NO se guarda nada: el estudiante reintenta sin dejar un mensaje
@@ -75,6 +77,7 @@ public class ChatbotService {
     private final AccesoService acceso;
     private final AlmacenamientoArchivosService almacenamiento;
     private final ModeloLenguaje modelo;
+    private final CalibracionChatbotService calibracion;
     private final TransactionTemplate lectura;
     private final TransactionTemplate escritura;
 
@@ -82,6 +85,7 @@ public class ChatbotService {
                           DocumentoPlanificacionRepository documentos, MensajeChatbotRepository mensajes,
                           HistorialService historial, AccesoService acceso,
                           AlmacenamientoArchivosService almacenamiento, ModeloLenguaje modelo,
+                          CalibracionChatbotService calibracion,
                           PlatformTransactionManager transacciones) {
         this.inscripciones = inscripciones;
         this.planificaciones = planificaciones;
@@ -91,16 +95,23 @@ public class ChatbotService {
         this.acceso = acceso;
         this.almacenamiento = almacenamiento;
         this.modelo = modelo;
+        this.calibracion = calibracion;
         this.lectura = new TransactionTemplate(transacciones);
         this.lectura.setReadOnly(true);
         this.escritura = new TransactionTemplate(transacciones);
     }
 
-    /** La conversación de una inscripción (HU-15 para el estudiante, HU-16 para su profesor guía). */
+    /**
+     * La conversación de una inscripción (HU-15 para el estudiante, HU-16 para su profesor guía, HU-20 para el jefe de
+     * carrera). La lectura del jefe queda en el log de la aplicación (HU-20, criterio 4, en parte: S-66).
+     */
     @Transactional(readOnly = true)
     public ConversacionChatbotDto conversacion(Long inscripcionId, UsuarioAutenticado actor) {
         Inscripcion i = buscarInscripcion(inscripcionId);
         acceso.exigirVerChat(i, actor);
+        if (acceso.leeChatComoJefe(i, actor) && !esElGuia(i, actor)) {
+            log.info("Jefe de carrera {} leyó el chat de la inscripción {}", actor.id(), i.getId());
+        }
         String motivo = motivoNoDisponible(i);
         return new ConversacionChatbotDto(i.getId(),
                 i.getEstudiante().getUsuario().getNombre() + " " + i.getEstudiante().getUsuario().getApellidos(),
@@ -160,7 +171,7 @@ public class ChatbotService {
                 : planificacionComoTexto(enRevision))
                 + "Mensaje del estudiante:\n" + req.texto().trim();
         return new Preparado(i.getId(), req.planificacionId(),
-                new Solicitud(InstruccionesChatbot.armar(h, i.getId()), historia, mensaje));
+                new Solicitud(InstruccionesChatbot.armar(calibracion.textoVigente(), h, i.getId()), historia, mensaje));
     }
 
     private RespuestaChatbotDto guardar(Preparado p, String texto, String respuesta, LocalDateTime enviado) {
@@ -250,6 +261,11 @@ public class ChatbotService {
 
     private static boolean esElEstudiante(Inscripcion i, UsuarioAutenticado actor) {
         return actor.tieneRol(Roles.ESTUDIANTE) && i.getEstudiante().getUsuario().getId().equals(actor.id());
+    }
+
+    private static boolean esElGuia(Inscripcion i, UsuarioAutenticado actor) {
+        return actor.tieneRol(Roles.PROFESOR_GUIA) && i.getProfesorGuia() != null
+                && i.getProfesorGuia().getId().equals(actor.id());
     }
 
     private Inscripcion buscarInscripcion(Long id) {

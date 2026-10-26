@@ -1,10 +1,11 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 16 tablas con claves, restricciones e
--- índices (14 del Sprint 1 más documento_planificacion y documento_evaluacion,
--- de la Fase E). No contiene contraseñas (el usuario de la aplicación lo crea
--- db/bd.ps1 con su clave tomada de una variable de entorno).
+-- Implementa el MER de Sprint1/mer.md: 17 tablas con claves, restricciones e
+-- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
+-- la Fase E, e instrucciones_chatbot de HU-17). No contiene contraseñas (el
+-- usuario de la aplicación lo crea db/bd.ps1 con su clave tomada de una
+-- variable de entorno).
 --
 -- ATENCIÓN: es re-ejecutable y, por eso, BORRA y vuelve a crear las tablas.
 -- Úsalo solo en desarrollo y demo. Cárgalo con db/bd.ps1 (o `source` en el
@@ -32,6 +33,7 @@ SET NAMES utf8mb4;
 -- Limpieza (orden inverso a las dependencias)
 -- -----------------------------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS instrucciones_chatbot;
 DROP TABLE IF EXISTS mensaje_chatbot;
 DROP TABLE IF EXISTS nota_voz;
 DROP TABLE IF EXISTS documento_evaluacion;
@@ -454,3 +456,16 @@ CREATE TABLE mensaje_chatbot (
     INDEX ix_mensaje_inscripcion_fecha (inscripcion_id, fecha),
     INDEX ix_mensaje_planificacion (planificacion_id)
 ) ENGINE = InnoDB COMMENT = 'Mensajes entre el estudiante y el chatbot, por inscripción (HU-15; el guía los lee, HU-16)';
+
+-- HU-17 (migración 008): una sola fila con las instrucciones que calibra el coordinador. Sin fila, la aplicación usa
+-- el texto base de RetroPlani Mate (backend/src/main/resources/chatbot/instrucciones-base.txt).
+CREATE TABLE instrucciones_chatbot (
+    id             BIGINT   NOT NULL COMMENT 'Siempre 1: un solo texto para todo el sistema',
+    texto          TEXT     NOT NULL COMMENT 'Reglas, tono, expresiones y respuestas modelo del chatbot (HU-17)',
+    editado_por_id BIGINT   NULL     COMMENT 'Coordinador que lo editó por última vez; nulo = texto base sin editar',
+    fecha_edicion  DATETIME NULL     COMMENT 'Última edición; nulo = texto base sin editar',
+    CONSTRAINT pk_instrucciones_chatbot PRIMARY KEY (id),
+    CONSTRAINT fk_instrucciones_editado_por FOREIGN KEY (editado_por_id) REFERENCES usuario (id),
+    CONSTRAINT ck_instrucciones_fila_unica CHECK (id = 1),
+    CONSTRAINT ck_instrucciones_edicion CHECK ((editado_por_id IS NULL) = (fecha_edicion IS NULL))
+) ENGINE = InnoDB COMMENT = 'Instrucciones del chatbot calibradas por el coordinador (HU-17)';

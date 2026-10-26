@@ -21,8 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * HU-15: chatbot de retroalimentación de planificaciones (Práctica Pedagógica y Profesional), con el historial del
- * estudiante como contexto. HU-16: el profesor guía de la inscripción lee la conversación. SUPUESTOS S-59 a S-64 en
- * PROGRESO.md (proveedor del modelo, quién lee el chat, cómo se adjunta la planificación).
+ * estudiante como contexto. HU-16: el profesor guía de la inscripción lee la conversación. HU-20: el jefe de carrera
+ * también la lee. SUPUESTOS S-59 a S-66 en PROGRESO.md (proveedor del modelo, quién lee el chat, cómo se adjunta la
+ * planificación).
  */
 @RestController
 @RequestMapping("/api/inscripciones/{inscripcionId}/chatbot")
@@ -36,10 +37,11 @@ public class ChatbotController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ESTUDIANTE', 'PROFESOR_GUIA')")
+    @PreAuthorize("hasAnyRole('ESTUDIANTE', 'PROFESOR_GUIA', 'JEFE_CARRERA')")
     @Operation(summary = "Ver la conversación con el chatbot",
-            description = "El estudiante de la inscripción y su profesor guía (HU-16; SUPUESTO S-60: nadie más, la "
-                    + "privacidad de los chats sigue abierta, S-38). Indica si el chatbot está disponible y quién "
+            description = "El estudiante de la inscripción, su profesor guía (HU-16, S-60) y el jefe de carrera en "
+                    + "cualquier inscripción de Práctica Pedagógica o Profesional (HU-20, S-66); los demás, 403. La "
+                    + "privacidad de los chats sigue abierta (S-38). Indica si el chatbot está disponible y quién "
                     + "puede leer el chat. Funciona también con la práctica cerrada (solo lectura).")
     public ConversacionChatbotDto conversacion(@PathVariable Long inscripcionId,
                                                @AuthenticationPrincipal UsuarioAutenticado actor) {

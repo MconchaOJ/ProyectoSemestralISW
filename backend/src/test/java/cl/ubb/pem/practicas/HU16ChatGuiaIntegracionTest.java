@@ -36,7 +36,7 @@ class HU16ChatGuiaIntegracionTest extends ChatbotIntegracionBase {
         consultar(CHAT_VALENTINA, CURSO2).andExpect(status().isForbidden());         // su profesor del curso (S-60)
         consultar(CHAT_VALENTINA, DIEGO).andExpect(status().isForbidden());          // otro estudiante
         consultar(CHAT_VALENTINA, COORDINADOR).andExpect(status().isForbidden());    // S-60, privacidad abierta (S-38)
-        consultar(CHAT_VALENTINA, JEFE_CARRERA).andExpect(status().isForbidden());   // llega con HU-20
+        // el jefe de carrera sí lo lee desde HU-20 (HU20ChatJefeCarreraIntegracionTest)
         consultar("/api/inscripciones/17/chatbot", "tutor1@demo.example").andExpect(status().isForbidden());
     }
 }

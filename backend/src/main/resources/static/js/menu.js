@@ -30,8 +30,13 @@ export const FUNCIONES = [
   { ruta: 'evaluaciones', icono: 'check', nombre: 'Evaluaciones con pauta digital', roles: LECTURA },
   { ruta: 'planificaciones', icono: 'file', nombre: 'Planificación de clases', roles: LECTURA },
   { ruta: 'historial', icono: 'clock', nombre: 'Historial del estudiante', roles: LECTURA },
-  // HU-15 (el estudiante conversa) y HU-16 (su profesor guía lee). SUPUESTO S-60: nadie más ve los chats.
+  // HU-20: el jefe de carrera lee los chats (S-66). Antes que el del guía: con dos roles (jefe + guía) gana este nombre
+  { ruta: 'chatbot', icono: 'chat', nombre: 'Conversaciones del asistente', roles: [JEFE] },
+  // HU-15 (el estudiante conversa) y HU-16 (su profesor guía lee). SUPUESTO S-60: ni el coordinador, ni el profesor
+  // del curso, ni el tutor ven los chats.
   { ruta: 'chatbot', icono: 'chat', nombre: 'Asistente de planificación', roles: ['ESTUDIANTE', 'PROFESOR_GUIA'] },
+  // HU-17: el coordinador calibra el estilo del asistente
+  { ruta: 'estilo-asistente', icono: 'sliders', nombre: 'Estilo del asistente', roles: COORD },
 ];
 
 const tieneAlguno = (item, roles) => item.roles.some((r) => roles.includes(r));
@@ -65,6 +70,7 @@ export const ACCESOS = {
     { icono: 'clock', titulo: 'Historial de un estudiante', texto: 'Recorrido por las 6 prácticas.', hash: '#/historial' },
     { icono: 'file', titulo: 'Seguimiento de planificaciones', texto: 'Estado de cada clase planificada.', hash: '#/planificaciones' },
     { icono: 'clipboard', titulo: 'Pautas de evaluación', texto: 'Crear y editar pautas (con versiones).', hash: '#/pautas' },
+    { icono: 'sliders', titulo: 'Estilo del asistente', texto: 'Calibra cómo retroalimenta el chatbot.', hash: '#/estilo-asistente' },
   ],
   PROFESOR_GUIA: [
     { icono: 'file', titulo: 'Planificaciones por revisar', texto: 'Aprueba u observa antes de la clase.', hash: '#/planificaciones?estado=EN_REVISION_GUIA', pendiente: { ruta: '/api/planificaciones', params: { estado: 'EN_REVISION_GUIA' } } },
@@ -92,6 +98,7 @@ export const ACCESOS = {
     { icono: 'download', titulo: 'Cartola de prácticas', texto: 'PDF de las prácticas cerradas entre dos fechas.', hash: '#/cartola' },
     { icono: 'clock', titulo: 'Historial de un estudiante', texto: 'Recorrido de cualquier estudiante (solo lectura).', hash: '#/historial' },
     { icono: 'check', titulo: 'Evaluaciones de clases', texto: 'Todas las evaluaciones (solo lectura).', hash: '#/evaluaciones' },
+    { icono: 'chat', titulo: 'Conversaciones del asistente', texto: 'Chats de Práctica Pedagógica y Profesional.', hash: '#/chatbot' },
   ],
 };
 

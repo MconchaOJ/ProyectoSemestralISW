@@ -40,8 +40,8 @@ class HU15ChatbotIntegracionTest extends ChatbotIntegracionBase {
                 .contains("Semestre actual de la carrera:")
                 .contains("Práctica en curso: Práctica Pedagógica, período 2026-2")
                 .contains("Trabajo Colaborativo en el Aula").contains("Investigación en el Aula")
-                // criterios 3, 5, 6 y 7 viajan como reglas del chatbot
-                .contains("Nunca diseñas una planificación").contains("como máximo 5 preguntas")
+                // criterios 3, 5, 6 y 7 viajan como reglas del chatbot (texto base de HU-17)
+                .contains("Nunca diseñas, completas ni armas una planificación").contains("hasta 5 preguntas")
                 .contains("nunca asignes puntaje").contains("como máximo dos retroalimentaciones");
         assertThat(s.historia()).isEmpty();
         assertThat(s.mensaje()).contains("no ha adjuntado ninguna planificación").endsWith("Hola, ¿me ayudas con mi clase?");

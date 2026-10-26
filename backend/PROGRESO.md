@@ -21,6 +21,10 @@
 > el guía lee el chat (TERMINADA).** Proveedor Groq con la clave en `ISW_GROQ_API_KEY` (S-59; hasta el mismo 26-oct era
 > Anthropic, ver "Cambio de proveedor a Groq"), migración 007,
 > **52 endpoints y 239 pruebas** (tras el cambio a Groq). Supuestos S-59 a S-64. Detalle en la sección "Sprint 2: chatbot, tanda 1 de 3".
+> **2026-10-26 (tanda 2 de 3): HU-17 el coordinador calibra el estilo del chatbot (TERMINADA) y HU-20 el jefe de carrera
+> lee los chats (PARCIAL: sin aviso al estudiante ni registro de accesos en la base).** Migración 008 (tabla 17,
+> `instrucciones_chatbot`), **54 endpoints y 250 pruebas**. Supuestos S-65 a S-68. Probado con el modelo real de Groq.
+> Detalle en la sección "Sprint 2: chatbot, tanda 2 de 3 - HU-17 y HU-20".
 > **Última actualización anterior: 2026-09-22 — S-47: enviar una planificación a revisión ahora también exige al menos un
 > documento adjunto (la planificación formal en Word o PDF, HU-21); los cinco campos del formulario quedan como
 > resumen. Encontrado y corregido durante la ronda de pruebas de la Fase H. Sobre la Fase F (actividad real de
@@ -450,6 +454,10 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 | S-62 | (2026-10-26, HU-15) Las reglas del flujo de RetroPlani Mate (verificación documental, máximo 5 preguntas, no diseñar, nunca poner nota, máximo 2 retroalimentaciones por clase) van en las **instrucciones del modelo**: el código no puede garantizarlas al 100 %. El texto del mensaje fijo de límite (criterio 3) lo redactó el equipo (la propuesta original no está en el repositorio) | HU-15 |
 | S-63 | (2026-10-26, HU-15) Se escribe al chatbot solo con la inscripción EN_CURSO; cerrada, la conversación queda para consulta (409 al escribir) | HU-15 |
 | S-64 | (2026-10-26, HU-15) "Asignaturas aprobadas" del contexto = las **prácticas** aprobadas registradas en el sistema (S-14), no la malla completa de la carrera | HU-15 |
+| S-65 | (2026-10-26, HU-17) El texto base del chatbot es la propuesta **"RetroPlani Mate" V3** del coordinador de prácticas (`Documents/ChatBot_extraido/ChatBot/PROPUESTA_DE_GPT_CHATBOT_RETROPLANI_MATE_V3_21-06 - Copia.pdf`, que no está en git) **resumida y adaptada por el equipo**: "adjuntar" = elegir la planificación en el sistema, solo Word o PDF (sin imágenes), y 9 de sus 10 respuestas modelo (la del cierre reflexivo quedó como regla del flujo). Se resumió porque el texto completo (~25 páginas) no cabe en la cuota por minuto de Groq. Reemplaza el mensaje fijo de límite que había redactado el equipo (S-62) por el de la propuesta. Las bases curriculares, la rúbrica y los demás archivos de referencia no se cargan (HU-29) | HU-15, HU-17 |
+| S-66 | (2026-10-26, HU-20) El jefe de carrera lee **todos** los chats de las asignaturas con chatbot, en solo lectura y **sin aviso al estudiante** (decisión del usuario: ya tiene lectura global del resto del sistema). El borrador de HU-20 sí pedía el aviso (criterio 3) y registrar cada acceso (criterio 4): hoy cada lectura del jefe queda solo en el log de la aplicación, no en una tabla. Sigue abierta la privacidad de los chats con el cliente (S-38) | HU-20 |
+| S-67 | (2026-10-26, HU-17) Las instrucciones calibradas miden entre **200 y 12 000 caracteres** (400 si no): el mínimo evita guardar un texto vacío o de prueba; el máximo protege la cuota de Groq (el texto viaja en cada mensaje; el base tiene ~7 000) | HU-17 |
+| S-68 | (2026-10-26, HU-17) Un solo texto para todo el sistema (no por asignatura). El cambio rige desde el **siguiente mensaje**, también en conversaciones en curso; los mensajes guardados no cambian (criterio 3). No se guarda historial de versiones: solo quién y cuándo editó por última vez. El contexto del estudiante lo sigue agregando el sistema, no se edita | HU-17 |
 
 ## Problemas conocidos y limitaciones
 
@@ -852,7 +860,7 @@ historial del estudiante (HU-05: semestre, prácticas aprobadas con nota, evalua
 en curso). Su profesor guía lee la conversación (HU-16).
 
 **Backend:**
-- `ChatbotController`: `GET /api/inscripciones/{id}/chatbot` (conversación; estudiante dueño o su guía) y
+- `ChatbotController`: `GET /api/inscripciones/{id}/chatbot` (conversación; estudiante dueño o su guía; desde HU-20 también el jefe de carrera) y
   `POST /api/inscripciones/{id}/chatbot/mensajes` (solo el estudiante dueño; 201 con los dos mensajes). **52 endpoints**
   (50 + 2).
 - `ChatbotService`: reglas (403 si no es el dueño, 409 si la asignatura no tiene chatbot o la inscripción está cerrada,
@@ -989,3 +997,124 @@ pocos estudiantes; para un curso completo escribiendo a la vez hace falta el pla
 
 **Otros datos:** respuestas de 0,7 a 4 s. Sin cortes por largo. El guía (`guia2@demo.example`) leyó los 8 mensajes.
 **239 pruebas, 0 fallos** con el modelo nuevo; la base se recreó con `bd.ps1` después de la prueba.
+
+## Sprint 2: chatbot, tanda 2 de 3 - HU-17 y HU-20 (2026-10-26)
+
+Rama `feature/chatbot`, sin commit (lo hace el usuario). **HU-17 TERMINADA; HU-20 PARCIAL.**
+
+### HU-17 · El coordinador calibra el estilo del chatbot
+
+**Por qué así:** las instrucciones estaban fijas en `InstruccionesChatbot.java`; el coordinador no podía ajustarlas sin
+un programador. Ahora son un registro de la base que solo él edita, y el código solo agrega lo que el coordinador no
+debe tocar: el contexto del estudiante (semestre, prácticas aprobadas, evaluaciones), que sale del historial (HU-05).
+
+**Base de datos (migración `008_instrucciones_chatbot.sql`, tabla 17):** `instrucciones_chatbot` con una sola fila
+(`CHECK id = 1`): `texto`, `editado_por_id` (FK a usuario) y `fecha_edicion` (`CHECK`: los dos nulos o los dos con
+valor). La migración deja la tabla **vacía** a propósito: así sigue siendo solo ASCII y el texto no queda copiado en ella.
+Sin fila, el chatbot usa el texto base que trae la aplicación; la primera vez que el coordinador guarda, se crea.
+`db/seed.sql` (desarrollo) sí carga la fila con el texto base (PARTE 3). `datos-iniciales.sql` (producción) no la carga.
+También se actualizaron `schema.sql`, `verificacion.sql` (17 tablas, bloque 25 nuevo; el conteo de FK ya estaba
+desactualizado desde la migración 007: ahora es 29), `bd.ps1` y `Sprint1/mer.md`.
+
+**Texto base (S-65):** una sola fuente, `backend/src/main/resources/chatbot/instrucciones-base.txt` (~7 000 caracteres):
+la propuesta RetroPlani Mate V3 resumida y adaptada. Trae regla prioritaria (no diseñar, exigir la planificación
+adjunta), flujo (umbral mínimo, verificación documental, hasta 5 preguntas diagnósticas, retroalimentación por componente,
+reflexión, máximo 2 retroalimentaciones), tono y expresiones a usar y a evitar, y 9 respuestas modelo. El `INSERT` de
+`seed.sql` se **generó** desde ese archivo; la prueba `elSeedCargaElTextoBaseSinEditar` falla si se desincronizan.
+Cambio de comportamiento para HU-15: la respuesta a "pegó la planificación como texto" ya no es la de "piden diseñar"
+(en la prueba real del mismo día respondía con la de diseño), y el mensaje de límite ahora es el de la propuesta.
+
+**Backend:** entidad `CalibracionChatbot`, `CalibracionChatbotRepository`, `CalibracionChatbotService` y
+`CalibracionChatbotController`:
+
+| Endpoint | Quién | Qué |
+|---|---|---|
+| `GET /api/chatbot/instrucciones` | Solo `COORDINADOR` (403 los demás) | Texto vigente, si es el base, quién y cuándo lo editó, el texto base y los límites |
+| `PUT /api/chatbot/instrucciones` | Solo `COORDINADOR` | Reemplaza el texto (200 a 12 000 caracteres, 400 si no, S-67); guarda quién y cuándo |
+
+`ChatbotService` arma las instrucciones con `calibracion.textoVigente()` (texto del coordinador o, si no hay fila o está
+en blanco, el base) más el contexto del estudiante. **54 endpoints** (eran 52).
+
+**Front-end:** pantalla "Estilo del asistente" (`vistas/estilo-asistente.js`, ítem del menú y acceso rápido del
+coordinador): área de texto con contador de caracteres, quién y cuándo editó, "Guardar", "Descartar cambios" y "Volver
+al texto base" (pide confirmación y no guarda hasta presionar Guardar).
+
+| Criterio | Estado |
+|---|---|
+| 1. Editar tono y expresiones permitidas/evitadas sin tocar código | **Cumplido** |
+| 2. Revisar y ajustar los casos de respuesta modelo | **Cumplido** (van en el mismo texto, sección "Respuestas modelo") |
+| 3. Los cambios aplican a lo nuevo, no reescriben lo guardado | **Cumplido** (S-68: rige desde el siguiente mensaje, también en conversaciones en curso) |
+
+### HU-20 · El jefe de carrera lee los chats
+
+`AccesoService.puedeVerChat` acepta además `leeChatComoJefe`: rol `JEFE_CARRERA` y asignatura con `chatbot_habilitado`,
+sin necesidad de ser el guía. `GET /api/inscripciones/{id}/chatbot` acepta `JEFE_CARRERA`; escribir sigue siendo solo del
+estudiante dueño (403). Cada lectura del jefe queda en el log (`Jefe de carrera 32 leyó el chat de la inscripción 11`).
+Front-end: ítem "Conversaciones del asistente" y acceso rápido del jefe; lista de todas las prácticas con asistente
+(período más reciente primero) con filtro por estudiante, asignatura o período (sin distinguir tildes); el chat se abre
+en solo lectura con el aviso "como jefe de carrera puedes leer esta conversación".
+
+| Criterio (borrador) | Estado |
+|---|---|
+| 1. Listar conversaciones por estudiante, asignatura y fecha | **Cumplido en parte:** filtro por estudiante, asignatura y período; no por fecha de mensaje |
+| 2. Solo lectura | **Cumplido** |
+| 3. El estudiante ve un aviso de que el jefe puede leer | **No hecho, por decisión del usuario** (S-66): pendiente de confirmar con el cliente |
+| 4. Cada acceso queda registrado | **Parcial:** solo en el log de la aplicación, no en una tabla (S-66) |
+
+### Pruebas: 250, 0 fallos (eran 239; +11)
+
+- `HU17CalibrarChatbotIntegracionTest` (6): el seed trae el texto base idéntico al archivo; el coordinador edita y el
+  **siguiente** mensaje lleva el texto nuevo más el contexto del estudiante, mientras el mensaje anterior se envió con el
+  base y los guardados no cambian; volver al texto base; los otros 5 roles reciben 403 al leer y al editar; vacío, corto
+  o de más de 12 000 caracteres da 400; sin fila en la tabla se usa el base y el primer guardado la crea.
+- `HU20ChatJefeCarreraIntegracionTest` (4): el jefe lee el chat de Valentina sin ser su guía; no escribe; solo en
+  asignaturas con chatbot (Trabajo Colaborativo 403); coordinador, profesor del curso, otro guía, otro estudiante y
+  tutor siguen en 403.
+- `AccesoServiceTest` (+1, `elJefeDeCarreraLeeLosChatsDeLasPracticasConChatbot`). En `HU16ChatGuiaIntegracionTest` el
+  jefe dejó de esperar 403 y `HU15ChatbotIntegracionTest` busca las frases del texto base nuevo.
+- `bd.ps1`: 17 tablas, 27 de 27 pruebas negativas, bloque 25 con 0 violaciones.
+
+### Prueba con el modelo real de Groq (`openai/gpt-oss-120b`)
+
+Mismo mensaje de Valentina ("Te adjunto mi planificación de la clase de funciones cuadráticas para que la revises.") con
+el mismo Word con errores de la prueba de HU-15, partiendo de una conversación vacía (`bd.ps1` entre una fase y otra):
+
+- **Fase A, texto base:** verificación documental en una tabla, observaciones preliminares (detectó los dos errores sobre
+  la parábola y las dos evaluaciones distintas) y **5 preguntas diagnósticas**. 2 364 tokens de entrada y 1 017 de salida.
+- **Fase B:** el coordinador (Andrea Fuentes Lagos) agregó por la API esta calibración al final del texto:
+
+  ```
+  ## Calibración de la coordinación (prueba HU-17)
+  - Comienza SIEMPRE tu respuesta con la frase exacta "Hola, colega:".
+  - Responde en un máximo de 120 palabras.
+  - Haz como máximo 2 preguntas diagnósticas, numeradas.
+  - No uses tablas ni títulos con #.
+  ```
+
+  Respuesta real (388 tokens de salida, 1,5 s):
+
+  > Hola, colega: recibí tu planificación "Introducción a las funciones cuadráticas". Incluye objetivo, inicio,
+  > desarrollo y cierre, y menciona recursos (GeoGebra, proyector) y una guía de exploración, aunque la guía no está
+  > adjunta. La evaluación indicada en el texto ("prueba escrita de factorización al final de la unidad") no parece
+  > alinearse con el objetivo de reconocer la función y su gráfica.
+  >
+  > 1. ¿Cómo relacionas esa prueba de factorización con el objetivo de reconocer la función cuadrática y su parábola?
+  > 2. ¿Qué acciones concretas de DUA incluirás en cada momento para apoyar a estudiantes que tengan dificultades con la representación gráfica?
+
+  Cumplió las 4 reglas nuevas y mantuvo las del texto base (verificación documental, recurso faltante). En la misma fase:
+  `PUT` del jefe de carrera 403, `GET` de la estudiante 403, el jefe leyó el chat (200, 2 mensajes, sin poder escribir) y
+  el coordinador recibió 403 al leerlo.
+
+**Navegador (Chrome, extensión):** pantalla "Estilo del asistente" del coordinador con el texto y "Última edición";
+lista del jefe con las 6 prácticas con asistente, filtro "valentína" → 1 resultado, chat en solo lectura sin formulario;
+**0 errores de JavaScript**. Después: `bd.ps1`, aplicación detenida.
+
+### Pendiente / para revisar
+
+1. Confirmar con el cliente S-65 (texto base resumido), S-66 (aviso al estudiante y registro de accesos del jefe) y S-68.
+2. HU-20 criterios 3 y 4 si el cliente los pide: el aviso es una línea en el chat del estudiante; el registro en la base
+   necesita una tabla nueva (otra migración).
+3. El texto base es más largo que las reglas anteriores: el primer mensaje con la planificación adjunta pasó de 1 808 a
+   2 364 tokens de entrada. Con la capa gratuita de Groq (8 000 tokens/minuto, contando el tope de salida reservado) la
+   cuota sigue alcanzando para uno o dos mensajes por minuto en todo el sistema (S-59).
+4. Producción: aplicar `008_instrucciones_chatbot.sql` en el servidor (paso de migraciones de `deploy/GUIA_DESPLIEGUE_EQUIPO.md`).

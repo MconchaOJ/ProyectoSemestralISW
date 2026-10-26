@@ -137,7 +137,7 @@ function Install-Bd {
     }
     Write-Host "  OK  Versión de MySQL compatible ($version >= $VersionMinimaMysql)" -ForegroundColor Green
 
-    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (16 tablas, trigger)'
+    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (17 tablas, trigger)'
     Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'seed.sql'))   'seed.sql (catálogo y datos de demo)'
 
     # Usuario de la aplicación: solo puede leer y escribir datos, no cambiar la estructura.

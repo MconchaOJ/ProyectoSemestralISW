@@ -21,6 +21,7 @@ const VISTAS = {
   cartola: () => import('./vistas/cartola.js'),
   pautas: () => import('./vistas/pautas.js'),
   chatbot: () => import('./vistas/chatbot.js'),
+  'estilo-asistente': () => import('./vistas/estilo-asistente.js'),
 };
 
 const $ = (id) => document.getElementById(id);

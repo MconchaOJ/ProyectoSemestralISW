@@ -1,6 +1,8 @@
-// HU-15 · Asistente de planificación (chatbot) y HU-16 · el profesor guía lee la conversación.
+// HU-15 · Asistente de planificación (chatbot), HU-16 · el profesor guía lee la conversación y HU-20 · el jefe de
+// carrera la lee también.
 //   Estudiante: #/chatbot (sus prácticas con asistente) y #/chatbot/{inscripcionId} (conversa)
 //   Profesor guía: #/chatbot (sus estudiantes de Práctica Pedagógica y Profesional) y #/chatbot/{inscripcionId} (lee)
+//   Jefe de carrera: #/chatbot (todos los estudiantes de esas prácticas, con filtro) y #/chatbot/{inscripcionId} (lee)
 import { api } from '../api.js';
 import {
   alerta, alertaError, badge, cabecera, conCarga, fechaHora, html, icono, raw, vacio, esc, iniciales,
@@ -8,17 +10,19 @@ import {
 
 export async function render(cont, ctx) {
   const [id] = ctx.args;
-  ctx.titulo('Asistente de planificación');
+  ctx.titulo(ctx.tiene('JEFE_CARRERA') ? 'Conversaciones del asistente' : 'Asistente de planificación');
   if (id) return conversacion(cont, ctx, id);
   return selector(cont, ctx);
 }
 
-/** Las inscripciones con asistente: el estudiante ve las suyas; el guía, las de sus estudiantes. */
+/** Las inscripciones con asistente: el estudiante ve las suyas; el guía, las de sus estudiantes; el jefe, todas. */
 async function selector(cont, ctx) {
   const todas = await api.get('/api/inscripciones');
+  const jefe = ctx.tiene('JEFE_CARRERA');
   const conAsistente = todas.filter((i) => i.asignatura.chatbotHabilitado
-    && (ctx.tiene('ESTUDIANTE') || ctx.actuaComo('PROFESOR_GUIA', i)));
+    && (jefe || ctx.tiene('ESTUDIANTE') || ctx.actuaComo('PROFESOR_GUIA', i)));
   const estudiante = ctx.tiene('ESTUDIANTE');
+  if (jefe) return listaJefe(cont, conAsistente);
 
   // un estudiante con una sola práctica en curso con asistente entra directo a conversar
   const enCurso = conAsistente.filter((i) => i.estado === 'EN_CURSO');
@@ -44,6 +48,43 @@ async function selector(cont, ctx) {
           </a>`)}</div>`}`.toString();
 }
 
+const tarjetaEstudiante = (i) => html`
+  <a class="tarjeta-estudiante" href="#/chatbot/${i.id}">
+    <span class="avatar-grande">${iniciales({ nombre: i.estudiante.nombreCompleto.split(' ')[0], apellidos: i.estudiante.nombreCompleto.split(' ')[1] ?? '' })}</span>
+    <span><strong>${i.estudiante.nombreCompleto}</strong>
+      <small>${i.asignatura.nombre} · ${i.periodo}</small> ${badge(i.estado)}</span>
+    ${icono('chat')}
+  </a>`;
+
+/** HU-20: el jefe de carrera ve todas las prácticas con asistente y filtra por estudiante, asignatura o período. */
+function listaJefe(cont, inscripciones) {
+  const orden = [...inscripciones].sort((a, b) => b.periodo.localeCompare(a.periodo)
+    || a.estudiante.nombreCompleto.localeCompare(b.estudiante.nombreCompleto));
+  cont.innerHTML = html`
+    ${cabecera({
+      titulo: 'Conversaciones del asistente',
+      subtitulo: 'Conversaciones de los estudiantes de Práctica Pedagógica y Profesional con el asistente de planificación (solo lectura).',
+    })}
+    ${orden.length === 0
+      ? vacio('Aún no hay prácticas con asistente', 'Aparecerán aquí las inscripciones de Práctica Pedagógica y Profesional.', 'chat')
+      : html`<label for="f-filtro" class="sr-only">Filtrar</label>
+        <input type="search" id="f-filtro" class="chat-filtro" placeholder="Filtrar por estudiante, asignatura o período…">
+        <div class="tarjetas-estudiantes" id="lista-chats"></div>`}`.toString();
+  const lista = cont.querySelector('#lista-chats');
+  if (!lista) return;
+  const texto = (i) => `${i.estudiante.nombreCompleto} ${i.asignatura.nombre} ${i.periodo}`.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const pintar = (filtro) => {
+    const f = filtro.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const visibles = orden.filter((i) => texto(i).includes(f));
+    lista.innerHTML = visibles.length
+      ? visibles.map(tarjetaEstudiante).join('')
+      : vacio('Sin resultados', 'Ninguna práctica coincide con el filtro.', 'search').toString();
+  };
+  pintar('');
+  cont.querySelector('#f-filtro').addEventListener('input', (ev) => pintar(ev.target.value));
+}
+
 /** Texto del asistente: se escapa todo y solo se reconoce **negrita** (el resto queda como texto con saltos de línea). */
 const formatear = (texto) => raw(esc(texto).replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>'));
 
@@ -64,15 +105,22 @@ const enRevision = (mensajes) => [...mensajes].reverse().find((m) => m.planifica
 async function conversacion(cont, ctx, inscripcionId) {
   const c = await api.get(`/api/inscripciones/${inscripcionId}/chatbot`);
   const propio = ctx.tiene('ESTUDIANTE');
+  const esGuia = ctx.tiene('PROFESOR_GUIA') && c.profesorGuia?.id === ctx.usuario.id;
   const planes = c.puedeEscribir ? await api.get('/api/planificaciones', { inscripcionId }) : [];
   ctx.titulo(propio ? 'Asistente de planificación' : `Chat de ${c.estudiante}`);
   const mensajes = [...c.mensajes];
 
-  const aviso = propio
-    ? (c.profesorGuia
+  let aviso;
+  if (propio) {
+    aviso = c.profesorGuia
       ? alerta('info', html`Tu profesor guía, <strong>${c.profesorGuia.nombreCompleto}</strong>, puede leer esta conversación.`)
-      : alerta('info', 'Tu profesor guía puede leer esta conversación.'))
-    : alerta('info', html`Solo lectura: eres el profesor guía de ${c.estudiante} en esta práctica. El estudiante sabe que puedes leer la conversación.`);
+      : alerta('info', 'Tu profesor guía puede leer esta conversación.');
+  } else if (esGuia) {
+    aviso = alerta('info', html`Solo lectura: eres el profesor guía de ${c.estudiante} en esta práctica. El estudiante sabe que puedes leer la conversación.`);
+  } else {
+    // HU-20 (SUPUESTO S-66): el jefe de carrera lee en solo lectura
+    aviso = alerta('info', html`Solo lectura: como jefe de carrera puedes leer esta conversación.${c.profesorGuia ? html` Profesor guía: ${c.profesorGuia.nombreCompleto}.` : ''}`);
+  }
 
   cont.innerHTML = html`
     ${cabecera({

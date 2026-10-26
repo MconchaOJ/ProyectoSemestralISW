@@ -235,3 +235,14 @@ dl.cifras dd { margin: .1em 0 0; font-size: 1.3rem; font-weight: 800; color: var
   .chat-mensaje { max-width: 100%; }
   .chat-acciones .btn { width: 100%; justify-content: center; }
 }
+
+/* ---------- HU-17 · Estilo del asistente (coordinador) ---------- */
+.estilo-texto { width: 100%; min-height: 24rem; font-size: .92rem; line-height: 1.5; }
+.estilo-pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; margin-top: .6rem; }
+.estilo-acciones { display: flex; flex-wrap: wrap; gap: .6rem; }
+.texto-error { color: var(--error); font-weight: 600; }
+/* ---------- HU-20 · Conversaciones del asistente (jefe de carrera) ---------- */
+.chat-filtro { width: 100%; max-width: 28rem; margin-bottom: 1rem; }
+@media (max-width: 620px) {
+  .estilo-acciones, .estilo-acciones .btn { width: 100%; justify-content: center; }
+}
