@@ -26,8 +26,9 @@ services:
       # Collation del proyecto (utf8mb4_0900_ai_ci)
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_0900_ai_ci
-    ports:
-      - "${ISW_DB_PORT_HOST:-3307}:3306"   # 3307 en el host para no chocar con MySQL local
+    # SEGURIDAD: La base de datos no expone puertos al exterior (solo vive dentro de la red 'isw-net')
+    # ports:
+    #   - "${ISW_DB_PORT_HOST:-3307}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       # Scripts de inicialización: MySQL los ejecuta en orden alfabético solo la primera vez
@@ -42,7 +43,7 @@ services:
     networks:
       - isw-net
 
-  # ── Backend Spring Boot ─────────────────────────────────────────────────────
+  # ── Backend Spring Boot (API REST para Postman) ─────────────────────────────
   backend:
     build:
       context: ./backend
@@ -62,7 +63,7 @@ services:
       ISW_JWT_SECRET: ${ISW_JWT_SECRET:-}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
     ports:
-      - "${ISW_BACKEND_PORT:-8080}:8080"
+      - "${ISW_BACKEND_PORT:-8018}:8080"
     volumes:
       # Adjuntos persistentes fuera del contenedor
       - adjuntos_data:/app/adjuntos
@@ -72,6 +73,22 @@ services:
       timeout: 5s
       start_period: 35s
       retries: 3
+    networks:
+      - isw-net
+
+  # ── Frontend Web (Nginx Proxy en puerto 8017) ────────────────────────────────
+  frontend:
+    image: nginx:alpine
+    container_name: isw-frontend
+    restart: unless-stopped
+    ports:
+      - "${ISW_FRONTEND_PORT:-8017}:80"
+    volumes:
+      - ./backend/src/main/resources/static:/usr/share/nginx/html:ro
+      - ./nginx-frontend.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
     networks:
       - isw-net
 
