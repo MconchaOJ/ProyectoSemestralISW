@@ -1,0 +1,42 @@
+# =============================================================================
+# .dockerignore - Archivos que Docker NO debe copiar al contexto de compilación
+# =============================================================================
+
+# Compilación previa (el Dockerfile compila desde cero)
+target/
+build/
+
+# Wrapper de Maven (la imagen ya trae Maven)
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Git
+.git
+.gitignore
+
+# Logs y temporales
+*.log
+logs/
+*.tmp
+*.swp
+~$*
+
+# Adjuntos (datos de usuario, no se empaquetan en la imagen)
+adjuntos/
+
+# Documentación (no necesaria para compilar)
+README.md
+PROGRESO.md
+HELP.md
+
+# Variables de entorno locales
+.env
+.env.*

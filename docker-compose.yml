@@ -1,0 +1,88 @@
+# =============================================================================
+# docker-compose.yml - ISW Prácticas (desarrollo local)
+#
+# Levanta MySQL 8.4 LTS + Backend Spring Boot en una red aislada.
+# Las credenciales se leen de un archivo .env (ver .env.docker.example).
+#
+# Uso rápido:
+#   cp .env.docker.example .env.docker
+#   # editar .env.docker con las claves deseadas
+#   docker compose up -d
+#   docker compose logs -f backend
+# =============================================================================
+
+services:
+  # ── Base de datos ───────────────────────────────────────────────────────────
+  database:
+    image: mysql:8.4
+    container_name: isw-mysql
+    restart: unless-stopped
+    env_file: .env.docker
+    environment:
+      MYSQL_DATABASE: isw_practicas
+      MYSQL_USER: ${ISW_DB_USER:-isw_app}
+      MYSQL_PASSWORD: ${ISW_DB_PASSWORD:-devpass2026}
+      MYSQL_ROOT_PASSWORD: ${ISW_DB_ROOT_PASSWORD:-rootdev2026}
+      # Collation del proyecto (utf8mb4_0900_ai_ci)
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_0900_ai_ci
+    ports:
+      - "${ISW_DB_PORT_HOST:-3307}:3306"   # 3307 en el host para no chocar con MySQL local
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Scripts de inicialización: MySQL los ejecuta en orden alfabético solo la primera vez
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${ISW_DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    networks:
+      - isw-net
+
+  # ── Backend Spring Boot ─────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: isw-backend
+    restart: unless-stopped
+    env_file: .env.docker
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      # Conexión a la BD: el host es el nombre del servicio Docker ("database")
+      ISW_DB_HOST: database
+      ISW_DB_PORT: 3306
+      ISW_DB_USER: ${ISW_DB_USER:-isw_app}
+      ISW_DB_PASSWORD: ${ISW_DB_PASSWORD:-devpass2026}
+      ISW_JWT_SECRET: ${ISW_JWT_SECRET:-}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
+    ports:
+      - "${ISW_BACKEND_PORT:-8080}:8080"
+    volumes:
+      # Adjuntos persistentes fuera del contenedor
+      - adjuntos_data:/app/adjuntos
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -s http://localhost:8080/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 35s
+      retries: 3
+    networks:
+      - isw-net
+
+# ── Red interna ───────────────────────────────────────────────────────────────
+networks:
+  isw-net:
+    driver: bridge
+
+# ── Volúmenes persistentes ────────────────────────────────────────────────────
+volumes:
+  mysql_data:
+    name: isw-mysql-data
+  adjuntos_data:
+    name: isw-adjuntos-data

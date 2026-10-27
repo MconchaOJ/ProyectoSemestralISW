@@ -1,0 +1,31 @@
+# =============================================================================
+# .dockerignore (raíz) - Para contexto de docker-compose build
+# =============================================================================
+
+.git
+.gitignore
+*.log
+logs/
+
+# Compilación
+backend/target/
+backend/build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Sistema operativo
+Thumbs.db
+.DS_Store
+$RECYCLE.BIN/
+
+# Documentación pesada (no necesaria para compilar)
+Sprint1/
+RESUMEN.md
+CLAUDE.md
+
+# Secretos locales
+.env
+.env.docker
