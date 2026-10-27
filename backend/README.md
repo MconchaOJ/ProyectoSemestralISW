@@ -50,7 +50,7 @@ Luego **abre una terminal nueva** para que la variable quede disponible. La plan
 Desde la raíz del proyecto:
 
 ```powershell
-.\db\bd.ps1                    # crea la base isw_practicas, las 18 tablas, los datos de demo y el usuario isw_app
+.\db\bd.ps1                    # crea la base isw_practicas, las 22 tablas, los datos de demo y el usuario isw_app
 .\db\bd.ps1 -Accion Verificar  # solo verifica (23 pruebas negativas incluidas)
 ```
 

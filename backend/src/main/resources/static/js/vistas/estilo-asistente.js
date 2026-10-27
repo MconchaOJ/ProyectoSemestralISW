@@ -2,10 +2,11 @@
 //   #/estilo-asistente: un solo texto para todo el sistema (reglas, tono, expresiones y respuestas modelo).
 //   El contexto de cada estudiante (semestre, prácticas aprobadas) lo agrega el sistema: no se edita aquí.
 // HU-29 · En la misma pantalla, la base de conocimiento (documentos de referencia, uno por tipo).
-// HU-30 · Y la validación: con ella abierta, el asistente solo responde a los estudiantes validadores.
+// HU-30 · Y la validación: con ella abierta, el asistente solo responde a los estudiantes validadores; los
+//         validadores responden la Escala SUS y la rúbrica de juicio experto, y aquí se ven los resultados.
 import { api } from '../api.js';
 import {
-  alerta, alertaError, cabecera, confirmar, conCarga, fechaHora, html, icono, toast, toastError, vacio,
+  alerta, alertaError, cabecera, confirmar, conCarga, decimal, fechaHora, html, icono, promedio, toast, toastError, vacio,
 } from '../ui.js';
 
 const kb = (bytes) => `${Math.max(1, Math.round(bytes / 1024)).toLocaleString('es-CL')} KB`;
@@ -65,7 +66,7 @@ async function baseConocimiento(caja, ctx) {
 
 /**
  * HU-30: abrir o cerrar la validación y elegir a los validadores entre los estudiantes que hoy cursan una práctica con
- * asistente. La Escala SUS y la rúbrica de los jueces se responden fuera del sistema.
+ * asistente. Los validadores responden la Escala SUS y la rúbrica desde su asistente (ver resultadosValidacion).
  */
 async function validacion(caja, ctx) {
   const [estado, inscripciones] = await Promise.all([api.get('/api/chatbot/validacion'), api.get('/api/inscripciones')]);
@@ -89,7 +90,7 @@ async function validacion(caja, ctx) {
         <ul class="lista-validadores">${lista.map((e) => html`<li><label class="check">
           <input type="checkbox" data-validador="${e.id}" ${marcados.has(e.id) ? 'checked' : ''}>
           ${e.nombreCompleto}${e.asignatura ? html` <small>· ${e.asignatura}</small>` : ''}</label></li>`)}</ul>`}
-    <p class="ayuda">La Escala SUS y la rúbrica de los jueces expertos se responden fuera del sistema.</p>`.toString();
+    <p class="ayuda">Los validadores responden la Escala SUS y la rúbrica de juicio experto desde su asistente («Validación del asistente»); los resultados aparecen abajo.</p>`.toString();
 
   const cambiar = async (accion) => {
     try {
@@ -103,6 +104,44 @@ async function validacion(caja, ctx) {
     cambiar(() => api.put('/api/chatbot/validacion', { abierta: ev.target.checked })));
   caja.querySelectorAll('[data-validador]').forEach((c) => c.addEventListener('change', () =>
     cambiar(() => api.put(`/api/chatbot/validacion/validadores/${c.dataset.validador}`, { validador: c.checked }))));
+}
+
+/** HU-30: resultados de la Escala SUS y de la rúbrica de juicio experto (promedios y cada respuesta). */
+async function resultadosValidacion(caja, ctx) {
+  const r = await api.get('/api/chatbot/validacion/resultados');
+  if (!ctx.vigente()) return;
+  const ins = r.instrumentos;
+  const titulo = html`<div class="tarjeta-titulo"><h2 id="t-resultados">Resultados de la validación</h2>
+    <small class="ayuda">${r.sus.respuestas} Escala${r.sus.respuestas === 1 ? '' : 's'} SUS · ${r.rubrica.respuestas} rúbrica${r.rubrica.respuestas === 1 ? '' : 's'}</small></div>`;
+  if (r.sus.respuestas === 0 && r.rubrica.respuestas === 0) {
+    caja.innerHTML = html`${titulo}${vacio('Aún no hay respuestas', 'Los validadores responden la Escala SUS y la rúbrica desde su asistente.', 'inbox')}`.toString();
+    return;
+  }
+  const rotulos = ins.itemsSus.map((_, i) => html`<th title="${ins.itemsSus[i]}">${i + 1}</th>`);
+  caja.innerHTML = html`
+    ${titulo}
+    <h3 class="validacion-subtitulo">Escala SUS (usabilidad, 0 a 100)</h3>
+    ${r.sus.respuestas === 0 ? html`<p class="ayuda">Nadie la ha respondido todavía.</p>` : html`
+      <p><strong>Puntaje SUS promedio: ${promedio(r.sus.promedioPuntaje)}</strong> <small class="ayuda">(68 es el promedio de referencia de la escala; los ítems pares son negativos: ahí, un número bajo es bueno)</small></p>
+      <div class="tabla-contenedor"><table class="tabla">
+        <thead><tr><th>Validador</th><th>Fecha</th>${rotulos}<th>SUS</th></tr></thead>
+        <tbody>${r.sus.detalle.map((d) => html`<tr><td>${d.validador.nombreCompleto}</td><td>${fechaHora(d.fecha)}</td>
+          ${d.items.map((v) => html`<td>${v}</td>`)}<td><strong>${decimal(d.puntaje, 1)}</strong></td></tr>`)}
+          <tr><td colspan="2"><strong>Promedio</strong></td>${r.sus.promedioPorItem.map((v) => html`<td>${promedio(v)}</td>`)}<td><strong>${promedio(r.sus.promedioPuntaje)}</strong></td></tr>
+        </tbody>
+      </table></div>`}
+    <h3 class="validacion-subtitulo">Rúbrica de juicio experto (1 a 4)</h3>
+    ${r.rubrica.respuestas === 0 ? html`<p class="ayuda">Nadie la ha respondido todavía.</p>` : html`
+      <div class="tabla-contenedor"><table class="tabla">
+        <thead><tr><th>Criterio</th><th>Promedio</th></tr></thead>
+        <tbody>${ins.criterios.map((c, i) => html`<tr><td>${c.numero}. ${c.nombre}</td><td><strong>${promedio(r.rubrica.promedioPorCriterio[i])}</strong></td></tr>`)}</tbody>
+      </table></div>
+      ${r.rubrica.detalle.map((d) => html`<details class="validacion-detalle">
+        <summary>${d.validador.nombreCompleto} · ${fechaHora(d.fecha)}</summary>
+        <ul>${d.criterios.map((c) => html`<li><strong>${c.numero}. ${ins.criterios[c.numero - 1].nombre}: ${c.puntaje}</strong> (${ins.nivelesRubrica[c.puntaje - 1]})${c.comentario ? html` — ${c.comentario}` : ''}</li>`)}</ul>
+        ${[d.fortalezas, d.debilidades, d.mejoras, d.recomendacion].map((t, i) => (t
+          ? html`<p><strong>${ins.preguntasAbiertas[i]}</strong><br>${t}</p>` : ''))}
+      </details>`)}`}`.toString();
 }
 
 export async function render(cont, ctx) {
@@ -130,9 +169,11 @@ export async function render(cont, ctx) {
       </div>
     </form>
     <section class="tarjeta asistente-seccion" id="base-conocimiento" aria-labelledby="t-base"></section>
-    <section class="tarjeta asistente-seccion" id="validacion-chatbot" aria-labelledby="t-validacion"></section>`.toString();
+    <section class="tarjeta asistente-seccion" id="validacion-chatbot" aria-labelledby="t-validacion"></section>
+    <section class="tarjeta asistente-seccion" id="resultados-validacion" aria-labelledby="t-resultados"></section>`.toString();
   await Promise.all([baseConocimiento(cont.querySelector('#base-conocimiento'), ctx),
-    validacion(cont.querySelector('#validacion-chatbot'), ctx)]);
+    validacion(cont.querySelector('#validacion-chatbot'), ctx),
+    resultadosValidacion(cont.querySelector('#resultados-validacion'), ctx)]);
 
   const form = cont.querySelector('#form-estilo');
   const area = form.querySelector('#f-instrucciones');

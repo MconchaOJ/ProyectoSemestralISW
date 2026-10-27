@@ -11,12 +11,12 @@
 SELECT CONCAT('Conectado como ', CURRENT_USER(), ' a la base ', DATABASE(), ' (MySQL ', VERSION(), ')') AS conexion;
 
 -- -----------------------------------------------------------------------------
-SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 18)' AS verificacion;
+SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 22)' AS verificacion;
 SELECT COUNT(*) AS tablas
   FROM information_schema.tables
  WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
-SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, inscripcion 55, pauta 3, dimension 11, indicador 58, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0)' AS verificacion;
+SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, inscripcion 55, pauta 3, dimension 11, indicador 58, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat_jefe_carrera 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0)' AS verificacion;
 SELECT 'rol' AS tabla, COUNT(*) AS filas FROM rol
 UNION ALL SELECT 'usuario',                COUNT(*) FROM usuario
 UNION ALL SELECT 'estudiante',             COUNT(*) FROM estudiante
@@ -34,9 +34,13 @@ UNION ALL SELECT 'mensaje_chatbot',        COUNT(*) FROM mensaje_chatbot
 UNION ALL SELECT 'documento_planificacion', COUNT(*) FROM documento_planificacion
 UNION ALL SELECT 'documento_evaluacion',    COUNT(*) FROM documento_evaluacion
 UNION ALL SELECT 'instrucciones_chatbot',   COUNT(*) FROM instrucciones_chatbot
-UNION ALL SELECT 'documento_base_conocimiento', COUNT(*) FROM documento_base_conocimiento;
+UNION ALL SELECT 'documento_base_conocimiento', COUNT(*) FROM documento_base_conocimiento
+UNION ALL SELECT 'lectura_chat_jefe_carrera',   COUNT(*) FROM lectura_chat_jefe_carrera
+UNION ALL SELECT 'respuesta_sus',               COUNT(*) FROM respuesta_sus
+UNION ALL SELECT 'respuesta_rubrica_experto',   COUNT(*) FROM respuesta_rubrica_experto
+UNION ALL SELECT 'respuesta_rubrica_criterio',  COUNT(*) FROM respuesta_rubrica_criterio;
 
-SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 18, FOREIGN KEY 30, UNIQUE 15, CHECK 44)' AS verificacion;
+SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 22, FOREIGN KEY 35, UNIQUE 18, CHECK 47)' AS verificacion;
 SELECT constraint_type AS tipo, COUNT(*) AS cantidad
   FROM information_schema.table_constraints
  WHERE table_schema = DATABASE()
@@ -393,3 +397,24 @@ SELECT '27. VALIDADORES DEL CHATBOT (esperado en la demo: Valentina Pérez; vali
 SELECT CONCAT(u.nombre, ' ', u.apellidos) AS validador, (SELECT validacion_abierta FROM instrucciones_chatbot) AS validacion_abierta
   FROM estudiante e JOIN usuario u ON u.id = e.usuario_id
  WHERE e.validador_chatbot;
+
+-- -----------------------------------------------------------------------------
+SELECT '28. LECTURAS DEL JEFE DE CARRERA (HU-20, migración 010; esperado: 0 violaciones en cada fila)' AS verificacion;
+SELECT 'Lectura registrada por alguien que no es jefe de carrera' AS control, COUNT(*) AS violaciones
+  FROM lectura_chat_jefe_carrera l JOIN usuario u ON u.id = l.usuario_id
+  JOIN rol r ON r.id = u.rol_id
+  LEFT JOIN rol r2 ON r2.id = u.rol_secundario_id
+ WHERE r.nombre <> 'JEFE_CARRERA' AND NOT (r2.nombre <=> 'JEFE_CARRERA')
+UNION ALL
+SELECT 'Lectura de un chat en una asignatura sin chatbot', COUNT(*)
+  FROM lectura_chat_jefe_carrera l JOIN inscripcion i ON i.id = l.inscripcion_id
+  JOIN asignatura_practica a ON a.id = i.asignatura_id
+ WHERE NOT a.chatbot_habilitado;
+
+SELECT '29. VALIDACIÓN DEL CHATBOT: ESCALA SUS Y RÚBRICA (HU-30, migración 011; esperado: 0 violaciones en cada fila)' AS verificacion;
+-- (no se controla que quien respondió siga marcado: el coordinador puede desmarcarlo después y su respuesta vale)
+SELECT 'Rúbrica que no tiene sus 9 criterios' AS control, COUNT(*) AS violaciones
+  FROM respuesta_rubrica_experto r
+ WHERE (SELECT COUNT(*) FROM respuesta_rubrica_criterio c WHERE c.respuesta_id = r.id) <> 9
+UNION ALL
+SELECT 'Puntaje SUS fuera de 0 a 100', COUNT(*) FROM respuesta_sus WHERE puntaje NOT BETWEEN 0 AND 100;

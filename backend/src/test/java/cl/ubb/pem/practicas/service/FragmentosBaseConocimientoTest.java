@@ -38,6 +38,46 @@ class FragmentosBaseConocimientoTest {
                 "para estudiantes clase", 5_000)).isEmpty();
     }
 
+    /**
+     * S-74 (TF-IDF): la consulta nombra las partes de su planificación (palabras que están en casi toda la base) y
+     * pregunta por el DUA. El fragmento del DUA comparte 2 palabras con la consulta; el genérico, 6. Con el conteo
+     * anterior ganaba el genérico; ahora gana el del tema, porque sus palabras son raras en la base y las repite.
+     */
+    @Test
+    void unFragmentoDelTemaLeGanaAUnoConMasPalabrasComunesEnComun() {
+        String dua = "Acciones DUA para la diversidad: el DUA ofrece múltiples formas de representación; el DUA "
+                + "atiende la diversidad del grupo con apoyos accesibles.";
+        String generico = "Objetivos, actividades, evaluación, aprendizaje, matemática y recursos del curso: los "
+                + "objetivos guían las actividades y la evaluación del aprendizaje de matemática con recursos.";
+        List<Documento> docs = new java.util.ArrayList<>();
+        docs.add(new Documento("Generalidades", generico));
+        for (int k = 1; k <= 6; k++) {
+            docs.add(new Documento("Orientaciones " + k, "Orientaciones de la práctica número " + k
+                    + ": objetivos, actividades, evaluación, aprendizaje, matemática y recursos."));
+        }
+        docs.add(new Documento("Acciones DUA", dua));
+        String consulta = "Mi clase tiene objetivos, actividades, evaluación del aprendizaje de matemática y recursos. "
+                + "¿Cómo uso el DUA para la diversidad?";
+
+        var buscadas = FragmentosBaseConocimiento.palabras(consulta);
+        assertThat(FragmentosBaseConocimiento.palabras(generico).stream().filter(buscadas::contains).count()).isEqualTo(6);
+        assertThat(FragmentosBaseConocimiento.palabras(dua).stream().filter(buscadas::contains).count()).isEqualTo(2);
+
+        // con el tope solo cabe un fragmento: el primero del ranking
+        String r = FragmentosBaseConocimiento.elegir(docs, consulta, dua.length() + 20);
+        assertThat(r).startsWith("### Acciones DUA").doesNotContain("Generalidades").doesNotContain("Orientaciones");
+    }
+
+    /** S-74: a igualdad de palabras en común, gana el fragmento que más trata el tema (TF), no el que va primero. */
+    @Test
+    void entreDosFragmentosConLaMismaPalabraGanaElQueLaTrataMas() {
+        String dePaso = "La parábola aparece en la unidad junto con funciones lineales, tablas de valores y gráficos de datos.";
+        String delTema = "La parábola: vértice de la parábola, eje de simetría de la parábola y concavidad.";
+        List<Documento> docs = List.of(new Documento("Programa", dePaso), new Documento("Rúbrica", delTema));
+        String r = FragmentosBaseConocimiento.elegir(docs, "parabola", Math.max(dePaso.length(), delTema.length()) + 5);
+        assertThat(r).startsWith("### Rúbrica").doesNotContain("Programa");
+    }
+
     @Test
     void cortaLosParrafosLargosSinPasarseDelLargo() {
         List<String> partes = FragmentosBaseConocimiento.cortar("palabra ".repeat(400));

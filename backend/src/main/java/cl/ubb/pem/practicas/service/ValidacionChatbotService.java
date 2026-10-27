@@ -15,9 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * HU-30, lo mínimo en el sistema: el coordinador marca a un grupo de estudiantes como validadores y abre la
- * validación; mientras está abierta, el chatbot solo responde a ellos (el resto recibe 409). La Escala SUS y la
- * rúbrica de los jueces expertos se responden fuera del sistema (SUPUESTO S-71).
+ * HU-30: el coordinador marca a un grupo de estudiantes como validadores y abre la validación; mientras está abierta,
+ * el chatbot solo responde a ellos (el resto recibe 409). Los validadores responden la Escala SUS y la rúbrica de
+ * juicio experto en el sistema ({@link RespuestasValidacionService}, S-75; reemplaza a S-71).
  *
  * La marca vive en la fila de configuración del chatbot (instrucciones_chatbot.validacion_abierta). Si esa fila no
  * existe (producción recién instalada), abrir la validación la crea con el texto base sin editar.

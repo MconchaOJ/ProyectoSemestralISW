@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** HU-30: validación del chatbot con un grupo de estudiantes (SUPUESTO S-71: la SUS y la rúbrica van fuera). */
+/** HU-30: validación del chatbot con un grupo de estudiantes (la SUS y la rúbrica: {@link RespuestasValidacionController}). */
 @RestController
 @RequestMapping("/api/chatbot/validacion")
 @Tag(name = "Chatbot de retroalimentación")

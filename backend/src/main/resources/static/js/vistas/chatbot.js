@@ -3,14 +3,16 @@
 //   Estudiante: #/chatbot (sus prácticas con asistente) y #/chatbot/{inscripcionId} (conversa)
 //   Profesor guía: #/chatbot (sus estudiantes de Práctica Pedagógica y Profesional) y #/chatbot/{inscripcionId} (lee)
 //   Jefe de carrera: #/chatbot (todos los estudiantes de esas prácticas, con filtro) y #/chatbot/{inscripcionId} (lee)
+// HU-30 · Estudiante validador: #/chatbot/validacion (responde la Escala SUS y la rúbrica de juicio experto)
 import { api } from '../api.js';
 import {
-  alerta, alertaError, badge, cabecera, conCarga, fechaHora, html, icono, raw, vacio, esc, iniciales,
+  alerta, alertaError, badge, cabecera, conCarga, fechaHora, html, icono, raw, toast, vacio, esc, iniciales,
 } from '../ui.js';
 
 export async function render(cont, ctx) {
   const [id] = ctx.args;
   ctx.titulo(ctx.tiene('JEFE_CARRERA') ? 'Conversaciones del asistente' : 'Asistente de planificación');
+  if (id === 'validacion' && ctx.tiene('ESTUDIANTE')) return formularioValidacion(cont, ctx);
   if (id) return conversacion(cont, ctx, id);
   return selector(cont, ctx);
 }
@@ -28,6 +30,7 @@ async function selector(cont, ctx) {
   const enCurso = conAsistente.filter((i) => i.estado === 'EN_CURSO');
   if (estudiante && enCurso.length === 1) return conversacion(cont, ctx, enCurso[0].id);
 
+  const validacion = estudiante ? await avisoValidador() : '';
   cont.innerHTML = html`
     ${cabecera({
       titulo: 'Asistente de planificación',
@@ -35,6 +38,7 @@ async function selector(cont, ctx) {
         ? 'Conversa sobre una planificación que ya escribiste para recibir retroalimentación. Disponible en Práctica Pedagógica y Práctica Profesional.'
         : 'Conversaciones de tus estudiantes de Práctica Pedagógica y Profesional con el asistente (solo lectura).',
     })}
+    ${validacion}
     ${conAsistente.length === 0
       ? vacio(estudiante ? 'Aún no tienes acceso al asistente' : 'No tienes estudiantes con asistente',
         estudiante ? 'El asistente se habilita cuando cursas Práctica Pedagógica o Práctica Profesional.'
@@ -112,9 +116,14 @@ async function conversacion(cont, ctx, inscripcionId) {
 
   let aviso;
   if (propio) {
-    aviso = c.profesorGuia
-      ? alerta('info', html`Tu profesor guía, <strong>${c.profesorGuia.nombreCompleto}</strong>, puede leer esta conversación.`)
-      : alerta('info', 'Tu profesor guía puede leer esta conversación.');
+    const guia = c.profesorGuia
+      ? html`Tu profesor guía, <strong>${c.profesorGuia.nombreCompleto}</strong>, puede leer esta conversación.`
+      : 'Tu profesor guía puede leer esta conversación.';
+    // HU-20, criterios 3 y 4 (SUPUESTO S-66): el estudiante sabe que el jefe de carrera lee y cuándo lo hizo
+    const jefe = c.avisoJefeCarrera
+      ? html`<br>${c.avisoJefeCarrera} ${c.ultimaLecturaJefeCarrera ? `Última lectura: ${fechaHora(c.ultimaLecturaJefeCarrera)}.` : 'Aún no la ha leído.'}`
+      : '';
+    aviso = html`${alerta('info', html`${guia}${jefe}`)}${await avisoValidador()}`;
   } else if (esGuia) {
     aviso = alerta('info', html`Solo lectura: eres el profesor guía de ${c.estudiante} en esta práctica. El estudiante sabe que puedes leer la conversación.`);
   } else {
@@ -201,4 +210,127 @@ async function conversacion(cont, ctx, inscripcionId) {
       caja.hidden = false;
     }
   });
+}
+
+// ---------- HU-30 · Validación del asistente (estudiante validador) ----------
+
+/** Si el estudiante es validador y le falta responder, un aviso con el enlace al formulario. */
+async function avisoValidador() {
+  try {
+    const v = await api.get('/api/chatbot/validacion/mi-validacion');
+    if (!v.validador || (v.susRespondida && v.rubricaRespondida)) return '';
+    return alerta('aviso', html`Participas en la <strong>validación del asistente</strong>: cuando lo hayas usado, responde la Escala SUS y la rúbrica. <a href="#/chatbot/validacion">Ir a la validación</a>`);
+  } catch {
+    return '';   // el aviso es secundario: si falla, la conversación se muestra igual
+  }
+}
+
+/** Una fila con su número, su texto y la escala de puntos (mismos estilos que la pauta de evaluación). */
+function filaEscala(nombre, numero, texto, desde, hasta, extra = '') {
+  const puntos = [];
+  for (let n = desde; n <= hasta; n += 1) puntos.push(n);
+  return html`<div class="indicador">
+    <span class="ind-num">${numero}</span>
+    <div class="ind-texto"><p id="d-${nombre}">${texto}</p>${extra}</div>
+    <div class="escala" role="radiogroup" aria-labelledby="d-${nombre}">
+      ${puntos.map((n) => html`<label class="punto"><input type="radio" name="${nombre}" value="${n}"><span>${n}</span></label>`)}
+    </div>
+  </div>`;
+}
+
+const leyenda = (niveles) => html`<p class="ayuda">${niveles.map((t, i) => `${i + 1} = ${t}`).join(' · ')}</p>`;
+
+async function formularioValidacion(cont, ctx) {
+  ctx.titulo('Validación del asistente');
+  const v = await api.get('/api/chatbot/validacion/mi-validacion');
+  if (!ctx.vigente()) return;
+  const ins = v.instrumentos;
+  const volver = html`<a class="btn btn-fantasma" href="#/chatbot">${icono('back')} Volver al asistente</a>`;
+  if (!v.validador) {
+    cont.innerHTML = html`${cabecera({ titulo: 'Validación del asistente', acciones: volver })}
+      ${vacio('No participas en la validación', 'El coordinador elige a los estudiantes que validan el asistente.', 'users')}`.toString();
+    return;
+  }
+
+  cont.innerHTML = html`
+    ${cabecera({
+      titulo: 'Validación del asistente',
+      subtitulo: 'Responde después de usar el asistente con tus planificaciones. Cada instrumento se responde una sola vez y el coordinador ve las respuestas con tu nombre.',
+      acciones: volver,
+    })}
+    <section class="tarjeta asistente-seccion" aria-labelledby="t-sus">
+      <div class="tarjeta-titulo"><h2 id="t-sus">1. Escala SUS (usabilidad)</h2></div>
+      ${v.susRespondida
+        ? alerta('ok', `Respondiste la Escala SUS el ${fechaHora(v.susRespondida)}. ¡Gracias!`)
+        : html`<form id="form-sus" novalidate>
+          <div data-alerta-form hidden></div>
+          <p class="ayuda">Marca tu nivel de acuerdo con cada afirmación sobre tu experiencia con el asistente.</p>
+          ${leyenda(ins.escalaSus)}
+          ${ins.itemsSus.map((t, i) => filaEscala(`sus-${i + 1}`, i + 1, t, 1, 5))}
+          <div class="estilo-pie"><span></span><button type="submit" class="btn btn-primario" data-cargando="Enviando…">${icono('send')} Enviar Escala SUS</button></div>
+        </form>`}
+    </section>
+    <section class="tarjeta asistente-seccion" aria-labelledby="t-rubrica">
+      <div class="tarjeta-titulo"><h2 id="t-rubrica">2. Rúbrica de juicio experto</h2></div>
+      ${v.rubricaRespondida
+        ? alerta('ok', `Respondiste la rúbrica el ${fechaHora(v.rubricaRespondida)}. ¡Gracias!`)
+        : html`<form id="form-rubrica" novalidate>
+          <div data-alerta-form hidden></div>
+          <p class="ayuda">Evalúa el desempeño global del asistente en todas tus conversaciones. Bajo cada criterio va lo que corresponde al nivel más alto.</p>
+          ${leyenda(ins.nivelesRubrica)}
+          ${ins.criterios.map((c) => filaEscala(`cr-${c.numero}`, c.numero, html`<strong>${c.nombre}</strong>`, 1, 4,
+            html`<small class="ayuda">Nivel 4: ${c.logroAlto}</small>
+              <input type="text" class="ind-comentario-input" name="com-${c.numero}" maxlength="1000" placeholder="Comentario (opcional)" aria-label="Comentario del criterio ${c.numero}">`))}
+          <h3 class="validacion-subtitulo">Preguntas abiertas (opcionales)</h3>
+          ${ins.preguntasAbiertas.map((p, i) => html`<label for="abierta-${i}">${p}</label>
+            <textarea id="abierta-${i}" rows="3" maxlength="4000"></textarea>`)}
+          <div class="estilo-pie"><span></span><button type="submit" class="btn btn-primario" data-cargando="Enviando…">${icono('send')} Enviar rúbrica</button></div>
+        </form>`}
+    </section>`.toString();
+
+  /** El valor marcado en cada grupo de radios, o null si falta alguno. */
+  const marcados = (form, prefijo, cantidad) => {
+    const valores = [];
+    for (let n = 1; n <= cantidad; n += 1) {
+      const r = form.querySelector(`input[name="${prefijo}-${n}"]:checked`);
+      if (!r) return null;
+      valores.push(Number(r.value));
+    }
+    return valores;
+  };
+  const alEnviar = (form, armar, ruta, gracias) => form?.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const caja = form.querySelector('[data-alerta-form]');
+    caja.hidden = true;
+    const cuerpo = armar(form);
+    if (!cuerpo) {
+      caja.innerHTML = alerta('error', 'Responde todos los ítems antes de enviar.').toString();
+      caja.hidden = false;
+      return;
+    }
+    try {
+      await conCarga(form.querySelector('button[type=submit]'), () => api.post(ruta, cuerpo));
+      if (!ctx.vigente()) return;
+      toast(gracias);
+      await formularioValidacion(cont, ctx);
+    } catch (e) {
+      if (e.status === 401) return;
+      caja.innerHTML = alertaError(e).toString();
+      caja.hidden = false;
+    }
+  });
+
+  alEnviar(cont.querySelector('#form-sus'), (form) => {
+    const items = marcados(form, 'sus', ins.itemsSus.length);
+    return items && { items };
+  }, '/api/chatbot/validacion/sus', 'Escala SUS enviada.');
+  alEnviar(cont.querySelector('#form-rubrica'), (form) => {
+    const puntajes = marcados(form, 'cr', ins.criterios.length);
+    if (!puntajes) return null;
+    const abierta = (i) => form.querySelector(`#abierta-${i}`).value;
+    return {
+      criterios: puntajes.map((puntaje, i) => ({ puntaje, comentario: form.querySelector(`[name="com-${i + 1}"]`).value })),
+      fortalezas: abierta(0), debilidades: abierta(1), mejoras: abierta(2), recomendacion: abierta(3),
+    };
+  }, '/api/chatbot/validacion/rubrica', 'Rúbrica enviada.');
 }

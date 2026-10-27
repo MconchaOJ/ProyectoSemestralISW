@@ -18,7 +18,7 @@ Instrucciones detalladas para trabajar en el código: [`CLAUDE.md`](CLAUDE.md).
    - `ISW_DB_PASSWORD`: clave del usuario `isw_app` (la usa la aplicación). Si no existe, `db\bd.ps1` la genera sola.
    - `ISW_JWT_SECRET` (opcional): 32 caracteres o más; si falta, se genera uno temporal al arrancar.
 
-2. **Base de datos** (crea `isw_practicas`, sus 18 tablas y los datos de demostración):
+2. **Base de datos** (crea `isw_practicas`, sus 22 tablas y los datos de demostración):
    ```powershell
    .\db\bd.ps1
    ```

@@ -10,6 +10,7 @@ import cl.ubb.pem.practicas.entity.AutorMensaje;
 import cl.ubb.pem.practicas.entity.DocumentoPlanificacion;
 import cl.ubb.pem.practicas.entity.EstadoInscripcion;
 import cl.ubb.pem.practicas.entity.Inscripcion;
+import cl.ubb.pem.practicas.entity.LecturaChatJefeCarrera;
 import cl.ubb.pem.practicas.entity.MensajeChatbot;
 import cl.ubb.pem.practicas.entity.Planificacion;
 import cl.ubb.pem.practicas.exception.AccesoDenegadoException;
@@ -18,8 +19,10 @@ import cl.ubb.pem.practicas.exception.RecursoNoEncontradoException;
 import cl.ubb.pem.practicas.exception.ReglaNegocioException;
 import cl.ubb.pem.practicas.repository.DocumentoPlanificacionRepository;
 import cl.ubb.pem.practicas.repository.InscripcionRepository;
+import cl.ubb.pem.practicas.repository.LecturaChatJefeCarreraRepository;
 import cl.ubb.pem.practicas.repository.MensajeChatbotRepository;
 import cl.ubb.pem.practicas.repository.PlanificacionRepository;
+import cl.ubb.pem.practicas.repository.UsuarioRepository;
 import cl.ubb.pem.practicas.security.Roles;
 import cl.ubb.pem.practicas.security.UsuarioAutenticado;
 import cl.ubb.pem.practicas.service.ModeloLenguaje.Solicitud;
@@ -27,6 +30,7 @@ import cl.ubb.pem.practicas.service.ModeloLenguaje.Turno;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import org.slf4j.Logger;
@@ -48,6 +52,9 @@ import org.springframework.transaction.support.TransactionTemplate;
  * - Las reglas y el estilo los calibra el coordinador (HU-17, {@link CalibracionChatbotService}); en cada mensaje
  *   viajan además los fragmentos pertinentes de la base de conocimiento que él cargó (HU-29, {@link BaseConocimientoService}).
  * - Con la validación abierta (HU-30, {@link ValidacionChatbotService}) solo escriben los estudiantes validadores (409).
+ * - Sin planificación adjunta en la conversación, un mensaje que parece una planificación pegada como texto recibe
+ *   una respuesta fija que pide elegirla, sin llamar al modelo (HU-15, criterio 2; {@link PlanificacionPegada}, S-72).
+ * - Cada lectura del jefe de carrera queda en la base y el estudiante ve la última (HU-20, criterios 3 y 4; S-66).
  * - El estudiante "adjunta" su planificación eligiéndola: el chatbot lee su formulario y sus documentos (HU-21); los
  *   Word y PDF se convierten a texto, porque el proveedor solo recibe texto (SUPUESTO S-61).
  * - Si el proveedor del modelo falla, responde 503 y NO se guarda nada: el estudiante reintenta sin dejar un mensaje
@@ -70,6 +77,14 @@ public class ChatbotService {
     static final String SOLO_PRACTICAS_FINALES = "El asistente de planificación solo está disponible en Práctica "
             + "Pedagógica y Práctica Profesional.";
     static final String PRACTICA_CERRADA = "Esta práctica ya está cerrada: la conversación queda solo para consulta.";
+    /** HU-15, criterio 2: la planificación se elige en el sistema, no se pega como texto (S-72). */
+    static final String PEGAR_PLANIFICACION = "Parece que pegaste tu planificación como texto. Para retroalimentarla "
+            + "necesito leerla desde el sistema: elígela en la lista «Planificación a revisar», sobre el cuadro del "
+            + "mensaje, y vuelve a enviarme tu consulta. Así leo su formulario y los documentos Word o PDF que le "
+            + "adjuntaste. Si aún no la registras, créala en «Planificaciones» y adjúntale el documento.";
+    /** HU-20, criterio 3 (S-66): lo que el estudiante sabe sobre la lectura del jefe de carrera. */
+    static final String AVISO_JEFE_CARRERA = "El jefe de carrera también puede leer esta conversación, en solo "
+            + "lectura; cada vez que la abre queda registrado.";
     static final String EN_VALIDACION = "El asistente de planificación aún no está disponible para ti: se está "
             + "validando con un grupo de estudiantes y se habilitará para todos al terminar esa etapa.";
 
@@ -77,6 +92,8 @@ public class ChatbotService {
     private final PlanificacionRepository planificaciones;
     private final DocumentoPlanificacionRepository documentos;
     private final MensajeChatbotRepository mensajes;
+    private final LecturaChatJefeCarreraRepository lecturasJefe;
+    private final UsuarioRepository usuarios;
     private final HistorialService historial;
     private final AccesoService acceso;
     private final AlmacenamientoArchivosService almacenamiento;
@@ -89,6 +106,7 @@ public class ChatbotService {
 
     public ChatbotService(InscripcionRepository inscripciones, PlanificacionRepository planificaciones,
                           DocumentoPlanificacionRepository documentos, MensajeChatbotRepository mensajes,
+                          LecturaChatJefeCarreraRepository lecturasJefe, UsuarioRepository usuarios,
                           HistorialService historial, AccesoService acceso,
                           AlmacenamientoArchivosService almacenamiento, ModeloLenguaje modelo,
                           CalibracionChatbotService calibracion, BaseConocimientoService baseConocimiento,
@@ -98,6 +116,8 @@ public class ChatbotService {
         this.planificaciones = planificaciones;
         this.documentos = documentos;
         this.mensajes = mensajes;
+        this.lecturasJefe = lecturasJefe;
+        this.usuarios = usuarios;
         this.historial = historial;
         this.acceso = acceso;
         this.almacenamiento = almacenamiento;
@@ -112,34 +132,49 @@ public class ChatbotService {
 
     /**
      * La conversación de una inscripción (HU-15 para el estudiante, HU-16 para su profesor guía, HU-20 para el jefe de
-     * carrera). La lectura del jefe queda en el log de la aplicación (HU-20, criterio 4, en parte: S-66).
+     * carrera). Cada lectura del jefe queda en la base (HU-20, criterio 4; S-66): no la del jefe que lee como guía de
+     * esa inscripción (por su segundo rol), que es una lectura de HU-16.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public ConversacionChatbotDto conversacion(Long inscripcionId, UsuarioAutenticado actor) {
         Inscripcion i = buscarInscripcion(inscripcionId);
         acceso.exigirVerChat(i, actor);
         if (acceso.leeChatComoJefe(i, actor) && !esElGuia(i, actor)) {
+            LecturaChatJefeCarrera lectura = new LecturaChatJefeCarrera();
+            lectura.setInscripcion(i);
+            lectura.setUsuario(usuarios.getReferenceById(actor.id()));
+            lecturasJefe.save(lectura);
             log.info("Jefe de carrera {} leyó el chat de la inscripción {}", actor.id(), i.getId());
         }
         String motivo = motivoNoDisponible(i);
+        boolean conChatbot = Boolean.TRUE.equals(i.getAsignatura().getChatbotHabilitado());
         return new ConversacionChatbotDto(i.getId(),
                 i.getEstudiante().getUsuario().getNombre() + " " + i.getEstudiante().getUsuario().getApellidos(),
                 i.getAsignatura().getNombre(), i.getPeriodo(), motivo == null, motivo,
                 motivo == null && esElEstudiante(i, actor), UsuarioResumenDto.desde(i.getProfesorGuia()),
+                conChatbot ? AVISO_JEFE_CARRERA : null,
+                lecturasJefe.findFirstByInscripcionIdOrderByFechaDescIdDesc(i.getId()).map(LecturaChatJefeCarrera::getFecha).orElse(null),
                 mensajes.findConversacion(i.getId()).stream().map(MensajeChatbotDto::desde).toList());
     }
 
-    /** El estudiante escribe; el chatbot responde y se guardan los dos mensajes (criterio 9). */
+    /**
+     * El estudiante escribe; el chatbot responde y se guardan los dos mensajes (criterio 9). Si el mensaje parece una
+     * planificación pegada como texto (y no hay una adjunta), la respuesta es fija y el modelo no se llama (criterio 2).
+     */
     public RespuestaChatbotDto enviar(Long inscripcionId, MensajeChatbotRequest req, UsuarioAutenticado actor) {
         LocalDateTime enviado = LocalDateTime.now();
         Preparado p = lectura.execute(estado -> preparar(inscripcionId, req, actor));
-        String respuesta = modelo.responder(p.solicitud());   // fuera de la transacción; si falla, 503 y nada guardado
+        String respuesta = p.solicitud() == null ? PEGAR_PLANIFICACION
+                : modelo.responder(p.solicitud());   // fuera de la transacción; si falla, 503 y nada guardado
         return escritura.execute(estado -> guardar(p, req.texto().trim(), respuesta, enviado));
     }
 
     // ---------------------------------------------------------------------------------------------
 
-    /** Lo que se reunió antes de llamar al modelo. {@code planificacionAdjunta} es la que vino en ESTE mensaje. */
+    /**
+     * Lo que se reunió antes de llamar al modelo. {@code planificacionAdjunta} es la que vino en ESTE mensaje;
+     * {@code solicitud} es nula cuando no hay que llamar al modelo (planificación pegada como texto).
+     */
     private record Preparado(Long inscripcionId, Long planificacionAdjunta, Solicitud solicitud) {
     }
 
@@ -170,11 +205,14 @@ public class ChatbotService {
             }
         }
 
+        // HU-15, criterio 2 (S-72): la planificación se elige en el sistema; pegada como texto no se envía al modelo
+        if (enRevision == null && PlanificacionPegada.pareceUna(req.texto())) {
+            return new Preparado(i.getId(), null, null);
+        }
+
         // Contexto: el historial del estudiante (HU-05), con las mismas reglas de acceso del endpoint de historial
         HistorialDto h = historial.historialDe(i.getEstudiante().getId(), actor);
-        List<Turno> historia = anteriores.stream()
-                .map(m -> new Turno(m.getAutor() == AutorMensaje.ESTUDIANTE, m.getContenido()))
-                .toList();
+        List<Turno> historia = historiaParaElModelo(anteriores);
         String mensaje = (enRevision == null
                 ? "(El estudiante no ha adjuntado ninguna planificación en esta conversación.)\n\n"
                 : planificacionComoTexto(enRevision))
@@ -182,6 +220,25 @@ public class ChatbotService {
         return new Preparado(i.getId(), req.planificacionId(),
                 new Solicitud(InstruccionesChatbot.armar(calibracion.textoVigente(), baseConocimiento.referenciaPara(mensaje),
                         h, i.getId()), historia, mensaje));
+    }
+
+    /**
+     * La conversación guardada, como turnos para el modelo. Se omite cada planificación pegada como texto junto con la
+     * respuesta fija que la pidió: el modelo nunca la leyó y reenviarla gastaría la cuota de tokens en cada mensaje.
+     */
+    static List<Turno> historiaParaElModelo(List<MensajeChatbot> anteriores) {
+        List<Turno> historia = new ArrayList<>();
+        for (MensajeChatbot m : anteriores) {
+            boolean delEstudiante = m.getAutor() == AutorMensaje.ESTUDIANTE;
+            if (!delEstudiante && PEGAR_PLANIFICACION.equals(m.getContenido())) {
+                if (!historia.isEmpty() && historia.get(historia.size() - 1).delEstudiante()) {
+                    historia.remove(historia.size() - 1);
+                }
+                continue;
+            }
+            historia.add(new Turno(delEstudiante, m.getContenido()));
+        }
+        return historia;
     }
 
     private RespuestaChatbotDto guardar(Preparado p, String texto, String respuesta, LocalDateTime enviado) {
@@ -269,7 +326,7 @@ public class ChatbotService {
         if (i.getEstado() != EstadoInscripcion.EN_CURSO) {
             return PRACTICA_CERRADA;
         }
-        // HU-30: con la validación abierta, solo los estudiantes validadores conversan (S-71)
+        // HU-30: con la validación abierta, solo los estudiantes validadores conversan
         return validacion.puedeUsar(i.getEstudiante()) ? null : EN_VALIDACION;
     }
 

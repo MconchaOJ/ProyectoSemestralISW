@@ -25,6 +25,11 @@
 > lee los chats (PARCIAL: sin aviso al estudiante ni registro de accesos en la base).** Migración 008 (tabla 17,
 > `instrucciones_chatbot`), **54 endpoints y 250 pruebas**. Supuestos S-65 a S-68. Probado con el modelo real de Groq.
 > Detalle en la sección "Sprint 2: chatbot, tanda 2 de 3 - HU-17 y HU-20".
+> **2026-10-26 (tanda 3 y cierre final): las 6 HU del chatbot COMPLETAS** (HU-15, 16, 17, 20, 29 y 30). Tanda 3: HU-29
+> base de conocimiento y HU-30 validadores (migración 009). Cierre final: regla en código para la planificación pegada
+> (HU-15, S-72), aviso y registro de lecturas del jefe (HU-20, migración 010), ranking TF-IDF (HU-29, S-74) y Escala SUS
+> y rúbrica dentro del sistema (HU-30, migración 011, S-75). **22 tablas, 11 migraciones, 64 endpoints, 280 pruebas,
+> 31 pruebas negativas.** Detalle en "Sprint 2: chatbot, cierre final".
 > **Última actualización anterior: 2026-09-22 — S-47: enviar una planificación a revisión ahora también exige al menos un
 > documento adjunto (la planificación formal en Word o PDF, HU-21); los cinco campos del formulario quedan como
 > resumen. Encontrado y corregido durante la ronda de pruebas de la Fase H. Sobre la Fase F (actividad real de
@@ -455,9 +460,16 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 | S-63 | (2026-10-26, HU-15) Se escribe al chatbot solo con la inscripción EN_CURSO; cerrada, la conversación queda para consulta (409 al escribir) | HU-15 |
 | S-64 | (2026-10-26, HU-15) "Asignaturas aprobadas" del contexto = las **prácticas** aprobadas registradas en el sistema (S-14), no la malla completa de la carrera | HU-15 |
 | S-65 | (2026-10-26, HU-17) El texto base del chatbot es la propuesta **"RetroPlani Mate" V3** del coordinador de prácticas (`Documents/ChatBot_extraido/ChatBot/PROPUESTA_DE_GPT_CHATBOT_RETROPLANI_MATE_V3_21-06 - Copia.pdf`, que no está en git) **resumida y adaptada por el equipo**: "adjuntar" = elegir la planificación en el sistema, solo Word o PDF (sin imágenes), y 9 de sus 10 respuestas modelo (la del cierre reflexivo quedó como regla del flujo). Se resumió porque el texto completo (~25 páginas) no cabe en la cuota por minuto de Groq. Reemplaza el mensaje fijo de límite que había redactado el equipo (S-62) por el de la propuesta. Las bases curriculares, la rúbrica y los demás archivos de referencia no se cargan (HU-29) | HU-15, HU-17 |
-| S-66 | (2026-10-26, HU-20) El jefe de carrera lee **todos** los chats de las asignaturas con chatbot, en solo lectura y **sin aviso al estudiante** (decisión del usuario: ya tiene lectura global del resto del sistema). El borrador de HU-20 sí pedía el aviso (criterio 3) y registrar cada acceso (criterio 4): hoy cada lectura del jefe queda solo en el log de la aplicación, no en una tabla. Sigue abierta la privacidad de los chats con el cliente (S-38) | HU-20 |
+| S-66 | (2026-10-26, HU-20; ajustado en el cierre final) El jefe de carrera lee **todos** los chats de las asignaturas con chatbot, en solo lectura. **Desde el cierre final, el estudiante ve un aviso** de que el jefe puede leer y cuándo lo hizo por última vez (criterio 3), y **cada lectura queda en la tabla `lectura_chat_jefe_carrera`** (migración 010, criterio 4); antes no había aviso y la lectura quedaba solo en el log. No se registran las lecturas del guía. Sigue abierta la privacidad de los chats con el cliente (S-38) | HU-20 |
 | S-67 | (2026-10-26, HU-17) Las instrucciones calibradas miden entre **200 y 12 000 caracteres** (400 si no): el mínimo evita guardar un texto vacío o de prueba; el máximo protege la cuota de Groq (el texto viaja en cada mensaje; el base tiene ~7 000) | HU-17 |
 | S-68 | (2026-10-26, HU-17) Un solo texto para todo el sistema (no por asignatura). El cambio rige desde el **siguiente mensaje**, también en conversaciones en curso; los mensajes guardados no cambian (criterio 3). No se guarda historial de versiones: solo quién y cuándo editó por última vez. El contexto del estudiante lo sigue agregando el sistema, no se edita | HU-17 |
+| S-69 | (2026-10-26, HU-29) Un documento vigente por tipo, con los 10 tipos de la lista de la propuesta RetroPlani Mate; al reemplazarlo, el archivo anterior queda en disco | HU-29 |
+| S-70 | (2026-10-26, HU-29) Búsqueda por palabras con tope de 5 000 caracteres por mensaje, **sin embeddings** (la capa gratuita de Groq no los ofrece). Desde el cierre final el orden es TF-IDF (S-74), pero sigue sin ser búsqueda por significado | HU-29 |
+| S-71 | (2026-10-26, HU-30) ~~La Escala SUS y la rúbrica de los jueces van fuera del sistema~~: **reemplazado por S-75** en el cierre final | HU-30 |
+| S-72 | (2026-10-26, HU-15 criterio 2) Un mensaje "parece una planificación pegada" si tiene más de 400 caracteres y nombra al menos 2 partes distintas de una planificación (objetivo, recursos, actividad, evaluación, DUA, inicio, desarrollo, cierre, indicador, habilidad, OA, minutos). Solo se aplica si no hay planificación adjunta en la conversación; la respuesta es fija y no se llama al modelo; los dos mensajes se guardan pero no se reenvían al modelo | HU-15 |
+| S-73 | (2026-10-26, HU-20) El estudiante ve la fecha de la **última** lectura del jefe, no la lista completa ni quién la hizo; la lista completa queda en la base para auditoría | HU-20 |
+| S-74 | (2026-10-26, HU-29) El orden de los fragmentos es TF-IDF con coseno (TF = 1 + ln veces, IDF de BM25) y las palabras cuentan desde 3 letras (para "DUA") | HU-29 |
+| S-75 | (2026-10-26, HU-30) La Escala SUS adaptada y la rúbrica de juicio experto (textos de la propuesta RetroPlani Mate V3, no inventados) las responde dentro del sistema cualquier **estudiante validador**, una vez cada una, con la validación abierta o cerrada; un juez experto usaría una cuenta de estudiante validador. En la propuesta son para los jueces; el instrumento de usuarios (formato de Andrés Seguel) no está en el material y no se construyó. No se guarda la identificación del juez (filiación, firma) | HU-30 |
 
 ## Problemas conocidos y limitaciones
 
@@ -470,6 +482,8 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 - En desarrollo el secreto del JWT es temporal si no se define `ISW_JWT_SECRET`: tras reiniciar la app hay que iniciar sesión de nuevo. Con el perfil `prod` es obligatorio (2026-10-11).
 - **Fase E:** los archivos se guardan en el disco local del servidor (`backend/adjuntos/`), no en un almacenamiento externo; en un despliegue con varias instancias habría que moverlos a un storage compartido. La transcripción de la nota de voz depende del navegador del evaluador (Web Speech API): no funciona en todos los navegadores (S-40). No se probó todavía en un navegador real por falta de esa herramienta en esta sesión (ver "Cómo se verificó lo del 22-sep" arriba); falta ese recorrido visual antes de la defensa.
 
+- **Chatbot (HU-29, criterio 2):** que responda solo con los documentos de la base de conocimiento lo cumple el modelo por instrucciones; la búsqueda de fragmentos es por palabras (TF-IDF, S-70 y S-74), no por significado. Limitación conocida de la arquitectura, no pendiente de código.
+
 ## Pendientes y mejoras (para sprints siguientes; nada bloquea la entrega)
 
 - Confirmar con el cliente/profesora los supuestos S-01 a S-46 (sobre todo S-05, S-09, S-10, S-21, S-29, S-40, S-45).
@@ -479,6 +493,19 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 - Migrar `Planificacion` al formato oficial real (S-45), cuando se decida el impacto en el formulario y en las 146 pruebas que ya lo usan.
 
 ## Migraciones de base de datos
+
+**`db/migraciones/011_escala_sus_y_rubrica_experto.sql`** (2026-10-26, HU-30): tablas `respuesta_sus` (10 ítems de 1 a 5,
+puntaje SUS generado por la base), `respuesta_rubrica_experto` (4 preguntas abiertas) y `respuesta_rubrica_criterio` (9
+criterios de 1 a 4 con comentario), una SUS y una rúbrica por validador (UNIQUE).
+
+**`db/migraciones/010_lectura_chat_jefe_carrera.sql`** (2026-10-26, HU-20): tabla `lectura_chat_jefe_carrera`
+(inscripción, usuario, fecha), una fila por cada lectura del jefe de carrera. **010 y 011 probadas sobre una base sin
+ellas:** terminan sin errores y las restricciones quedan iguales a una instalación nueva (CHECK 47, FK 35, PK 22, UNIQUE 18).
+
+**`db/migraciones/009_base_conocimiento_y_validacion.sql`** (2026-10-26, HU-29 y HU-30): tabla
+`documento_base_conocimiento`, `estudiante.validador_chatbot` e `instrucciones_chatbot.validacion_abierta`.
+
+**`db/migraciones/008_instrucciones_chatbot.sql`** (2026-10-26, HU-17): tabla `instrucciones_chatbot` (una fila).
 
 **`db/migraciones/007_chatbot_planificacion.sql`** (2026-10-26, HU-15): columna `mensaje_chatbot.planificacion_id`
 (nula, FK a `planificacion`, índice): la planificación que el estudiante adjuntó a ese mensaje. La tabla
@@ -1150,7 +1177,7 @@ vista de Sebastián (aviso, sin formulario), 0 errores de JavaScript.
 Supuestos nuevos: **S-69** (un documento por tipo, los 10 de la propuesta; el anterior queda en disco), **S-70**
 (búsqueda por palabras con tope de 5 000 caracteres), **S-71** (la SUS y la rúbrica de jueces van fuera del sistema).
 
-### Lo que le toca al compañero (pendiente)
+### Lo que le tocaba al compañero (resuelto el 26-oct en el cierre final, sección siguiente)
 1. **HU-30:** registrar la Escala SUS y la rúbrica de 9 criterios: se propone un formulario externo (Google Forms) y
    confirmarlo con el cliente. No hay nada de esto en el sistema.
 2. **HU-20:** aviso al estudiante de que el jefe lee su chat y registro de accesos en una tabla (S-66), si el cliente lo pide.
@@ -1158,3 +1185,124 @@ Supuestos nuevos: **S-69** (un documento por tipo, los 10 de la propuesta; el an
    conocimiento), S-60, S-65 a S-71 y S-38.
 4. **HU-29:** si los jueces ven respuestas pobres, cambiar la búsqueda por embeddings (solo `FragmentosBaseConocimiento`).
 5. Aplicar las migraciones 007, 008 y 009 en el servidor (`CLAUDE.md` y `DESPLIEGUE.md` ya quedaron al día el 26-oct).
+
+
+## Sprint 2: chatbot, cierre final - HU-15, HU-20, HU-29 y HU-30 completas (2026-10-26)
+
+Rama `feature/chatbot`, sin commit (lo hace el usuario). Se cierran los 4 criterios que quedaron a medias en las tandas
+1 a 3. **Las 6 HU del chatbot (HU-15, 16, 17, 20, 29 y 30) quedan completas; no queda nada pendiente de código.**
+**280 pruebas, 0 fallos** (eran 263; +17). Migraciones `010` y `011` (tablas 19 a 22). **64 endpoints** (eran 60).
+Base: 22 tablas, PK 22, FK 35, UNIQUE 18, CHECK 47, **31 de 31 pruebas negativas** (eran 27; +4).
+
+### 1. HU-15, criterio 2 · La planificación pegada como texto (regla en código)
+Antes lo hacía el modelo "por instrucciones", sin garantía. Ahora `ChatbotService` decide **antes** de llamar al modelo:
+si en la conversación no hay planificación adjunta y el mensaje parece una planificación pegada
+(`PlanificacionPegada.pareceUna`), responde un texto fijo (`PEGAR_PLANIFICACION`: elegirla en «Planificación a revisar»)
+**sin llamar a Groq**, igual que las otras reglas del sistema. Parece una planificación = más de 400 caracteres **y** al
+menos 2 partes distintas de una planificación (objetivo, recursos, actividad, evaluación, DUA, inicio, desarrollo,
+cierre, indicador, habilidad, OA, minutos), sin tildes ni mayúsculas (SUPUESTO **S-72**). Una pregunta corta, aunque
+nombre esas partes, sigue llegando al modelo. Los dos mensajes se guardan (el guía ve el intento), pero
+`historiaParaElModelo` los saca de la historia que viaja en los mensajes siguientes: el modelo nunca leyó ese texto y
+reenviarlo gastaría la cuota de tokens. Pruebas: `HU15PlanificacionPegadaIntegracionTest` (4; el mock comprueba que el
+modelo no se llamó) y `PlanificacionPegadaTest` (4).
+
+### 2. HU-20, criterios 3 y 4 · Aviso al estudiante y registro de las lecturas del jefe
+- **Criterio 4:** tabla `lectura_chat_jefe_carrera` (inscripción, usuario, fecha; migración `010`). Cada
+  `GET /api/inscripciones/{id}/chatbot` del jefe de carrera inserta una fila (el método pasó de `readOnly` a
+  transacción normal). No se registran las lecturas del guía, del estudiante ni las del jefe que lee como guía de esa
+  inscripción por su segundo rol (eso es HU-16). Un 403 no deja fila.
+- **Criterio 3:** `ConversacionChatbotDto` trae `avisoJefeCarrera` (en las asignaturas con chatbot) y
+  `ultimaLecturaJefeCarrera`. La pantalla del estudiante muestra, bajo el aviso del guía: «El jefe de carrera también
+  puede leer esta conversación, en solo lectura; cada vez que la abre queda registrado. Última lectura: …» (o «Aún no la
+  ha leído»). Solo la última, no la lista (S-73).
+- **S-66 ajustado:** antes "sin aviso y solo en el log"; ahora con aviso y registro en la base. **Sigue siendo SUPUESTO**
+  (no lo confirmó el cliente), igual que la privacidad de los chats (S-38).
+- Pruebas: 2 nuevas en `HU20ChatJefeCarreraIntegracionTest` (el jefe lee dos veces → 2 filas y el estudiante ve la fecha;
+  el guía y el estudiante leen → 0 filas; el coordinador recibe 403 → 0 filas).
+
+### 3. HU-29 · Ranking de fragmentos por TF-IDF (S-70 se mantiene; S-74 nuevo)
+Sin presupuesto para embeddings (Groq no los ofrece en la capa gratuita), se mejoró `FragmentosBaseConocimiento` sin
+servicio externo: cada fragmento y la consulta se pesan con **TF** (1 + ln de las veces que aparece cada palabra) por
+**IDF** (fórmula de BM25: casi cero para una palabra que está en todos los fragmentos) y se ordenan por **coseno**. Antes
+solo se sumaban las palabras en común (cada una pesada por rareza, pero sin contar repeticiones ni el largo del
+fragmento). Además las palabras cuentan desde **3 letras** (antes 4), para que entren siglas como "DUA", con una lista de
+palabras vacías de 3 letras ("los", "con", "que"...). Pruebas nuevas en `FragmentosBaseConocimientoTest` (2): un
+fragmento del DUA que comparte 2 palabras con la consulta le gana a uno genérico que comparte 6 palabras comunes (con el
+algoritmo anterior ganaba el genérico: lo verifiqué con el cálculo, no corriendo el código anterior), y entre dos
+fragmentos con la misma palabra gana el que más la trata.
+
+**Limitaciones conocidas (no son pendientes de código):**
+- **Sigue sin ser búsqueda por significado:** un sinónimo o una paráfrasis no coincide (S-70 se mantiene). Mejoró la
+  precisión, no la "comprensión".
+- **Criterio 2 ("responde solo con esos documentos")** sigue dependiendo de las instrucciones al modelo: los fragmentos
+  viajan como material de consulta, pero nada impide que el modelo agregue conocimiento propio. Garantizarlo al 100 %
+  exigiría otra arquitectura (por ejemplo, verificar cada afirmación contra las fuentes); no se fuerza.
+
+### 4. HU-30 completa · Escala SUS y rúbrica de 9 criterios dentro del sistema
+- **Los instrumentos NO son inventados:** están en la propuesta RetroPlani Mate V3 (`Documents/ChatBot (1).rar`,
+  apartado I, carta a los jueces expertos): la **Escala SUS adaptada al chatbot** (10 ítems de 1 a 5, versión en
+  español de Sevilla-González et al., 2020, adaptada de Brooke, 1986), la **rúbrica de juicio experto** (9 criterios de 1
+  "logro insuficiente" a 4 "logro alto") y sus **4 preguntas abiertas**. Los textos están en `InstrumentosValidacion`;
+  de la rúbrica se muestra el descriptor del nivel 4 de cada criterio. No hizo falta el supuesto de "versión más citada".
+- Tablas (migración `011`): `respuesta_sus` (10 ítems con CHECK 1 a 5; el **puntaje SUS 0 a 100 lo calcula la base**,
+  columna generada con la fórmula de Brooke: impares respuesta − 1, pares 5 − respuesta, suma × 2,5),
+  `respuesta_rubrica_experto` (las 4 preguntas abiertas) y `respuesta_rubrica_criterio` (9 filas por rúbrica: número
+  1 a 9, puntaje 1 a 4, comentario opcional). Las dos primeras con UNIQUE por validador: **una vez cada una**.
+- Endpoints (`RespuestasValidacionController`): `GET /api/chatbot/validacion/mi-validacion` (estudiante: si es validador,
+  qué respondió y los textos), `POST .../sus` y `POST .../rubrica` (estudiante validador; 403 si no lo es, 409 si ya
+  respondió, 400 si faltan ítems o se salen de la escala), `GET .../resultados` (solo el coordinador: promedio SUS,
+  promedio por ítem y por criterio, y cada respuesta con nombre y fecha). Los demás roles, 403.
+- Pantallas: el validador ve en su asistente un aviso «Participas en la validación…» con el enlace a
+  `#/chatbot/validacion` (SUS primero y rúbrica después, con la misma escala de botones que la pauta de evaluación); el
+  coordinador ve la tarjeta «Resultados de la validación» en «Configuración del asistente».
+- **SUPUESTO S-75:** en la propuesta, la SUS y la rúbrica son para los **jueces expertos** y los estudiantes de 4.º y 5.º
+  año usan otro instrumento (el formato de Andrés Seguel, que no está en el material). Aquí responde cualquier
+  **estudiante marcado como validador**: un juez experto usaría una cuenta de estudiante validador (el chatbot solo lo
+  usa un estudiante). Se puede responder con la validación abierta o cerrada; desmarcar al validador no borra lo que
+  respondió. No se guardan la identificación del juez (filiación, firma) ni el instrumento de usuarios. Reemplaza a
+  **S-71** (que dejaba la SUS y la rúbrica fuera del sistema).
+- Pruebas: 5 nuevas en `HU30ValidacionChatbotIntegracionTest` (responde las dos una vez y la segunda da 409; el
+  coordinador ve SUS 80,00 y los promedios; sin respuestas los promedios van vacíos; un no validador recibe 403 hasta que
+  lo marcan; los demás roles 403; incompletas o fuera de escala 400 sin guardar nada).
+
+### Base de datos
+- `verificacion.sql`: tablas 22, filas de las 4 tablas nuevas (0 en la demo), restricciones esperadas, bloques **28**
+  (lecturas: solo de jefes de carrera y en asignaturas con chatbot) y **29** (rúbricas con sus 9 criterios, SUS entre 0 y
+  100). No se controla que quien respondió siga marcado: el coordinador puede desmarcarlo después y su respuesta vale.
+- `bd.ps1`: 4 pruebas negativas nuevas (ítem SUS fuera de 1 a 5, segunda SUS del mismo validador, criterio 10, lectura
+  de una inscripción inexistente).
+- **Migraciones probadas sobre una base sin ellas:** se borraron las 4 tablas como root y se aplicaron `010` y `011`;
+  terminan sin errores y las restricciones quedan idénticas a una instalación nueva (CHECK 47, FK 35, PK 22, UNIQUE 18).
+  En el servidor hay que aplicar, en orden, `007` a `011`.
+- Las columnas son `INT` (no `TINYINT`): con `ddl-auto=validate`, Hibernate rechaza un `TINYINT` mapeado a `Integer`.
+
+### Prueba con el modelo real de Groq (`openai/gpt-oss-120b`, 26-oct)
+- **HU-15, criterio 2:** Valentina pegó como texto una planificación de función cuadrática (objetivo, recursos, inicio,
+  desarrollo, cierre y evaluación) sin adjuntar ninguna. Respondió en **0,3 s** con el texto fijo («Parece que pegaste tu
+  planificación como texto… elígela en la lista «Planificación a revisar»…»): **Groq no se llamó**. Luego escribió
+  «Hola, ¿qué necesitas de mí para revisar una clase?» y ese sí llegó al modelo (1,4 s): pidió elegir la planificación
+  en «Planificación a revisar».
+- **HU-29 con el ranking nuevo:** el coordinador subió 3 documentos reales de la propuesta: la rúbrica (2 520
+  caracteres), los ejemplos de acciones DUA (25 501) y las Bases Curriculares de 7.º a 2.º medio (58 846). Pregunta, con la
+  planificación 8 adjunta: «¿Qué acciones DUA concretas podría agregar para atender la diversidad de mi curso en esta
+  clase de función cuadrática?». Comparé los fragmentos que elige cada algoritmo con esos mismos textos (con un programa
+  desechable que usa la clase compilada): **el nuevo trae el fragmento «Principios del DUA… Principio 1: proporcionar
+  múltiples medios de representación»**, que el anterior dejaba fuera, y saca un párrafo genérico de las Bases («Los
+  aportes de la matemática…»); los demás fragmentos de acciones DUA coinciden. El modelo hizo primero sus 5 preguntas
+  diagnósticas (el flujo de HU-15); tras contestarlas, la retroalimentación organizó acciones DUA por momento de la clase
+  («Representación múltiple», «Apoyo al procesamiento», «Opciones de respuesta»), en la línea de los principios del DUA
+  del fragmento elegido; desde fuera no se puede saber qué parte salió del documento y cuál del conocimiento propio del
+  modelo (ver la limitación del criterio 2). **Límite visto:** ninguno de los dos algoritmos trajo el OA de función cuadrática de las Bases para esa
+  pregunta, porque la consulta la dominan las palabras del DUA (no es búsqueda por significado, S-70).
+- **En Chrome:** la estudiante ve el aviso del jefe («Aún no la ha leído» → tras la lectura del jefe, «Última lectura:
+  26-10-2026 22:50»); el formulario de validación (10 ítems SUS, 9 criterios, 4 preguntas abiertas) avisa si falta un
+  ítem y, enviado, queda como «Respondiste… ¡Gracias!»; el coordinador ve SUS 80,00 y el criterio 6 en 2,00. Sin errores
+  de JavaScript en la consola (en este equipo no hay `node`: la sintaxis de los módulos nuevos se validó cargándolos en
+  Chrome).
+- Nota: las primeras dos pruebas se enviaron con un script de PowerShell 5.1 que leyó su propio archivo como ANSI, por
+  eso esos mensajes quedaron con tildes rotas en la base de prueba (no es un error de la aplicación); la pregunta de
+  HU-29 se repitió desde el navegador con UTF-8 correcto. La base se recreó al final (`bd.ps1`).
+
+### Qué queda (ya no es código)
+- **Confirmar con el cliente** S-38, S-59 (Groq: costo, privacidad y cuota), S-60, S-65 a S-75.
+- Aplicar las migraciones `007` a `011` en el servidor cuando exista.

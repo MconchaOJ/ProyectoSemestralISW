@@ -1,10 +1,12 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 18 tablas con claves, restricciones e
+-- Implementa el MER de Sprint1/mer.md: 22 tablas con claves, restricciones e
 -- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
--- la Fase E, instrucciones_chatbot de HU-17 y documento_base_conocimiento de
--- HU-29). No contiene contraseñas (el
+-- la Fase E, instrucciones_chatbot de HU-17, documento_base_conocimiento de
+-- HU-29, lectura_chat_jefe_carrera de HU-20 y respuesta_sus,
+-- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30). No
+-- contiene contraseñas (el
 -- usuario de la aplicación lo crea db/bd.ps1 con su clave tomada de una
 -- variable de entorno).
 --
@@ -34,6 +36,10 @@ SET NAMES utf8mb4;
 -- Limpieza (orden inverso a las dependencias)
 -- -----------------------------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS respuesta_rubrica_criterio;
+DROP TABLE IF EXISTS respuesta_rubrica_experto;
+DROP TABLE IF EXISTS respuesta_sus;
+DROP TABLE IF EXISTS lectura_chat_jefe_carrera;
 DROP TABLE IF EXISTS documento_base_conocimiento;
 DROP TABLE IF EXISTS instrucciones_chatbot;
 DROP TABLE IF EXISTS mensaje_chatbot;
@@ -494,3 +500,69 @@ CREATE TABLE documento_base_conocimiento (
         'BASES_CURRICULARES_3M_4M', 'ACCIONES_DUA', 'PLANIFICACION_COMENTADA_1', 'PLANIFICACION_COMENTADA_2')),
     CONSTRAINT ck_documento_base_tamano CHECK (tamano_bytes > 0 AND tamano_bytes <= 10485760)
 ) ENGINE = InnoDB COMMENT = 'Documentos de referencia del chatbot cargados por el coordinador (HU-29)';
+
+-- HU-20 (migración 010): cada lectura de un chat hecha por el jefe de carrera (el estudiante ve la última).
+CREATE TABLE lectura_chat_jefe_carrera (
+    id             BIGINT      NOT NULL AUTO_INCREMENT,
+    inscripcion_id BIGINT      NOT NULL,
+    usuario_id     BIGINT      NOT NULL COMMENT 'Jefe de carrera que leyó la conversación',
+    fecha          DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    CONSTRAINT pk_lectura_chat_jefe_carrera PRIMARY KEY (id),
+    CONSTRAINT fk_lectura_chat_inscripcion FOREIGN KEY (inscripcion_id) REFERENCES inscripcion (id),
+    CONSTRAINT fk_lectura_chat_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id),
+    INDEX ix_lectura_chat_inscripcion_fecha (inscripcion_id, fecha)
+) ENGINE = InnoDB COMMENT = 'Cada lectura de un chat del chatbot hecha por el jefe de carrera (HU-20)';
+
+-- HU-30 (migración 011): Escala SUS adaptada al chatbot (propuesta RetroPlani Mate V3), una por validador. El puntaje
+-- SUS de 0 a 100 lo calcula la base con la fórmula de Brooke: impares (respuesta - 1), pares (5 - respuesta), × 2,5.
+CREATE TABLE respuesta_sus (
+    id            BIGINT       NOT NULL AUTO_INCREMENT,
+    validador_id  BIGINT       NOT NULL COMMENT 'Estudiante validador que respondió',
+    item1         INT          NOT NULL,
+    item2         INT          NOT NULL,
+    item3         INT          NOT NULL,
+    item4         INT          NOT NULL,
+    item5         INT          NOT NULL,
+    item6         INT          NOT NULL,
+    item7         INT          NOT NULL,
+    item8         INT          NOT NULL,
+    item9         INT          NOT NULL,
+    item10        INT          NOT NULL,
+    puntaje       DECIMAL(5,2) GENERATED ALWAYS AS (((item1 - 1) + (5 - item2) + (item3 - 1) + (5 - item4)
+                      + (item5 - 1) + (5 - item6) + (item7 - 1) + (5 - item8) + (item9 - 1) + (5 - item10)) * 2.5) STORED
+                      COMMENT 'Puntaje SUS de 0 a 100 (fórmula de Brooke)',
+    fecha         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_respuesta_sus PRIMARY KEY (id),
+    CONSTRAINT uq_respuesta_sus_validador UNIQUE (validador_id),
+    CONSTRAINT fk_respuesta_sus_validador FOREIGN KEY (validador_id) REFERENCES estudiante (id),
+    CONSTRAINT ck_respuesta_sus_items CHECK (item1 BETWEEN 1 AND 5 AND item2 BETWEEN 1 AND 5 AND item3 BETWEEN 1 AND 5
+        AND item4 BETWEEN 1 AND 5 AND item5 BETWEEN 1 AND 5 AND item6 BETWEEN 1 AND 5 AND item7 BETWEEN 1 AND 5
+        AND item8 BETWEEN 1 AND 5 AND item9 BETWEEN 1 AND 5 AND item10 BETWEEN 1 AND 5)
+) ENGINE = InnoDB COMMENT = 'Escala SUS adaptada al chatbot, una por validador (HU-30)';
+
+-- HU-30 (migración 011): rúbrica de juicio experto, una por validador; sus 9 criterios van en la tabla siguiente.
+CREATE TABLE respuesta_rubrica_experto (
+    id            BIGINT   NOT NULL AUTO_INCREMENT,
+    validador_id  BIGINT   NOT NULL COMMENT 'Estudiante validador que respondió',
+    fortalezas    TEXT     NULL COMMENT 'Pregunta abierta 1',
+    debilidades   TEXT     NULL COMMENT 'Pregunta abierta 2',
+    mejoras       TEXT     NULL COMMENT 'Pregunta abierta 3',
+    recomendacion TEXT     NULL COMMENT 'Pregunta abierta 4',
+    fecha         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_respuesta_rubrica_experto PRIMARY KEY (id),
+    CONSTRAINT uq_respuesta_rubrica_validador UNIQUE (validador_id),
+    CONSTRAINT fk_respuesta_rubrica_validador FOREIGN KEY (validador_id) REFERENCES estudiante (id)
+) ENGINE = InnoDB COMMENT = 'Rúbrica de juicio experto del chatbot, una por validador (HU-30)';
+
+CREATE TABLE respuesta_rubrica_criterio (
+    id           BIGINT        NOT NULL AUTO_INCREMENT,
+    respuesta_id BIGINT        NOT NULL,
+    numero       INT           NOT NULL COMMENT 'Criterio 1 a 9 de la rúbrica',
+    puntaje      INT           NOT NULL COMMENT '1 logro insuficiente, 2 parcial, 3 adecuado, 4 alto',
+    comentario   VARCHAR(1000) NULL,
+    CONSTRAINT pk_respuesta_rubrica_criterio PRIMARY KEY (id),
+    CONSTRAINT uq_rubrica_criterio_numero UNIQUE (respuesta_id, numero),
+    CONSTRAINT fk_rubrica_criterio_respuesta FOREIGN KEY (respuesta_id) REFERENCES respuesta_rubrica_experto (id),
+    CONSTRAINT ck_rubrica_criterio_numero CHECK (numero BETWEEN 1 AND 9),
+    CONSTRAINT ck_rubrica_criterio_puntaje CHECK (puntaje BETWEEN 1 AND 4)
+) ENGINE = InnoDB COMMENT = 'Puntaje y comentario de cada criterio de la rúbrica de juicio experto (HU-30)';
