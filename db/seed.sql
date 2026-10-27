@@ -712,3 +712,12 @@ INSERT INTO instrucciones_chatbot (id, texto, editado_por_id, fecha_edicion) VAL
 - DUA ausente o solo declarado: señala que no hay acciones concretas en los momentos de la clase y da ideas breves para inicio, desarrollo y cierre ligadas a su planificación, terminando con "Estas ideas son referencias para que las adaptes a tu clase, no una planificación ya resuelta."
 - Ya recibió dos retroalimentaciones: "Ya he entregado dos retroalimentaciones para esta planificación. Ahora lo más formativo es que uses las sugerencias, mejores autónomamente tu diseño y lo compartas con tu profesor/a universitario/a o tutor/a de práctica, y luego con tu profesor/a colaborador/a del centro educativo. Si tienes una planificación distinta, con otro objetivo o una nueva clase, puedes elegirla para revisarla."
 ', NULL, NULL);
+
+-- =============================================================================
+-- PARTE 4 - VALIDACIÓN DEL CHATBOT (HU-30, migración 009)
+-- =============================================================================
+-- La validación parte CERRADA (instrucciones_chatbot.validacion_abierta = FALSE):
+-- el chatbot responde a todos. Valentina (estudiante 3, Práctica Pedagógica) es
+-- la validadora de demostración: si el coordinador abre la validación, solo ella
+-- (y los que él marque) conversa con el chatbot.
+UPDATE estudiante SET validador_chatbot = TRUE WHERE id = 3;

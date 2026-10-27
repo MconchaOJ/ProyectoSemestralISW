@@ -1118,3 +1118,43 @@ lista del jefe con las 6 prácticas con asistente, filtro "valentína" → 1 res
    2 364 tokens de entrada. Con la capa gratuita de Groq (8 000 tokens/minuto, contando el tope de salida reservado) la
    cuota sigue alcanzando para uno o dos mensajes por minuto en todo el sistema (S-59).
 4. Producción: aplicar `008_instrucciones_chatbot.sql` en el servidor (paso de migraciones de `deploy/GUIA_DESPLIEGUE_EQUIPO.md`).
+
+## Sprint 2: chatbot, tanda 3 de 3 - HU-29 y HU-30, fin del chatbot por ahora (2026-10-26)
+
+Rama `feature/chatbot`, sin commit. **HU-29 TERMINADA con un límite (S-70); HU-30 PARCIAL a propósito.**
+**263 pruebas, 0 fallos** (eran 250; +13). Migración `009_base_conocimiento_y_validacion.sql` (tabla 18). **60 endpoints.**
+
+**HU-29 · Base de conocimiento.** Tabla `documento_base_conocimiento` (uno vigente por tipo, 10 tipos = la lista de la
+propuesta RetroPlani Mate, S-69). `GET /api/chatbot/base-conocimiento`, `POST /{tipo}` (subir o reemplazar, multipart) y
+`DELETE /{tipo}`, solo el coordinador (403 los demás). Usa `AlmacenamientoArchivosService` (disco, 10 MB, Word/PDF). El
+texto se extrae una sola vez al subir (`TextoDocx`, `TextoPdf` hasta 400 páginas) y se guarda en la base; sin texto
+legible, 400. En cada mensaje `FragmentosBaseConocimiento` elige los fragmentos (≈700 caracteres) con más palabras en
+común con el mensaje y la planificación, pesadas por rareza, hasta 5 000 caracteres (S-70: búsqueda por palabras, no
+embeddings). Sin documentos, el chatbot funciona igual. Pantalla: tarjeta "Base de conocimiento" en "Configuración del
+asistente" (antes "Estilo del asistente").
+
+**Prueba real (Groq):** el coordinador subió `02_Rubrica_planificacion_clases.docx` (2 520 caracteres) y
+`06_Bases_Curriculares_Matematica_7basico_2medio.pdf` (58 846 caracteres); la estudiante no pudo subir (403). La
+respuesta citó las Bases ("mostrar que comprenden la función cuadrática y representarla gráficamente") y recorrió los
+criterios reales de la rúbrica (presentación, diagnóstico, léxico y ortografía, dificultades matemáticas). 3 741 tokens de
+entrada (antes 2 364). **Observaciones:** no advirtió que la función cuadrática es de 2.º medio y la clase dice 1.º medio;
+ante una pregunta directa saltó las preguntas diagnósticas y entregó la retroalimentación completa con sugerencias muy
+concretas (calibrar con HU-17).
+
+**HU-30 · Validación (lo mínimo).** `estudiante.validador_chatbot` e `instrucciones_chatbot.validacion_abierta`.
+`GET/PUT /api/chatbot/validacion` y `PUT /api/chatbot/validacion/validadores/{estudianteId}`, solo el coordinador. Con la
+validación abierta, un no validador ve "aún no disponible" y recibe 409 al escribir. Seed: cerrada, Valentina validadora.
+Pantalla: tarjeta "Validación con estudiantes" (interruptor y casillas). Probado en Chrome: abrir la validación y la
+vista de Sebastián (aviso, sin formulario), 0 errores de JavaScript.
+
+Supuestos nuevos: **S-69** (un documento por tipo, los 10 de la propuesta; el anterior queda en disco), **S-70**
+(búsqueda por palabras con tope de 5 000 caracteres), **S-71** (la SUS y la rúbrica de jueces van fuera del sistema).
+
+### Lo que le toca al compañero (pendiente)
+1. **HU-30:** registrar la Escala SUS y la rúbrica de 9 criterios: se propone un formulario externo (Google Forms) y
+   confirmarlo con el cliente. No hay nada de esto en el sistema.
+2. **HU-20:** aviso al estudiante de que el jefe lee su chat y registro de accesos en una tabla (S-66), si el cliente lo pide.
+3. **Confirmar con el cliente** S-59 (Groq, costo y privacidad: capa gratuita = 1 mensaje/minuto con la base de
+   conocimiento), S-60, S-65 a S-71 y S-38.
+4. **HU-29:** si los jueces ven respuestas pobres, cambiar la búsqueda por embeddings (solo `FragmentosBaseConocimiento`).
+5. Aplicar las migraciones 007, 008 y 009 en el servidor (`CLAUDE.md` y `DESPLIEGUE.md` ya quedaron al día el 26-oct).

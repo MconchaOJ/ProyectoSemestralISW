@@ -169,7 +169,7 @@ Camila Rojas (estudiante 1) tiene una inscripción en Trabajo Colaborativo 2026-
 
 ## 3. Modelo completo (el que tiene la base de datos)
 
-Este es el diagrama con todos los campos, tipos y claves (`PK` clave primaria, `FK` clave foránea, `UK` único). Son las 17 tablas del script `db/schema.sql` (14 del Sprint 1, `documento_planificacion` y `documento_evaluacion` de la Fase E, e `instrucciones_chatbot` de HU-17).
+Este es el diagrama con todos los campos, tipos y claves (`PK` clave primaria, `FK` clave foránea, `UK` único). Son las 18 tablas del script `db/schema.sql` (14 del Sprint 1, `documento_planificacion` y `documento_evaluacion` de la Fase E, `instrucciones_chatbot` de HU-17 y `documento_base_conocimiento` de HU-29).
 
 ```mermaid
 erDiagram
@@ -198,6 +198,7 @@ erDiagram
     INSCRIPCION ||--o{ MENSAJE_CHATBOT : "registra"
     PLANIFICACION |o--o{ MENSAJE_CHATBOT : "se revisa en"
     USUARIO |o--o| INSTRUCCIONES_CHATBOT : "calibra"
+    USUARIO ||--o{ DOCUMENTO_BASE_CONOCIMIENTO : "carga"
     PLANIFICACION ||--o{ DOCUMENTO_PLANIFICACION : "recibe"
     USUARIO ||--o{ DOCUMENTO_PLANIFICACION : "sube"
     EVALUACION ||--o{ DOCUMENTO_EVALUACION : "recibe"
@@ -225,6 +226,7 @@ erDiagram
         varchar rut UK
         int semestre_actual
         int anio_ingreso
+        boolean validador_chatbot "HU-30, migracion 009"
     }
     ASIGNATURA_PRACTICA {
         int id PK
@@ -347,6 +349,18 @@ erDiagram
         text texto "reglas, tono y respuestas modelo"
         bigint editado_por_id FK "nulo = texto base"
         datetime fecha_edicion
+        boolean validacion_abierta "HU-30, migracion 009"
+    }
+    DOCUMENTO_BASE_CONOCIMIENTO {
+        bigint id PK
+        varchar tipo UK "10 tipos de la propuesta (migracion 009)"
+        varchar nombre_archivo
+        varchar ruta_archivo "solo en disco, fuera de git"
+        varchar tipo_mime
+        bigint tamano_bytes "maximo 10 MB"
+        mediumtext texto "extraido al subir"
+        bigint subido_por_id FK
+        datetime fecha_subida
     }
     DOCUMENTO_PLANIFICACION {
         bigint id PK
@@ -394,7 +408,8 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 | `DOCUMENTO_EVALUACION` | Un archivo (Word, Excel o PDF) con la pauta y evaluación formal que sube el profesor guía | Máximo 10 MB (S-43). Se puede subir con la evaluación en BORRADOR o FINALIZADA (S-41) | HU-22 |
 | `NOTA_VOZ` | Audio que graba el evaluador al terminar la clase, con su transcripción | Como máximo una por evaluación. La transcripción la genera el navegador (S-40) y la puede corregir el evaluador. Se graba en BORRADOR o FINALIZADA (S-42) | HU-11, HU-12 |
 | `MENSAJE_CHATBOT` | Cada mensaje entre el estudiante y el chatbot, y la planificación que el estudiante adjuntó (si adjuntó una) | Se guarda por inscripción: lo leen el profesor guía de esa inscripción (HU-16, SUPUESTO S-60) y el jefe de carrera (HU-20, S-66) | HU-15, HU-16, HU-20 |
-| `INSTRUCCIONES_CHATBOT` | Las instrucciones del chatbot que calibra el coordinador: reglas, tono, expresiones y respuestas modelo (una sola fila) | Sin fila, el chatbot usa el texto base de RetroPlani Mate que trae la aplicación; el contexto de cada estudiante no se guarda aquí (migración 008) | HU-17 |
+| `INSTRUCCIONES_CHATBOT` | Las instrucciones del chatbot que calibra el coordinador: reglas, tono, expresiones y respuestas modelo (una sola fila) | Sin fila, el chatbot usa el texto base de RetroPlani Mate que trae la aplicación; el contexto de cada estudiante no se guarda aquí (migración 008). Desde la migración 009 también guarda si la validación del chatbot está abierta | HU-17, HU-30 |
+| `DOCUMENTO_BASE_CONOCIMIENTO` | Un documento de referencia del chatbot (rúbrica, bases curriculares, acciones DUA...), uno vigente por tipo, con el texto ya extraído | El archivo queda en disco; el chatbot recibe en cada mensaje solo los fragmentos pertinentes (migración 009) | HU-29 |
 
 ## 5. Relaciones
 
@@ -428,6 +443,7 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 | `INSCRIPCION` — `MENSAJE_CHATBOT` | 1 a N | El chat de un estudiante en una práctica final tiene muchos mensajes |
 | `PLANIFICACION` — `MENSAJE_CHATBOT` | 0..1 a N | Un mensaje del estudiante puede adjuntar una planificación de su misma inscripción (migración 007) |
 | `USUARIO` — `INSTRUCCIONES_CHATBOT` | 0..1 a 0..1 | El coordinador que editó por última vez las instrucciones del chatbot (migración 008) |
+| `USUARIO` — `DOCUMENTO_BASE_CONOCIMIENTO` | 1 a N | El coordinador que subió cada documento de la base de conocimiento (migración 009) |
 
 ## 6. Reglas que el diagrama no puede mostrar
 
@@ -465,7 +481,7 @@ stateDiagram-v2
 ## 7. Qué se implementa en el Sprint 1
 
 - El script SQL (`db/schema.sql`, con `db/seed.sql` y `db/bd.ps1` para cargarlo) crea **las 16 tablas** con sus claves y restricciones (16 `PRIMARY KEY`, 24 `FOREIGN KEY`, 13 `UNIQUE`, 34 `CHECK` y los índices de las consultas de HU-02 a HU-05), y carga datos semilla (roles, las 6 asignaturas, la pauta de observación con sus 3 dimensiones y 20 indicadores, y 20 estudiantes de demostración) más usuarios ficticios (S-39). Ya está creada y verificada en el MySQL local (base `isw_practicas`).
-- La aplicación Spring Boot usa **16 entidades** (15 hasta el 26-oct): las 12 de HU-01 a HU-05, más `DOCUMENTO_PLANIFICACION`, `DOCUMENTO_EVALUACION` y `NOTA_VOZ`, activadas en la Fase E (22-sep). Desde el 26-oct (Sprint 2, HU-15) también `MENSAJE_CHATBOT`, y con HU-17 la tabla 17, `INSTRUCCIONES_CHATBOT` (entidad `CalibracionChatbot`, migración 008): las 17 tablas tienen entidad.
+- La aplicación Spring Boot usa **16 entidades** (15 hasta el 26-oct): las 12 de HU-01 a HU-05, más `DOCUMENTO_PLANIFICACION`, `DOCUMENTO_EVALUACION` y `NOTA_VOZ`, activadas en la Fase E (22-sep). Desde el 26-oct (Sprint 2, HU-15) también `MENSAJE_CHATBOT`, y con HU-17 la tabla 17, `INSTRUCCIONES_CHATBOT` (entidad `CalibracionChatbot`, migración 008), y con HU-29 la 18, `DOCUMENTO_BASE_CONOCIMIENTO` (migración 009): las 18 tablas tienen entidad.
 - Las cifras de puntaje (`puntaje_total`, `promedio`) se calculan al finalizar la evaluación y se guardan, para que el historial no tenga que recalcular.
 - Los documentos adjuntos y los audios de nota de voz se guardan en disco (`backend/adjuntos/`), fuera del control de versiones; la base solo guarda su ruta relativa.
 

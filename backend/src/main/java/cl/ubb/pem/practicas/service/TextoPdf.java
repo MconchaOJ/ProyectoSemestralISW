@@ -18,16 +18,21 @@ final class TextoPdf {
     }
 
     static String extraer(byte[] pdf) throws IOException {
+        return extraer(pdf, MAXIMO_PAGINAS);
+    }
+
+    /** Con otro tope de páginas: los documentos de la base de conocimiento (HU-29) son mucho más largos. */
+    static String extraer(byte[] pdf, int maximoPaginas) throws IOException {
         PdfReader lector = new PdfReader(pdf);
         try {
             PdfTextExtractor extractor = new PdfTextExtractor(lector);
             StringBuilder texto = new StringBuilder();
-            int paginas = Math.min(lector.getNumberOfPages(), MAXIMO_PAGINAS);
+            int paginas = Math.min(lector.getNumberOfPages(), maximoPaginas);
             for (int p = 1; p <= paginas; p++) {
                 texto.append(extractor.getTextFromPage(p)).append('\n');
             }
-            if (lector.getNumberOfPages() > MAXIMO_PAGINAS) {
-                texto.append("[… solo se leyeron las primeras ").append(MAXIMO_PAGINAS).append(" páginas]\n");
+            if (lector.getNumberOfPages() > maximoPaginas) {
+                texto.append("[… solo se leyeron las primeras ").append(maximoPaginas).append(" páginas]\n");
             }
             return texto.toString().replaceAll("[ \\t]+\n", "\n").replaceAll("\n{3,}", "\n\n").trim();
         } finally {

@@ -45,7 +45,9 @@ import org.springframework.transaction.support.TransactionTemplate;
  *   la conversación queda para consulta (SUPUESTO S-63).
  * - Escribe solo el estudiante dueño. Leen el estudiante, su profesor guía (S-60) y el jefe de carrera (HU-20, S-66),
  *   ver {@link AccesoService#puedeVerChat}.
- * - Las reglas y el estilo los calibra el coordinador (HU-17, {@link CalibracionChatbotService}).
+ * - Las reglas y el estilo los calibra el coordinador (HU-17, {@link CalibracionChatbotService}); en cada mensaje
+ *   viajan además los fragmentos pertinentes de la base de conocimiento que él cargó (HU-29, {@link BaseConocimientoService}).
+ * - Con la validación abierta (HU-30, {@link ValidacionChatbotService}) solo escriben los estudiantes validadores (409).
  * - El estudiante "adjunta" su planificación eligiéndola: el chatbot lee su formulario y sus documentos (HU-21); los
  *   Word y PDF se convierten a texto, porque el proveedor solo recibe texto (SUPUESTO S-61).
  * - Si el proveedor del modelo falla, responde 503 y NO se guarda nada: el estudiante reintenta sin dejar un mensaje
@@ -68,6 +70,8 @@ public class ChatbotService {
     static final String SOLO_PRACTICAS_FINALES = "El asistente de planificación solo está disponible en Práctica "
             + "Pedagógica y Práctica Profesional.";
     static final String PRACTICA_CERRADA = "Esta práctica ya está cerrada: la conversación queda solo para consulta.";
+    static final String EN_VALIDACION = "El asistente de planificación aún no está disponible para ti: se está "
+            + "validando con un grupo de estudiantes y se habilitará para todos al terminar esa etapa.";
 
     private final InscripcionRepository inscripciones;
     private final PlanificacionRepository planificaciones;
@@ -78,6 +82,8 @@ public class ChatbotService {
     private final AlmacenamientoArchivosService almacenamiento;
     private final ModeloLenguaje modelo;
     private final CalibracionChatbotService calibracion;
+    private final BaseConocimientoService baseConocimiento;
+    private final ValidacionChatbotService validacion;
     private final TransactionTemplate lectura;
     private final TransactionTemplate escritura;
 
@@ -85,7 +91,8 @@ public class ChatbotService {
                           DocumentoPlanificacionRepository documentos, MensajeChatbotRepository mensajes,
                           HistorialService historial, AccesoService acceso,
                           AlmacenamientoArchivosService almacenamiento, ModeloLenguaje modelo,
-                          CalibracionChatbotService calibracion,
+                          CalibracionChatbotService calibracion, BaseConocimientoService baseConocimiento,
+                          ValidacionChatbotService validacion,
                           PlatformTransactionManager transacciones) {
         this.inscripciones = inscripciones;
         this.planificaciones = planificaciones;
@@ -96,6 +103,8 @@ public class ChatbotService {
         this.almacenamiento = almacenamiento;
         this.modelo = modelo;
         this.calibracion = calibracion;
+        this.baseConocimiento = baseConocimiento;
+        this.validacion = validacion;
         this.lectura = new TransactionTemplate(transacciones);
         this.lectura.setReadOnly(true);
         this.escritura = new TransactionTemplate(transacciones);
@@ -171,7 +180,8 @@ public class ChatbotService {
                 : planificacionComoTexto(enRevision))
                 + "Mensaje del estudiante:\n" + req.texto().trim();
         return new Preparado(i.getId(), req.planificacionId(),
-                new Solicitud(InstruccionesChatbot.armar(calibracion.textoVigente(), h, i.getId()), historia, mensaje));
+                new Solicitud(InstruccionesChatbot.armar(calibracion.textoVigente(), baseConocimiento.referenciaPara(mensaje),
+                        h, i.getId()), historia, mensaje));
     }
 
     private RespuestaChatbotDto guardar(Preparado p, String texto, String respuesta, LocalDateTime enviado) {
@@ -252,11 +262,15 @@ public class ChatbotService {
         return v == null || v.toString().isBlank() ? "(sin completar)" : v.toString();
     }
 
-    private static String motivoNoDisponible(Inscripcion i) {
+    private String motivoNoDisponible(Inscripcion i) {
         if (!Boolean.TRUE.equals(i.getAsignatura().getChatbotHabilitado())) {
             return SOLO_PRACTICAS_FINALES;
         }
-        return i.getEstado() == EstadoInscripcion.EN_CURSO ? null : PRACTICA_CERRADA;
+        if (i.getEstado() != EstadoInscripcion.EN_CURSO) {
+            return PRACTICA_CERRADA;
+        }
+        // HU-30: con la validación abierta, solo los estudiantes validadores conversan (S-71)
+        return validacion.puedeUsar(i.getEstudiante()) ? null : EN_VALIDACION;
     }
 
     private static boolean esElEstudiante(Inscripcion i, UsuarioAutenticado actor) {

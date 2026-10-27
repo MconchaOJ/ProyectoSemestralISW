@@ -1,9 +1,10 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 17 tablas con claves, restricciones e
+-- Implementa el MER de Sprint1/mer.md: 18 tablas con claves, restricciones e
 -- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
--- la Fase E, e instrucciones_chatbot de HU-17). No contiene contraseñas (el
+-- la Fase E, instrucciones_chatbot de HU-17 y documento_base_conocimiento de
+-- HU-29). No contiene contraseñas (el
 -- usuario de la aplicación lo crea db/bd.ps1 con su clave tomada de una
 -- variable de entorno).
 --
@@ -33,6 +34,7 @@ SET NAMES utf8mb4;
 -- Limpieza (orden inverso a las dependencias)
 -- -----------------------------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS documento_base_conocimiento;
 DROP TABLE IF EXISTS instrucciones_chatbot;
 DROP TABLE IF EXISTS mensaje_chatbot;
 DROP TABLE IF EXISTS nota_voz;
@@ -96,6 +98,7 @@ CREATE TABLE estudiante (
     rut             VARCHAR(10) NOT NULL COMMENT 'Sin puntos y con guion, ej. 12345678-9',
     semestre_actual INT         NOT NULL COMMENT 'Parte del contexto del chatbot (S-14)',
     anio_ingreso    INT         NOT NULL,
+    validador_chatbot BOOLEAN   NOT NULL DEFAULT FALSE COMMENT 'TRUE = participa en la validación del chatbot (HU-30, migración 009)',
     CONSTRAINT pk_estudiante         PRIMARY KEY (id),
     CONSTRAINT uq_estudiante_usuario UNIQUE (usuario_id),
     CONSTRAINT uq_estudiante_rut     UNIQUE (rut),
@@ -464,8 +467,30 @@ CREATE TABLE instrucciones_chatbot (
     texto          TEXT     NOT NULL COMMENT 'Reglas, tono, expresiones y respuestas modelo del chatbot (HU-17)',
     editado_por_id BIGINT   NULL     COMMENT 'Coordinador que lo editó por última vez; nulo = texto base sin editar',
     fecha_edicion  DATETIME NULL     COMMENT 'Última edición; nulo = texto base sin editar',
+    validacion_abierta BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'TRUE = el chatbot solo responde a los validadores (HU-30, migración 009)',
     CONSTRAINT pk_instrucciones_chatbot PRIMARY KEY (id),
     CONSTRAINT fk_instrucciones_editado_por FOREIGN KEY (editado_por_id) REFERENCES usuario (id),
     CONSTRAINT ck_instrucciones_fila_unica CHECK (id = 1),
     CONSTRAINT ck_instrucciones_edicion CHECK ((editado_por_id IS NULL) = (fecha_edicion IS NULL))
-) ENGINE = InnoDB COMMENT = 'Instrucciones del chatbot calibradas por el coordinador (HU-17)';
+) ENGINE = InnoDB COMMENT = 'Configuración del chatbot: instrucciones del coordinador (HU-17) y validación (HU-30)';
+
+-- HU-29 (migración 009): documentos de referencia del chatbot, uno vigente por tipo. El archivo va a disco; la base
+-- guarda su ruta y el texto ya extraído (no se convierte un PDF largo en cada mensaje).
+CREATE TABLE documento_base_conocimiento (
+    id             BIGINT       NOT NULL AUTO_INCREMENT,
+    tipo           VARCHAR(40)  NOT NULL COMMENT 'Uno de los 10 documentos de la propuesta RetroPlani Mate',
+    nombre_archivo VARCHAR(255) NOT NULL,
+    ruta_archivo   VARCHAR(500) NOT NULL COMMENT 'Ruta relativa en disco (fuera de git)',
+    tipo_mime      VARCHAR(100) NOT NULL,
+    tamano_bytes   BIGINT       NOT NULL,
+    texto          MEDIUMTEXT   NOT NULL COMMENT 'Texto extraído del Word o PDF al subirlo',
+    subido_por_id  BIGINT       NOT NULL,
+    fecha_subida   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_documento_base_conocimiento PRIMARY KEY (id),
+    CONSTRAINT uq_documento_base_tipo UNIQUE (tipo),
+    CONSTRAINT fk_documento_base_subido_por FOREIGN KEY (subido_por_id) REFERENCES usuario (id),
+    CONSTRAINT ck_documento_base_tipo CHECK (tipo IN ('MOMENTOS_CLASE', 'RUBRICA_PLANIFICACION',
+        'DUA_DIVERSIFICACION', 'BANCO_COMENTARIOS', 'ENLACES_RECURSOS', 'BASES_CURRICULARES_7B_2M',
+        'BASES_CURRICULARES_3M_4M', 'ACCIONES_DUA', 'PLANIFICACION_COMENTADA_1', 'PLANIFICACION_COMENTADA_2')),
+    CONSTRAINT ck_documento_base_tamano CHECK (tamano_bytes > 0 AND tamano_bytes <= 10485760)
+) ENGINE = InnoDB COMMENT = 'Documentos de referencia del chatbot cargados por el coordinador (HU-29)';

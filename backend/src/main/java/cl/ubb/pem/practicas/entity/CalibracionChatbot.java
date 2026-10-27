@@ -7,9 +7,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Las instrucciones del chatbot que calibra el coordinador (HU-17, migración 008): tono, expresiones a usar y a
- * evitar, reglas del flujo y respuestas modelo. Hay UNA sola fila (id 1) para todo el sistema. El contexto de cada
- * estudiante no se guarda aquí: lo agrega el sistema en cada mensaje.
+ * La configuración del chatbot, UNA sola fila (id 1) para todo el sistema: las instrucciones que calibra el
+ * coordinador (HU-17, migración 008: tono, expresiones a usar y a evitar, reglas del flujo y respuestas modelo) y si la
+ * validación con estudiantes está abierta (HU-30, migración 009). El contexto de cada estudiante no se guarda aquí:
+ * lo agrega el sistema en cada mensaje.
  */
 @Entity
 @Table(name = "instrucciones_chatbot")
@@ -34,4 +35,8 @@ public class CalibracionChatbot {
 
     @Column(name = "fecha_edicion")
     private LocalDateTime fechaEdicion;
+
+    /** HU-30 (migración 009): mientras está abierta, el chatbot solo responde a los estudiantes validadores. */
+    @Column(name = "validacion_abierta", nullable = false)
+    private Boolean validacionAbierta = false;
 }

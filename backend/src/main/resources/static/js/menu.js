@@ -36,7 +36,7 @@ export const FUNCIONES = [
   // del curso, ni el tutor ven los chats.
   { ruta: 'chatbot', icono: 'chat', nombre: 'Asistente de planificación', roles: ['ESTUDIANTE', 'PROFESOR_GUIA'] },
   // HU-17: el coordinador calibra el estilo del asistente
-  { ruta: 'estilo-asistente', icono: 'sliders', nombre: 'Estilo del asistente', roles: COORD },
+  { ruta: 'estilo-asistente', icono: 'sliders', nombre: 'Configuración del asistente', roles: COORD },
 ];
 
 const tieneAlguno = (item, roles) => item.roles.some((r) => roles.includes(r));
@@ -70,7 +70,7 @@ export const ACCESOS = {
     { icono: 'clock', titulo: 'Historial de un estudiante', texto: 'Recorrido por las 6 prácticas.', hash: '#/historial' },
     { icono: 'file', titulo: 'Seguimiento de planificaciones', texto: 'Estado de cada clase planificada.', hash: '#/planificaciones' },
     { icono: 'clipboard', titulo: 'Pautas de evaluación', texto: 'Crear y editar pautas (con versiones).', hash: '#/pautas' },
-    { icono: 'sliders', titulo: 'Estilo del asistente', texto: 'Calibra cómo retroalimenta el chatbot.', hash: '#/estilo-asistente' },
+    { icono: 'sliders', titulo: 'Configuración del asistente', texto: 'Estilo, base de conocimiento y validación.', hash: '#/estilo-asistente' },
   ],
   PROFESOR_GUIA: [
     { icono: 'file', titulo: 'Planificaciones por revisar', texto: 'Aprueba u observa antes de la clase.', hash: '#/planificaciones?estado=EN_REVISION_GUIA', pendiente: { ruta: '/api/planificaciones', params: { estado: 'EN_REVISION_GUIA' } } },
