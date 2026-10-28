@@ -1,11 +1,12 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 22 tablas con claves, restricciones e
+-- Implementa el MER de Sprint1/mer.md: 25 tablas con claves, restricciones e
 -- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
 -- la Fase E, instrucciones_chatbot de HU-17, documento_base_conocimiento de
--- HU-29, lectura_chat_jefe_carrera de HU-20 y respuesta_sus,
--- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30). No
+-- HU-29, lectura_chat_jefe_carrera de HU-20, respuesta_sus,
+-- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30,
+-- componente_nota y nota_componente de HU-09 y equipo_practica de HU-10). No
 -- contiene contraseñas (el
 -- usuario de la aplicación lo crea db/bd.ps1 con su clave tomada de una
 -- variable de entorno).
@@ -36,6 +37,8 @@ SET NAMES utf8mb4;
 -- Limpieza (orden inverso a las dependencias)
 -- -----------------------------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS nota_componente;
+DROP TABLE IF EXISTS componente_nota;
 DROP TABLE IF EXISTS respuesta_rubrica_criterio;
 DROP TABLE IF EXISTS respuesta_rubrica_experto;
 DROP TABLE IF EXISTS respuesta_sus;
@@ -54,6 +57,7 @@ DROP TABLE IF EXISTS indicador;
 DROP TABLE IF EXISTS dimension_pauta;
 DROP TABLE IF EXISTS pauta;
 DROP TABLE IF EXISTS inscripcion;
+DROP TABLE IF EXISTS equipo_practica;
 DROP TABLE IF EXISTS asignatura_practica;
 DROP TABLE IF EXISTS estudiante;
 DROP TABLE IF EXISTS usuario;
@@ -137,6 +141,21 @@ CREATE TABLE asignatura_practica (
     CONSTRAINT ck_asignatura_tutor     CHECK (lleva_tutor = FALSE OR requiere_centro_educativo = TRUE)
 ) ENGINE = InnoDB COMMENT = 'Las 6 asignaturas de práctica de la carrera';
 
+-- HU-10 (migración 013): dupla o grupo de una misma asignatura y periodo. Comparte guía (cada inscripción
+-- lo guarda; el sistema exige que sea el mismo al armar el equipo, S-80), colegio y curso.
+CREATE TABLE equipo_practica (
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    asignatura_id   INT          NOT NULL,
+    periodo         VARCHAR(6)   NOT NULL,
+    establecimiento VARCHAR(150) NULL COMMENT 'Colegio compartido; nulo si la asignatura no va a un colegio',
+    curso           VARCHAR(50)  NULL COMMENT 'Curso compartido, por ejemplo 1° Medio B',
+    fecha_creacion  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    CONSTRAINT pk_equipo_practica PRIMARY KEY (id),
+    CONSTRAINT fk_equipo_practica_asignatura FOREIGN KEY (asignatura_id) REFERENCES asignatura_practica (id),
+    CONSTRAINT ck_equipo_practica_periodo CHECK (periodo REGEXP '^[0-9]{4}-[12]$'),
+    INDEX ix_equipo_practica_asignatura_periodo (asignatura_id, periodo)
+) ENGINE = InnoDB COMMENT = 'Dupla o grupo de estudiantes de una misma asignatura y periodo (HU-10)';
+
 CREATE TABLE inscripcion (
     id                BIGINT       NOT NULL AUTO_INCREMENT,
     estudiante_id     BIGINT       NOT NULL,
@@ -145,8 +164,10 @@ CREATE TABLE inscripcion (
     profesor_guia_id  BIGINT       NULL     COMMENT 'Nulo en el ciclo inicial (no va al colegio)',
     profesor_curso_id BIGINT       NOT NULL COMMENT 'Quien autoriza las clases (S-05)',
     tutor_id          BIGINT       NULL     COMMENT 'Tutor de la universidad (solo Práctica Profesional); nulo = sin tutor (HU-07, migración 006)',
+    equipo_id         BIGINT       NULL     COMMENT 'Dupla o grupo al que pertenece; nulo = individual (HU-10, migración 013)',
     estado            VARCHAR(20)  NOT NULL DEFAULT 'EN_CURSO' COMMENT 'EN_CURSO, APROBADA, REPROBADA',
     nota_final        DECIMAL(3,1) NULL     COMMENT 'Nulo hasta el cierre',
+    nota_calculada    DECIMAL(3,1) NULL     COMMENT 'Nota ponderada con los componentes de la asignatura; nula si falta alguno (HU-09, migración 012)',
     fecha_cierre      DATE         NULL     COMMENT 'Día en que se cerró (APROBADA o REPROBADA); nulo mientras está EN_CURSO (HU-31, migración 003)',
     CONSTRAINT pk_inscripcion PRIMARY KEY (id),
     -- Un estudiante no se inscribe dos veces en la misma asignatura y periodo.
@@ -157,10 +178,12 @@ CREATE TABLE inscripcion (
     CONSTRAINT fk_inscripcion_guia       FOREIGN KEY (profesor_guia_id)  REFERENCES usuario (id),
     CONSTRAINT fk_inscripcion_curso      FOREIGN KEY (profesor_curso_id) REFERENCES usuario (id),
     CONSTRAINT fk_inscripcion_tutor      FOREIGN KEY (tutor_id)          REFERENCES usuario (id),
+    CONSTRAINT fk_inscripcion_equipo     FOREIGN KEY (equipo_id)         REFERENCES equipo_practica (id),
     CONSTRAINT ck_inscripcion_periodo CHECK (periodo REGEXP '^[0-9]{4}-[12]$'),
     CONSTRAINT ck_inscripcion_estado  CHECK (estado IN ('EN_CURSO', 'APROBADA', 'REPROBADA')),
     CONSTRAINT ck_inscripcion_nota    CHECK (nota_final IS NULL OR nota_final BETWEEN 1.0 AND 7.0),
     CONSTRAINT ck_inscripcion_nota_cierre CHECK (estado <> 'EN_CURSO' OR nota_final IS NULL),
+    CONSTRAINT ck_inscripcion_nota_calculada CHECK (nota_calculada IS NULL OR nota_calculada BETWEEN 1.0 AND 7.0),
     CONSTRAINT ck_inscripcion_profesores_distintos CHECK (profesor_guia_id IS NULL OR profesor_guia_id <> profesor_curso_id),
     CONSTRAINT ck_inscripcion_fecha_cierre CHECK (estado <> 'EN_CURSO' OR fecha_cierre IS NULL),
     CONSTRAINT ck_inscripcion_tutor_distinto CHECK (tutor_id IS NULL
@@ -566,3 +589,38 @@ CREATE TABLE respuesta_rubrica_criterio (
     CONSTRAINT ck_rubrica_criterio_numero CHECK (numero BETWEEN 1 AND 9),
     CONSTRAINT ck_rubrica_criterio_puntaje CHECK (puntaje BETWEEN 1 AND 4)
 ) ENGINE = InnoDB COMMENT = 'Puntaje y comentario de cada criterio de la rúbrica de juicio experto (HU-30)';
+
+-- =============================================================================
+-- 8. Nota final ponderada                                    (HU-09, migración 012)
+-- =============================================================================
+
+-- El coordinador define los componentes y sus pesos por asignatura (los de una asignatura suman 100; lo valida la
+-- aplicación). Un componente con notas registradas no se borra (FK RESTRICT).
+CREATE TABLE componente_nota (
+    id            INT          NOT NULL AUTO_INCREMENT,
+    asignatura_id INT          NOT NULL,
+    nombre        VARCHAR(150) NOT NULL,
+    peso          DECIMAL(5,2) NOT NULL COMMENT 'Porcentaje de la nota final (los de una asignatura suman 100)',
+    orden         INT          NOT NULL,
+    CONSTRAINT pk_componente_nota PRIMARY KEY (id),
+    CONSTRAINT uq_componente_nota_nombre UNIQUE (asignatura_id, nombre),
+    CONSTRAINT fk_componente_nota_asignatura FOREIGN KEY (asignatura_id) REFERENCES asignatura_practica (id),
+    CONSTRAINT ck_componente_nota_peso CHECK (peso > 0 AND peso <= 100),
+    CONSTRAINT ck_componente_nota_orden CHECK (orden >= 1)
+) ENGINE = InnoDB COMMENT = 'Estructura evaluativa de cada asignatura: componentes y pesos (HU-09)';
+
+-- El profesor del curso registra la nota de cada componente; la nota ponderada queda en inscripcion.nota_calculada.
+CREATE TABLE nota_componente (
+    id             BIGINT       NOT NULL AUTO_INCREMENT,
+    inscripcion_id BIGINT       NOT NULL,
+    componente_id  INT          NOT NULL,
+    nota           DECIMAL(2,1) NOT NULL,
+    registrada_por BIGINT       NOT NULL COMMENT 'Profesor del curso que la registró',
+    fecha_registro DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    CONSTRAINT pk_nota_componente PRIMARY KEY (id),
+    CONSTRAINT uq_nota_componente UNIQUE (inscripcion_id, componente_id),
+    CONSTRAINT fk_nota_componente_inscripcion FOREIGN KEY (inscripcion_id) REFERENCES inscripcion (id),
+    CONSTRAINT fk_nota_componente_componente FOREIGN KEY (componente_id) REFERENCES componente_nota (id),
+    CONSTRAINT fk_nota_componente_usuario FOREIGN KEY (registrada_por) REFERENCES usuario (id),
+    CONSTRAINT ck_nota_componente_nota CHECK (nota BETWEEN 1.0 AND 7.0)
+) ENGINE = InnoDB COMMENT = 'Nota de cada componente de la estructura evaluativa en una inscripción (HU-09)';

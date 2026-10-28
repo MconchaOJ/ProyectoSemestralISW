@@ -17,19 +17,25 @@ export const rolesDe = (usuario) => [usuario.rol, usuario.rolSecundario].filter(
 
 /** Funciones disponibles: funcionan contra la API real. `alias` = otras rutas que activan el mismo ítem. */
 export const FUNCIONES = [
+  // HU-14: panel de monitoreo (el jefe de carrera lo lee igual que el coordinador)
+  { ruta: 'panel', icono: 'chart', nombre: 'Panel de monitoreo', roles: [...COORD, JEFE] },
   { ruta: 'cartola', icono: 'download', nombre: 'Cartola de prácticas', roles: [JEFE] },
   { ruta: 'cuenta', icono: 'shield', nombre: 'Mi cuenta', roles: LECTURA },
   {
-    ruta: 'estudiantes', alias: ['profesores', 'inscripciones'], icono: 'users',
+    ruta: 'estudiantes', alias: ['profesores', 'inscripciones', 'equipos'], icono: 'users',
     nombre: 'Estudiantes e inscripciones', roles: COORD,
   },
   // Antes que "Mis inscripciones": con dos roles (jefe + guía) gana este nombre, porque ve todas
   { ruta: 'inscripciones', icono: 'users', nombre: 'Inscripciones', roles: [JEFE] },
   { ruta: 'inscripciones', icono: 'users', nombre: 'Mis inscripciones', roles: NO_COORD },
   { ruta: 'pautas', icono: 'clipboard', nombre: 'Pautas de evaluación', roles: COORD },
+  // HU-09: estructura evaluativa (componentes y pesos de la nota final) por asignatura
+  { ruta: 'nota-final', icono: 'sliders', nombre: 'Nota final por asignatura', roles: COORD },
   { ruta: 'evaluaciones', icono: 'check', nombre: 'Evaluaciones con pauta digital', roles: LECTURA },
   { ruta: 'planificaciones', icono: 'file', nombre: 'Planificación de clases', roles: LECTURA },
   { ruta: 'historial', icono: 'clock', nombre: 'Historial del estudiante', roles: LECTURA },
+  // HU-08: informes por asignatura y por estudiante (PDF o Excel)
+  { ruta: 'informes', icono: 'download', nombre: 'Informes', roles: [...COORD, JEFE] },
   // HU-20: el jefe de carrera lee los chats (S-66). Antes que el del guía: con dos roles (jefe + guía) gana este nombre
   { ruta: 'chatbot', icono: 'chat', nombre: 'Conversaciones del asistente', roles: [JEFE] },
   // HU-15 (el estudiante conversa) y HU-16 (su profesor guía lee). SUPUESTO S-60: ni el coordinador, ni el profesor
@@ -65,11 +71,15 @@ export function itemActivo(seccion, roles) {
 /** Tarjetas de acceso rápido de la pantalla de inicio, por rol (con dos roles se suman: ver accesosPara). */
 export const ACCESOS = {
   COORDINADOR: [
+    { icono: 'chart', titulo: 'Panel de monitoreo', texto: 'Pendientes, evaluaciones y estudiantes sin evaluar.', hash: '#/panel' },
     { icono: 'users', titulo: 'Registrar un estudiante', texto: 'Alta de estudiantes y profesores.', hash: '#/estudiantes' },
     { icono: 'clipboard', titulo: 'Inscribir en una práctica', texto: 'Asigna guía y profesor del curso.', hash: '#/inscripciones' },
     { icono: 'clock', titulo: 'Historial de un estudiante', texto: 'Recorrido por las 6 prácticas.', hash: '#/historial' },
     { icono: 'file', titulo: 'Seguimiento de planificaciones', texto: 'Estado de cada clase planificada.', hash: '#/planificaciones' },
     { icono: 'clipboard', titulo: 'Pautas de evaluación', texto: 'Crear y editar pautas (con versiones).', hash: '#/pautas' },
+    { icono: 'download', titulo: 'Informes', texto: 'Por asignatura o por estudiante, en PDF o Excel.', hash: '#/informes' },
+    { icono: 'users', titulo: 'Duplas y grupos', texto: 'Equipos que comparten guía, colegio y curso.', hash: '#/equipos' },
+    { icono: 'sliders', titulo: 'Nota final por asignatura', texto: 'Componentes y pesos de la nota final.', hash: '#/nota-final' },
     { icono: 'sliders', titulo: 'Configuración del asistente', texto: 'Estilo, base de conocimiento y validación.', hash: '#/estilo-asistente' },
   ],
   PROFESOR_GUIA: [
@@ -79,7 +89,7 @@ export const ACCESOS = {
   ],
   PROFESOR_CURSO: [
     { icono: 'file', titulo: 'Planificaciones por autorizar', texto: 'Segunda etapa del flujo.', hash: '#/planificaciones?estado=EN_AUTORIZACION', pendiente: { ruta: '/api/planificaciones', params: { estado: 'EN_AUTORIZACION' } } },
-    { icono: 'users', titulo: 'Mis inscripciones', texto: 'Estudiantes a tu cargo.', hash: '#/inscripciones' },
+    { icono: 'users', titulo: 'Mis inscripciones', texto: 'Estudiantes a tu cargo; con «Nota» registras la nota final.', hash: '#/inscripciones' },
     { icono: 'clock', titulo: 'Historial de mis estudiantes', texto: 'Recorrido completo.', hash: '#/historial' },
   ],
   ESTUDIANTE: [
@@ -95,7 +105,9 @@ export const ACCESOS = {
     { icono: 'clock', titulo: 'Historial de mis estudiantes', texto: 'Recorrido completo.', hash: '#/historial' },
   ],
   JEFE_CARRERA: [
+    { icono: 'chart', titulo: 'Panel de monitoreo', texto: 'Avance de cada asignatura y estudiante.', hash: '#/panel' },
     { icono: 'download', titulo: 'Cartola de prácticas', texto: 'PDF de las prácticas cerradas entre dos fechas.', hash: '#/cartola' },
+    { icono: 'download', titulo: 'Informes', texto: 'Por asignatura o por estudiante, en PDF o Excel.', hash: '#/informes' },
     { icono: 'clock', titulo: 'Historial de un estudiante', texto: 'Recorrido de cualquier estudiante (solo lectura).', hash: '#/historial' },
     { icono: 'check', titulo: 'Evaluaciones de clases', texto: 'Todas las evaluaciones (solo lectura).', hash: '#/evaluaciones' },
     { icono: 'chat', titulo: 'Conversaciones del asistente', texto: 'Chats de Práctica Pedagógica y Profesional.', hash: '#/chatbot' },

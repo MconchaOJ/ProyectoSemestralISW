@@ -30,6 +30,9 @@
 > (HU-15, S-72), aviso y registro de lecturas del jefe (HU-20, migración 010), ranking TF-IDF (HU-29, S-74) y Escala SUS
 > y rúbrica dentro del sistema (HU-30, migración 011, S-75). **22 tablas, 11 migraciones, 64 endpoints, 280 pruebas,
 > 31 pruebas negativas.** Detalle en "Sprint 2: chatbot, cierre final".
+> **2026-10-28 (Sprint 2): HU-08 informes (PDF y Excel), HU-28 historial en PDF, HU-09 nota final ponderada (migración
+> 012) y HU-10 duplas y grupos (migración 013).** HU-07 se dejó para después (faltan las pautas reales). **25 tablas, 13
+> migraciones, 76 endpoints, 321 pruebas (0 fallos), 35 pruebas negativas.** Supuestos S-76 a S-80. Detalle en "Sprint 2: HU-08, HU-28, HU-09 y HU-10".
 > **Última actualización anterior: 2026-09-22 — S-47: enviar una planificación a revisión ahora también exige al menos un
 > documento adjunto (la planificación formal en Word o PDF, HU-21); los cinco campos del formulario quedan como
 > resumen. Encontrado y corregido durante la ronda de pruebas de la Fase H. Sobre la Fase F (actividad real de
@@ -470,6 +473,12 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 | S-73 | (2026-10-26, HU-20) El estudiante ve la fecha de la **última** lectura del jefe, no la lista completa ni quién la hizo; la lista completa queda en la base para auditoría | HU-20 |
 | S-74 | (2026-10-26, HU-29) El orden de los fragmentos es TF-IDF con coseno (TF = 1 + ln veces, IDF de BM25) y las palabras cuentan desde 3 letras (para "DUA") | HU-29 |
 | S-75 | (2026-10-26, HU-30) La Escala SUS adaptada y la rúbrica de juicio experto (textos de la propuesta RetroPlani Mate V3, no inventados) las responde dentro del sistema cualquier **estudiante validador**, una vez cada una, con la validación abierta o cerrada; un juez experto usaría una cuenta de estudiante validador. En la propuesta son para los jueces; el instrumento de usuarios (formato de Andrés Seguel) no está en el material y no se construyó. No se guarda la identificación del juez (filiación, firma) | HU-30 |
+| S-76 | (2026-10-28, HU-08) El informe por estudiante en PDF es el mismo documento del historial en PDF (HU-28): sus mismas prácticas, evaluaciones y planificaciones con la síntesis por práctica. Lo pide solo el coordinador o el jefe de carrera; el historial en PDF lo pide cualquiera que pueda ver el historial | HU-08, HU-28 |
+| S-77 | (2026-10-28, HU-08) La distribución de puntajes va por **porcentaje del puntaje máximo** de cada pauta (menos de 60 %, 60-69, 70-79, 80-89, 90 o más; el 60 % es la exigencia habitual para el 4,0), así se comparan pautas con escalas distintas. Las notas finales, en 4 tramos (1,0-3,9; 4,0-4,9; 5,0-5,9; 6,0-7,0). Solo cuentan evaluaciones FINALIZADAS | HU-08 |
+| S-78 | (2026-10-28, HU-09) Escala 1,0 a 7,0 con un decimal y redondeo hacia arriba desde 0,05. La nota calculada se guarda en `inscripcion.nota_calculada`; la nota de cierre la sigue poniendo el coordinador (la calculada es su sugerencia). Solo el profesor del curso de la inscripción registra las notas de los componentes; los componentes no se enlazan todavía con las evaluaciones del sistema (se ingresan a mano) | HU-09 |
+| S-79 | (2026-10-28, HU-10) Una dupla tiene exactamente 2 integrantes y un grupo de 2 a 4 ("grupos de 4", reportado por un estudiante); solo se arman con inscripciones EN_CURSO y sin otro equipo; un equipo con inscripciones cerradas no se deshace | HU-10 |
+| S-80 | (2026-10-28, HU-10) El guía compartido no se guarda en el equipo: sigue en cada inscripción y el sistema exige que sea el mismo al armarlo (cambiarlo después a uno solo de los integrantes no está bloqueado) | HU-10 |
+| S-81 | (2026-10-28, HU-14) En el panel, "sin evaluar" son las inscripciones EN_CURSO sin evaluación FINALIZADA en asignaturas que ya tienen alguna pauta en el sistema; las planificaciones pendientes solo cuentan en inscripciones EN_CURSO. El panel lo ven el coordinador y el jefe de carrera | HU-14 |
 
 ## Problemas conocidos y limitaciones
 
@@ -1306,3 +1315,111 @@ fragmentos con la misma palabra gana el que más la trata.
 ### Qué queda (ya no es código)
 - **Confirmar con el cliente** S-38, S-59 (Groq: costo, privacidad y cuota), S-60, S-65 a S-75.
 - Aplicar las migraciones `007` a `011` en el servidor cuando exista.
+
+## Sprint 2: HU-08, HU-28, HU-09 y HU-10 (2026-10-28)
+
+Pedido del usuario: las 5 HU pendientes del Sprint 2 según la columna "Sprint" del backlog (HU-07 resto, HU-08, HU-09,
+HU-10 y HU-28). **HU-07 se saltó por ahora** (decisión del usuario: faltan los `.rar` con las pautas reales). Se hizo en
+2 tandas, sin commit (lo hace el usuario). **HU-08, HU-28, HU-09 y HU-10 TERMINADAS; 321 pruebas, 0 fallos** (falta la
+prueba en Chrome, ver "Qué falta verificar").
+
+### Tanda 1: HU-08 informes y HU-28 historial en PDF
+
+**HU-08 · Informes por asignatura y por estudiante** (solo `COORDINADOR` y `JEFE_CARRERA`):
+
+| # | Criterio | Cómo se cumple |
+|---|---|---|
+| 1 | Informe por estudiante con todas sus prácticas | `GET /api/reportes/estudiantes/{id}?formato=pdf\|xlsx`. Sale del historial (HU-05), más una síntesis por práctica (cantidad y promedio de evaluaciones finalizadas, planificaciones y autorizadas). El PDF es el mismo del historial (S-76); el Excel trae 4 hojas (Estudiante, Prácticas, Evaluaciones, Planificaciones) |
+| 2 | Informe por asignatura y periodo con promedios y distribución de puntajes | `GET /api/reportes/asignaturas/{id}?periodo=AAAA-S&formato=pdf\|xlsx`: resumen (inscripciones por estado, promedio de notas finales, evaluaciones y su promedio, planificaciones y autorizadas), distribución de las notas finales en 4 tramos, una tabla por pauta usada (puntaje máximo, promedio, mínimo, más alto) con la distribución en 5 tramos por **% del puntaje máximo** (S-77) y una fila por estudiante. Solo cuenta evaluaciones FINALIZADAS |
+| 3 | Descarga en PDF o Excel | Parámetro `formato` (por defecto `pdf`; otro valor = 400). El Excel lo escribe `LibroXlsx` **a mano**: un `.xlsx` es un ZIP con XML, igual que el `.docx` que ya lee `TextoDocx`, así que no se agregó Apache POI (unos 15 MB de dependencias) |
+
+**HU-28 · Historial en PDF** (`GET /api/estudiantes/{id}/historial/pdf` y `GET /api/estudiantes/me/historial/pdf`):
+(1) las mismas inscripciones, evaluaciones finalizadas y planificaciones que la pantalla; (2) las mismas reglas de acceso
+que ver el historial (pasa por `HistorialService.historialDe`); (3) incluye la fecha y hora de generación. Botón
+«Descargar PDF» en la pantalla de historial.
+
+**Código nuevo:** `EstiloPdf` (colores, fuentes, tablas y pie de página comunes, con el aspecto de la cartola),
+`HistorialPdfGenerador`, `InformeAsignaturaPdfGenerador`, `InformeService` (con el enum `Formato`), `LibroXlsx`,
+`SintesisInscripcion`, `InformeAsignaturaDto`, `InformeController`; `InscripcionRepository.findDeAsignaturaEnPeriodo`.
+La cartola (HU-31) no se tocó. **Front-end:** pantalla nueva «Informes» (coordinador y jefe de carrera: asignatura +
+periodo + formato, o estudiante + formato) y el botón del historial.
+
+### Tanda 2: HU-09 nota final ponderada y HU-10 duplas y grupos
+
+**HU-09** (migración `012_nota_final_ponderada.sql`):
+
+| # | Criterio | Cómo se cumple |
+|---|---|---|
+| 1 | Los pesos se configuran por asignatura | Tabla `componente_nota` (nombre, peso %, orden). `GET /api/asignaturas/{id}/componentes-nota` (cualquiera con sesión) y `PUT` (solo coordinador: reemplaza la lista; con `id` edita, sin `id` crea, lo que no viene se borra). Los pesos deben sumar 100 (400); nombres repetidos = 400; quitar un componente con notas = 409 (renombrarlo o cambiar su peso sí se puede). Al guardar se recalcula la nota de las inscripciones EN_CURSO. **Práctica Pedagógica trae sus 8 componentes reales** (10, 17, 5, 13, 3, 5, 20 y 27 %, de las orientaciones 2026-2, `RESUMEN.md` §3.5), también en `datos-iniciales.sql` |
+| 2 | La nota queda guardada en la inscripción | Tabla `nota_componente` (una por componente e inscripción). `PUT /api/inscripciones/{id}/nota-final/componentes/{c}` (solo el **profesor del curso de esa inscripción**, 403 para cualquier otro; 409 si está cerrada) recalcula y guarda `inscripcion.nota_calculada`. `GET /api/inscripciones/{id}/nota-final` (quien ve la inscripción) trae cada componente con su nota y aporte. Columna aparte de `nota_final` porque la base exige `nota_final` nula mientras está EN_CURSO (`ck_inscripcion_nota_cierre`); al cerrar, el coordinador ve la calculada como sugerencia y la nota de cierre sigue siendo suya (S-22) |
+| 3 | La escala se confirma con el cliente | **SUPUESTO S-78**: 1,0 a 7,0 con un decimal, redondeo hacia arriba desde 0,05 (3,95 → 4,0) |
+
+**HU-10** (migración `013_equipos_dupla_grupo.sql`): tabla `equipo_practica` (asignatura, periodo, colegio y curso) e
+`inscripcion.equipo_id`. `GET /api/equipos` y `GET /api/equipos/{id}` (coordinador y jefe), `POST` y `DELETE` (solo
+coordinador).
+
+| # | Criterio | Cómo se cumple |
+|---|---|---|
+| 1 | Una dupla comparte guía, colegio y curso | Colegio y curso en el equipo (obligatorios si la asignatura va a un colegio). El guía sigue en cada inscripción y el sistema exige que sea el mismo en todos los integrantes (400 si no, S-80) |
+| 2 | Cada integrante tiene su propia pauta | Ya lo cumplía el modelo: cada integrante conserva su inscripción y sus evaluaciones; el equipo solo las agrupa |
+| 3 | El historial de cada uno muestra con quién trabajó | `InscripcionHistorialDto.equipo` y `InscripcionDto.equipo` (compañeros sin incluirse a sí mismo); en la pantalla de historial, en el PDF («Trabajó en dupla con: …») y en el Excel del informe por estudiante |
+
+Reglas (S-79): DUPLA = exactamente 2 integrantes, GRUPO = 2 a 4, INDIVIDUAL no forma equipos (400); misma asignatura y
+periodo (400); todas EN_CURSO y sin otro equipo (409). Deshacer un equipo solo si todas siguen EN_CURSO (409 si no: queda
+como registro histórico).
+
+**Demo (`seed.sql`, PARTE 5):** notas de los 8 componentes en la inscripción 55 (nota calculada 5,9) y de 3 en la 11
+(Valentina, sin nota calculada); equipos 1 y 2 (duplas de Ambientes 2026-1: 25+27 y 29+31), 3 (grupo de Aproximación
+2026-2: 19 a 22) y 4 (dupla cerrada de Trabajo Colaborativo 2024-2: Sebastián Vargas y Trinidad Cárdenas, inscripciones
+14 y 48, guía Marcos Bravo).
+
+**Front-end:** pantalla nueva «Nota final por asignatura» (coordinador: editor de componentes con la suma en vivo);
+botón «Nota» en cada inscripción (modal: el profesor del curso registra, los demás leen); la tabla de inscripciones
+muestra «Dupla con: …» y la nota calculada («5,9 (calc.)») mientras no hay nota de cierre; el cierre trae la nota
+calculada como sugerencia; pestaña «Duplas y grupos» en «Estudiantes e inscripciones» (listar, armar y deshacer).
+
+**Base de datos:** `schema.sql` (25 tablas), `seed.sql`, `datos-iniciales.sql`, `verificacion.sql` (cantidades
+esperadas: PK 25, FK 41, UNIQUE 20, CHECK 52; bloques nuevos **30** y **31**), `bd.ps1` (4 pruebas negativas nuevas:
+**35**), `Sprint1/mer.md`. En el servidor hay que aplicar, en orden, `007` a `013`.
+
+### Pruebas nuevas (41)
+`HU08InformesIntegracionTest` (10), `HU28HistorialPdfIntegracionTest` (5), `HU09NotaFinalIntegracionTest` (10),
+`HU10EquiposIntegracionTest` (9), `LibroXlsxTest` (4) y `NotaFinalCalculoTest` (3). Se ajustó `HistorialServiceTest`
+(constructor nuevo). **28-oct: `bd.ps1` 35 de 35 negativas y `mvn clean package` 321 pruebas, 0 fallos.**
+
+### Qué falta verificar
+- Base y pruebas: **hecho el 28-oct** (35/35 negativas, 321 pruebas, 0 fallos).
+- Probar las pantallas nuevas en Chrome (informes, nota final, duplas y grupos, botón «Nota», PDF del historial) y abrir
+  un Excel generado en Excel o LibreOffice.
+
+### Supuestos nuevos
+Ver la tabla de supuestos: S-76 a S-80.
+
+**Números al 28-oct:** 25 tablas, 13 migraciones, 6 roles, **76 endpoints** (64 + 2 de HU-28 + 2 de HU-08 + 4 de
+HU-09 + 4 de HU-10), 321 pruebas (41 nuevas, 0 fallos), 35 pruebas negativas.
+
+## Sprint 2: HU-14 panel de monitoreo del coordinador (2026-10-28)
+
+Sin commit (lo hace el usuario). **HU-14 TERMINADA.** Sin cambios en la base de datos (no hay migración).
+
+| # | Criterio | Cómo se cumple |
+|---|---|---|
+| 1 | Muestra planificaciones pendientes, evaluaciones hechas y estudiantes sin evaluar | `GET /api/panel` (solo `COORDINADOR` y `JEFE_CARRERA`): cifras del filtro; una fila por asignatura; las planificaciones pendientes (esperando al guía, al profesor del curso o, si fueron devueltas, al estudiante) con el nombre de quien debe actuar y los días que llevan esperando, las más antiguas primero; los estudiantes EN_CURSO sin ninguna evaluación FINALIZADA (con cuántos borradores tienen); y el avance de cada inscripción (planificaciones autorizadas, evaluaciones, promedio y nota) |
+| 2 | Se puede filtrar por periodo y asignatura | Parámetros `periodo` (AAAA-S; vacío = todos; mal escrito = 400) y `asignaturaId` (vacío = todas). La pantalla parte en el periodo en curso |
+
+**SUPUESTO S-81:** "sin evaluar" cuenta solo en asignaturas que ya tienen alguna pauta en el sistema (hoy Trabajo
+Colaborativo y Práctica Profesional): en las demás no hay con qué evaluar todavía (por eso Práctica Pedagógica no aparece
+hasta cargar sus pautas, HU-07). Las planificaciones pendientes solo cuentan en inscripciones EN_CURSO: en el seed quedan
+dos sin resolver en prácticas de 2024-2 ya aprobadas, y nadie las va a revisar.
+
+**Código:** `PanelDto`, `PanelService` (4 consultas: inscripciones con `InscripcionRepository.findParaPanel`, evaluaciones
+con `EvaluacionRepository.findTodasPorInscripciones`, planificaciones y pautas; reutiliza `SintesisInscripcion.promedio`),
+`PanelController`. **Front-end:** pantalla «Panel de monitoreo» (primera del menú del coordinador y del jefe de carrera,
+con su acceso rápido): mosaico de cifras (las que piden acción se ven en ámbar si son mayores que 0), tabla por
+asignatura, pendientes, sin evaluar y avance por estudiante, con enlaces a la planificación y al historial. Estilos
+`.cifras-panel` en `vistas.css`.
+
+**Pruebas:** `HU14PanelIntegracionTest` (9). **28-oct: 330 pruebas, 0 fallos.** El backend de Docker se reconstruyó
+(`docker compose up -d --build backend`).
+
+**Números al 28-oct (tras HU-14):** 25 tablas, 13 migraciones, **77 endpoints**, **330 pruebas**, 35 pruebas negativas.

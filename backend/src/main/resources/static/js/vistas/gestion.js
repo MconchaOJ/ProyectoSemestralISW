@@ -1,17 +1,19 @@
 // HU-02 · Registrar estudiantes e inscribirlos en una práctica.
-//   Coordinador: pestañas Estudiantes, Profesores e Inscripciones (crear, buscar, cerrar).
+//   Coordinador: pestañas Estudiantes, Profesores, Inscripciones (crear, buscar, cerrar) y Duplas y grupos (HU-10).
 //   Otros roles: "Mis inscripciones" (solo lectura; el servidor entrega a cada uno lo suyo; al jefe de carrera, todas).
 import { api } from '../api.js';
+import { abrirNotaFinal } from './nota-inscripcion.js';
 import { asignaturas } from '../datos.js';
 import {
-  MODALIDADES, alertaError, badge, cabecera, campo, cargando, debounce, esc, html, icono, modalFormulario,
-  nombreRol, nota, toast, vacio,
+  MODALIDADES, alertaError, badge, cabecera, campo, cargando, confirmar, debounce, esc, html, icono, modalFormulario,
+  nombreRol, nota, toast, toastError, vacio,
 } from '../ui.js';
 
 const PESTANAS = [
   { ruta: 'estudiantes', texto: 'Estudiantes', icono: 'users' },
   { ruta: 'profesores', texto: 'Profesores', icono: 'graduation' },
   { ruta: 'inscripciones', texto: 'Inscripciones', icono: 'clipboard' },
+  { ruta: 'equipos', texto: 'Duplas y grupos', icono: 'users' },
 ];
 
 export async function render(cont, ctx) {
@@ -29,6 +31,7 @@ export async function render(cont, ctx) {
   const zona = cont.querySelector('#zona');
   if (activa.ruta === 'estudiantes') await tabEstudiantes(zona, ctx);
   else if (activa.ruta === 'profesores') await tabProfesores(zona, ctx);
+  else if (activa.ruta === 'equipos') await tabEquipos(zona);
   else await tabInscripciones(zona, ctx, { coordinador: true });
 }
 
@@ -146,17 +149,32 @@ export function tablaInscripciones(lista, { acciones = null } = {}) {
   return html`<div class="tabla-contenedor"><table class="tabla">
     <thead><tr><th>Estudiante</th><th>Práctica</th><th>Período</th><th>Profesor guía</th><th>Profesor del curso</th><th>Estado</th><th class="num">Nota</th>${acciones ? html`<th></th>` : ''}</tr></thead>
     <tbody>${lista.map((i) => html`<tr>
-      <td><strong>${i.estudiante.nombreCompleto}</strong><br><small>${i.estudiante.rut}</small></td>
+      <td><strong>${i.estudiante.nombreCompleto}</strong><br><small>${i.estudiante.rut}</small>${i.equipo ? html`<br><small>${textoEquipo(i)}</small>` : ''}</td>
       <td>${i.asignatura.nombre}<br><small>${MODALIDADES[i.asignatura.modalidad] ?? i.asignatura.modalidad}</small></td>
       <td>${i.periodo}</td>
       <td>${i.profesorGuia ? i.profesorGuia.nombreCompleto : html`<small>No lleva guía</small>`}
         ${i.tutor ? html`<br><small>Tutor: ${i.tutor.nombreCompleto}</small>` : i.asignatura.llevaTutor ? html`<br><small>Sin tutor asignado</small>` : ''}</td>
       <td>${i.profesorCurso?.nombreCompleto ?? '—'}</td>
       <td>${badge(i.estado)}</td>
-      <td class="num">${nota(i.notaFinal)}</td>
+      <td class="num">${notaCelda(i)}</td>
       ${acciones ? html`<td class="acciones">${acciones(i)}</td>` : ''}
     </tr>`)}</tbody></table></div>
     <p class="pie-tabla">${lista.length} inscripci${lista.length === 1 ? 'ón' : 'ones'}</p>`;
+}
+
+/** HU-10: "Dupla con: Ana Soto" o "Grupo con: Ana Soto, Luis Pérez". */
+export function textoEquipo(i) {
+  const tipo = i.asignatura.modalidad === 'GRUPO' ? 'Grupo' : 'Dupla';
+  return `${tipo} con: ${i.equipo.companeros.map((c) => c.nombreCompleto).join(', ') || '—'}`;
+}
+
+/** Nota de cierre; mientras no hay, la calculada con la estructura evaluativa (HU-09), marcada como tal. */
+function notaCelda(i) {
+  if (i.notaFinal !== null && i.notaFinal !== undefined) return nota(i.notaFinal);
+  if (i.notaCalculada !== null && i.notaCalculada !== undefined) {
+    return html`<span title="Nota calculada con los componentes; la de cierre la pone el coordinador">${nota(i.notaCalculada)} <small>(calc.)</small></span>`;
+  }
+  return nota(null);
 }
 
 async function tabInscripciones(zona, ctx, { coordinador }) {
@@ -198,6 +216,9 @@ async function tabInscripciones(zona, ctx, { coordinador }) {
       lista.querySelectorAll('[data-cerrar-inscripcion]').forEach((b) => {
         b.addEventListener('click', () => cerrarInscripcion(datos.find((x) => String(x.id) === b.dataset.cerrarInscripcion), cargar));
       });
+      lista.querySelectorAll('[data-nota-inscripcion]').forEach((b) => {
+        b.addEventListener('click', () => abrirNotaFinal(datos.find((x) => String(x.id) === b.dataset.notaInscripcion), cargar));
+      });
       lista.querySelectorAll('[data-tutor-inscripcion]').forEach((b) => {
         b.addEventListener('click', () => asignarTutor(datos.find((x) => String(x.id) === b.dataset.tutorInscripcion), cargar));
       });
@@ -216,7 +237,9 @@ async function tabInscripciones(zona, ctx, { coordinador }) {
 
 function accionesInscripcion(i, ctx, coordinador) {
   const historial = ctx.tiene('ESTUDIANTE') ? '#/historial' : `#/historial/${i.estudiante.id}`;
-  const enlaces = [html`<a class="btn btn-chico" href="${historial}">${icono('clock')} Historial</a>`];
+  const enlaces = [html`<a class="btn btn-chico" href="${historial}">${icono('clock')} Historial</a>`,
+    // HU-09: todos los que ven la inscripción ven su nota ponderada; solo su profesor del curso la registra
+    html` <button type="button" class="btn btn-chico" data-nota-inscripcion="${i.id}">Nota</button>`];
   if (i.estado === 'EN_CURSO') {
     if (ctx.tiene('ESTUDIANTE') && i.asignatura.requierePlanificacion) {
       enlaces.push(html` <a class="btn btn-chico" href="#/planificaciones/nueva?inscripcionId=${i.id}">${icono('file')} Planificar</a>`);
@@ -310,12 +333,109 @@ function cerrarInscripcion(inscripcion, alTerminar) {
     campos: [
       campo({ nombre: 'estado', etiqueta: 'Resultado', tipo: 'select', requerido: true, completo: true,
         opciones: [{ valor: 'APROBADA', texto: 'Aprobada' }, { valor: 'REPROBADA', texto: 'Reprobada' }] }),
-      campo({ nombre: 'notaFinal', etiqueta: 'Nota final', tipo: 'number', requerido: true, completo: true, ayuda: 'Entre 1,0 y 7,0 con un decimal (usa punto: 5.8).',
+      campo({ nombre: 'notaFinal', etiqueta: 'Nota final', tipo: 'number', requerido: true, completo: true,
+        valor: inscripcion.notaCalculada ?? '',
+        ayuda: inscripcion.notaCalculada != null
+          ? `Sugerida: ${nota(inscripcion.notaCalculada)}, calculada con los componentes de la asignatura. Puedes cambiarla.`
+          : 'Entre 1,0 y 7,0 con un decimal (usa punto: 5.8).',
         atributos: { min: 1, max: 7, step: 0.1 } }),
     ],
     alEnviar: (datos) => api.put(`/api/inscripciones/${inscripcion.id}/cierre`, datos),
     alListo: () => { toast('Inscripción cerrada.'); alTerminar(); },
   });
+}
+
+// ============================ DUPLAS Y GRUPOS (HU-10) ============================
+async function tabEquipos(zona) {
+  const catalogo = (await asignaturas()).filter((a) => a.modalidad !== 'INDIVIDUAL');
+  zona.innerHTML = html`
+    <div class="barra-herramientas">
+      <label class="filtro">Práctica
+        <select id="f-asignatura"><option value="">Todas</option>${catalogo.map((a) => html`<option value="${a.id}">${a.orden}. ${a.nombre} (${MODALIDADES[a.modalidad]})</option>`)}</select></label>
+      <label class="filtro">Período
+        <input type="text" id="f-periodo" placeholder="2026-2" maxlength="6" style="width:7em"></label>
+      <button type="button" class="btn btn-primario" id="nuevo">${icono('plus')} Armar dupla o grupo</button>
+    </div>
+    <p class="subtitulo">Una dupla comparte profesor guía, colegio y curso. Cada integrante conserva su inscripción y sus propias evaluaciones; su historial muestra con quién trabajó.</p>
+    <div id="lista"></div>`.toString();
+  const lista = zona.querySelector('#lista');
+  const fAsig = zona.querySelector('#f-asignatura');
+  const fPer = zona.querySelector('#f-periodo');
+
+  async function cargar() {
+    lista.innerHTML = cargando('Cargando equipos…').toString();
+    try {
+      const datos = await api.get('/api/equipos', { asignaturaId: fAsig.value, periodo: fPer.value });
+      lista.innerHTML = datos.length === 0
+        ? vacio('No hay duplas ni grupos con esos filtros', 'Arma uno con el botón de arriba.', 'users').toString()
+        : html`<div class="tabla-contenedor"><table class="tabla">
+            <thead><tr><th>Práctica</th><th>Período</th><th>Integrantes</th><th>Profesor guía</th><th>Colegio y curso</th><th></th></tr></thead>
+            <tbody>${datos.map((e) => html`<tr>
+              <td>${e.asignatura.nombre}<br><small>${MODALIDADES[e.asignatura.modalidad]}</small></td>
+              <td>${e.periodo}</td>
+              <td>${e.integrantes.map((x) => html`${x.estudiante.nombreCompleto} ${badge(x.estado)}<br>`)}</td>
+              <td>${e.profesorGuia ? e.profesorGuia.nombreCompleto : html`<small>No lleva guía</small>`}</td>
+              <td>${e.establecimiento ? `${e.establecimiento}${e.curso ? `, ${e.curso}` : ''}` : html`<small>No va a un colegio</small>`}</td>
+              <td class="acciones">${e.integrantes.every((x) => x.estado === 'EN_CURSO') ? html`<button type="button" class="btn btn-chico" data-disolver="${e.id}">Deshacer</button>` : ''}</td>
+            </tr>`)}</tbody></table></div>
+          <p class="pie-tabla">${datos.length} equipo${datos.length === 1 ? '' : 's'}</p>`.toString();
+      lista.querySelectorAll('[data-disolver]').forEach((b) => b.addEventListener('click', async () => {
+        const ok = await confirmar({ titulo: 'Deshacer equipo', mensaje: 'Cada integrante quedará como individual. Sus inscripciones y evaluaciones no cambian.', textoOk: 'Deshacer', peligro: true });
+        if (!ok) return;
+        try { await api.del(`/api/equipos/${b.dataset.disolver}`); toast('Equipo deshecho.'); cargar(); } catch (e) { toastError(e); }
+      }));
+    } catch (e) {
+      lista.innerHTML = alertaError(e).toString();
+    }
+  }
+
+  fAsig.addEventListener('change', cargar);
+  fPer.addEventListener('input', debounce(cargar, 300));
+  zona.querySelector('#nuevo').addEventListener('click', () => nuevoEquipo(catalogo, cargar));
+  await cargar();
+}
+
+function nuevoEquipo(catalogo, alTerminar) {
+  const m = modalFormulario({
+    titulo: 'Armar dupla o grupo', textoOk: 'Armar', textoCarga: 'Guardando…',
+    introduccion: html`<p class="subtitulo">Elige la práctica y el período: aparecen las inscripciones en curso que aún no tienen equipo. Deben tener el mismo profesor guía.</p>`,
+    campos: [
+      campo({ nombre: 'asignaturaId', etiqueta: 'Práctica', tipo: 'select', requerido: true,
+        opciones: catalogo.map((a) => ({ valor: a.id, texto: `${a.orden}. ${a.nombre} (${MODALIDADES[a.modalidad]})` })) }),
+      campo({ nombre: 'periodo', etiqueta: 'Período', requerido: true, atributos: { pattern: '[0-9]{4}-[12]', title: 'Debe tener el formato AAAA-S, por ejemplo 2026-2.', maxlength: 6, placeholder: '2026-2' } }),
+      html`<fieldset class="completo" style="grid-column:1/-1" id="integrantes"><legend>Integrantes</legend><p class="subtitulo">Elige la práctica y el período.</p></fieldset>`,
+      campo({ nombre: 'establecimiento', etiqueta: 'Colegio compartido', atributos: { maxlength: 150 } }),
+      campo({ nombre: 'curso', etiqueta: 'Curso compartido', atributos: { maxlength: 50, placeholder: '1° Medio B' } }),
+    ],
+    alEnviar: (datos) => {
+      const ids = [...m.form.querySelectorAll('input[name=integrante]:checked')].map((c) => Number(c.value));
+      return api.post('/api/equipos', { inscripcionIds: ids, establecimiento: datos.establecimiento, curso: datos.curso });
+    },
+    alListo: (e) => {
+      const tipo = e.asignatura.modalidad === 'GRUPO' ? 'Grupo armado' : 'Dupla armada';
+      toast(`${tipo} con ${e.integrantes.length} integrantes.`);
+      alTerminar();
+    },
+  });
+
+  const caja = m.el.querySelector('#integrantes');
+  const selAsig = m.form.elements.asignaturaId;
+  const periodo = m.form.elements.periodo;
+  const colegio = [m.form.elements.establecimiento, m.form.elements.curso];
+  const cargarIntegrantes = async () => {
+    const a = catalogo.find((x) => String(x.id) === selAsig.value);
+    colegio.forEach((c) => { c.disabled = !a?.requiereCentroEducativo; c.required = !!a?.requiereCentroEducativo; });
+    if (!a || !/^[0-9]{4}-[12]$/.test(periodo.value.trim())) return;
+    const lista = (await api.get('/api/inscripciones', { asignaturaId: a.id, periodo: periodo.value.trim() }))
+      .filter((i) => i.estado === 'EN_CURSO' && !i.equipo);
+    caja.innerHTML = html`<legend>Integrantes (${a.modalidad === 'DUPLA' ? 'exactamente 2' : 'de 2 a 4'})</legend>
+      ${lista.length === 0 ? html`<p class="subtitulo">No hay inscripciones en curso sin equipo en esa práctica y período.</p>`
+        : lista.map((i) => html`<label class="opcion"><input type="checkbox" name="integrante" value="${i.id}">
+            ${i.estudiante.nombreCompleto} <small>· guía: ${i.profesorGuia?.nombreCompleto ?? 'no lleva'}</small></label><br>`)}`.toString();
+  };
+  selAsig.addEventListener('change', () => cargarIntegrantes().catch(toastError));
+  periodo.addEventListener('input', debounce(() => cargarIntegrantes().catch(toastError), 300));
+  colegio.forEach((c) => { c.disabled = true; });
 }
 
 // ============================ OTROS ROLES ============================

@@ -1,6 +1,7 @@
 package cl.ubb.pem.practicas.service;
 
 import cl.ubb.pem.practicas.dto.AsignaturaDto;
+import cl.ubb.pem.practicas.dto.EquipoResumenDto;
 import cl.ubb.pem.practicas.dto.EstudianteDto;
 import cl.ubb.pem.practicas.dto.EvaluacionResumenDto;
 import cl.ubb.pem.practicas.dto.HistorialDto;
@@ -40,15 +41,17 @@ public class HistorialService {
     private final EvaluacionRepository evaluaciones;
     private final PlanificacionRepository planificaciones;
     private final AccesoService acceso;
+    private final HistorialPdfGenerador pdf;
 
     public HistorialService(EstudianteRepository estudiantes, InscripcionRepository inscripciones,
                             EvaluacionRepository evaluaciones, PlanificacionRepository planificaciones,
-                            AccesoService acceso) {
+                            AccesoService acceso, HistorialPdfGenerador pdf) {
         this.estudiantes = estudiantes;
         this.inscripciones = inscripciones;
         this.evaluaciones = evaluaciones;
         this.planificaciones = planificaciones;
         this.acceso = acceso;
+        this.pdf = pdf;
     }
 
     public HistorialDto historialDe(Long estudianteId, UsuarioAutenticado actor) {
@@ -65,6 +68,16 @@ public class HistorialService {
         Estudiante e = estudiantes.findByUsuarioId(actor.id()).orElseThrow(
                 () -> new RecursoNoEncontradoException("El usuario no tiene una ficha de estudiante."));
         return armar(e);
+    }
+
+    /** HU-28: el mismo historial en PDF, con las mismas reglas de acceso que verlo en pantalla. */
+    public byte[] pdfDe(Long estudianteId, UsuarioAutenticado actor) {
+        return pdf.generar(historialDe(estudianteId, actor));
+    }
+
+    /** HU-28: el historial propio del estudiante, en PDF. */
+    public byte[] pdfPropio(UsuarioAutenticado actor) {
+        return pdf.generar(historialPropio(actor));
     }
 
     private HistorialDto armar(Estudiante e) {
@@ -86,7 +99,8 @@ public class HistorialService {
                         evaluacionesPorInscripcion.getOrDefault(i.getId(), List.of()).stream()
                                 .map(EvaluacionResumenDto::desde).toList(),
                         planificacionesPorInscripcion.getOrDefault(i.getId(), List.of()).stream()
-                                .map(PlanificacionResumenDto::desde).toList()))
+                                .map(PlanificacionResumenDto::desde).toList(),
+                        EquipoResumenDto.de(i)))
                 .toList();
 
         // Criterio 4: lo que el chatbot necesitará como contexto (S-14)

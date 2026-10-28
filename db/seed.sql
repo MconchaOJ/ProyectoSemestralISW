@@ -145,6 +145,19 @@ INSERT INTO indicador (id, dimension_id, numero, descripcion) VALUES
     (57, 11, 18, 'Demuestra sentido de responsabilidad frente a las tareas asignadas asociadas a su práctica profesional.'),
     (58, 11, 19, 'Presenta anticipadamente la planificación de su clase.');
 
+-- Estructura evaluativa de Práctica Pedagógica (HU-09, migración 012): 8 componentes que suman 100 %.
+-- Fuente: orientaciones de la Práctica Pedagógica 2026-2 (RESUMEN.md, sección 3.5). Las demás asignaturas las
+-- configura el coordinador desde la página ("Nota final", SUPUESTO S-78).
+INSERT INTO componente_nota (id, asignatura_id, nombre, peso, orden) VALUES
+    (1, 5, 'Especialidad UBB: Producto 1 Expectativas',                   10.00, 1),
+    (2, 5, 'Especialidad UBB: Producto 2 Contexto',                       17.00, 2),
+    (3, 5, 'Colaborador Especialidad: pauta 1.º observación',              5.00, 3),
+    (4, 5, 'Colaborador Especialidad: pauta 2.º observación',             13.00, 4),
+    (5, 5, 'Colaborador Orientación: pauta 1.º observación',               3.00, 5),
+    (6, 5, 'Colaborador Orientación: pauta 2.º observación',               5.00, 6),
+    (7, 5, 'Integración curricular: TANEP',                               20.00, 7),
+    (8, 5, 'Integración curricular: Informe final (Producto 3)',          27.00, 8);
+
 -- =============================================================================
 -- PARTE 2 - DEMO (datos ficticios, S-15)
 -- =============================================================================
@@ -721,3 +734,40 @@ INSERT INTO instrucciones_chatbot (id, texto, editado_por_id, fecha_edicion) VAL
 -- la validadora de demostración: si el coordinador abre la validación, solo ella
 -- (y los que él marque) conversa con el chatbot.
 UPDATE estudiante SET validador_chatbot = TRUE WHERE id = 3;
+
+-- =============================================================================
+-- PARTE 5 - NOTA FINAL PONDERADA Y EQUIPOS (HU-09 y HU-10, migraciones 012 y 013)
+-- =============================================================================
+-- HU-09: el profesor del curso registra la nota de cada componente de Práctica Pedagógica.
+--   Inscripción 55 (Agustín Navarro, curso 4 = Ricardo Núñez): los 8 componentes, nota calculada 5,9
+--     (6,0·10 + 5,5·17 + 6,2·5 + 5,8·13 + 6,5·3 + 6,0·5 + 5,7·20 + 6,1·27) / 100 = 5,881.
+--   Inscripción 11 (Valentina Pérez, curso 5 = Patricia Contreras): 3 de 8, todavía sin nota calculada.
+INSERT INTO nota_componente (inscripcion_id, componente_id, nota, registrada_por, fecha_registro) VALUES
+    (55, 1, 6.0, 4, '2026-10-20 10:00:00'),
+    (55, 2, 5.5, 4, '2026-10-20 10:00:00'),
+    (55, 3, 6.2, 4, '2026-10-20 10:00:00'),
+    (55, 4, 5.8, 4, '2026-10-20 10:00:00'),
+    (55, 5, 6.5, 4, '2026-10-20 10:00:00'),
+    (55, 6, 6.0, 4, '2026-10-20 10:00:00'),
+    (55, 7, 5.7, 4, '2026-10-20 10:00:00'),
+    (55, 8, 6.1, 4, '2026-10-20 10:00:00'),
+    (11, 1, 6.5, 5, '2026-10-21 09:00:00'),
+    (11, 2, 6.0, 5, '2026-10-21 09:00:00'),
+    (11, 3, 6.3, 5, '2026-10-21 09:00:00');
+UPDATE inscripcion SET nota_calculada = 5.9 WHERE id = 55;
+
+-- HU-10: duplas y grupos. Cada integrante sigue con su propia inscripción y sus propias evaluaciones.
+--   1 y 2: duplas de Ambientes de Aprendizaje 2026-1 (sin colegio ni guía)
+--   3: grupo de 4 de Aproximación al Sistema Escolar 2026-2
+--   4: dupla ya cerrada de Trabajo Colaborativo 2024-2 (Sebastián Vargas y Trinidad Cárdenas, guía Marcos Bravo),
+--      para que el historial muestre con quién trabajó cada uno (criterio 3)
+INSERT INTO equipo_practica (id, asignatura_id, periodo, establecimiento, curso, fecha_creacion) VALUES
+    (1, 2, '2026-1', NULL, NULL, '2026-03-16 09:00:00'),
+    (2, 2, '2026-1', NULL, NULL, '2026-03-16 09:05:00'),
+    (3, 1, '2026-2', NULL, NULL, '2026-08-17 09:00:00'),
+    (4, 3, '2024-2', 'Liceo Bicentenario Ejemplo', '1° Medio B', '2024-08-19 09:00:00');
+UPDATE inscripcion SET equipo_id = 1 WHERE id IN (25, 27);
+UPDATE inscripcion SET equipo_id = 2 WHERE id IN (29, 31);
+UPDATE inscripcion SET equipo_id = 3 WHERE id IN (19, 20, 21, 22);
+UPDATE inscripcion SET equipo_id = 4 WHERE id IN (14, 48);
+

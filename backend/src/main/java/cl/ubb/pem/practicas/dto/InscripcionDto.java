@@ -7,13 +7,14 @@ import java.time.LocalDate;
 
 public record InscripcionDto(Long id, EstudianteResumenDto estudiante, AsignaturaDto asignatura, String periodo,
                              UsuarioResumenDto profesorGuia, UsuarioResumenDto profesorCurso, UsuarioResumenDto tutor,
-                             EstadoInscripcion estado, BigDecimal notaFinal, LocalDate fechaCierre) {
+                             EstadoInscripcion estado, BigDecimal notaFinal, LocalDate fechaCierre,
+                             BigDecimal notaCalculada, EquipoResumenDto equipo) {
 
     public static InscripcionDto desde(Inscripcion i) {
         return new InscripcionDto(i.getId(), EstudianteResumenDto.desde(i.getEstudiante()),
                 AsignaturaDto.desde(i.getAsignatura()), i.getPeriodo(),
                 UsuarioResumenDto.desde(i.getProfesorGuia()), UsuarioResumenDto.desde(i.getProfesorCurso()),
                 UsuarioResumenDto.desde(i.getTutor()),
-                i.getEstado(), i.getNotaFinal(), i.getFechaCierre());
+                i.getEstado(), i.getNotaFinal(), i.getFechaCierre(), i.getNotaCalculada(), EquipoResumenDto.de(i));
     }
 }

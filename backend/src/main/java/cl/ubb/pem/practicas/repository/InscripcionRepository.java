@@ -1,5 +1,6 @@
 package cl.ubb.pem.practicas.repository;
 
+import cl.ubb.pem.practicas.entity.EstadoInscripcion;
 import cl.ubb.pem.practicas.entity.Inscripcion;
 import java.time.LocalDate;
 import java.util.List;
@@ -39,6 +40,33 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
             where i.fechaCierre between :desde and :hasta
             order by i.fechaCierre, i.periodo, i.asignatura.orden, e.usuario.apellidos, i.id""")
     List<Inscripcion> findCerradasEntre(@Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
+
+    /** Panel del coordinador (HU-14): filtros opcionales (nulo = todos), con lo que muestra cada fila. */
+    @Query("""
+            select i from Inscripcion i
+              join fetch i.estudiante e
+              join fetch e.usuario
+              join fetch i.asignatura a
+              left join fetch i.profesorGuia
+              join fetch i.profesorCurso
+            where (:asignaturaId is null or a.id = :asignaturaId)
+              and (:periodo is null or i.periodo = :periodo)
+            order by a.orden, i.periodo desc, e.usuario.apellidos, e.usuario.nombre, i.id""")
+    List<Inscripcion> findParaPanel(@Param("asignaturaId") Integer asignaturaId, @Param("periodo") String periodo);
+
+    /** HU-09: al cambiar los pesos de una asignatura se recalcula la nota de las inscripciones en curso. */
+    List<Inscripcion> findByAsignaturaIdAndEstado(Integer asignaturaId, EstadoInscripcion estado);
+
+    /** Informe por asignatura (HU-08): las inscripciones de una asignatura en un periodo, por apellido del estudiante. */
+    @Query("""
+            select i from Inscripcion i
+              join fetch i.estudiante e
+              join fetch e.usuario
+              left join fetch i.profesorGuia
+            where i.asignatura.id = :asignaturaId and i.periodo = :periodo
+            order by e.usuario.apellidos, e.usuario.nombre, i.id""")
+    List<Inscripcion> findDeAsignaturaEnPeriodo(@Param("asignaturaId") Integer asignaturaId,
+                                                @Param("periodo") String periodo);
 
     /**
      * Listado con filtros opcionales (parámetro nulo = sin filtro). Los tres últimos parámetros son el alcance

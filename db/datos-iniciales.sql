@@ -178,6 +178,19 @@ INSERT INTO indicador (id, dimension_id, numero, descripcion) VALUES
     (57, 11, 18, 'Demuestra sentido de responsabilidad frente a las tareas asignadas asociadas a su práctica profesional.'),
     (58, 11, 19, 'Presenta anticipadamente la planificación de su clase.');
 
+-- Estructura evaluativa de Práctica Pedagógica (HU-09, migración 012): 8 componentes que suman 100 %.
+-- Fuente: orientaciones de la Práctica Pedagógica 2026-2 (RESUMEN.md, sección 3.5). Las demás asignaturas las
+-- configura el coordinador desde la página ("Nota final", SUPUESTO S-78).
+INSERT INTO componente_nota (id, asignatura_id, nombre, peso, orden) VALUES
+    (1, 5, 'Especialidad UBB: Producto 1 Expectativas',                   10.00, 1),
+    (2, 5, 'Especialidad UBB: Producto 2 Contexto',                       17.00, 2),
+    (3, 5, 'Colaborador Especialidad: pauta 1.º observación',              5.00, 3),
+    (4, 5, 'Colaborador Especialidad: pauta 2.º observación',             13.00, 4),
+    (5, 5, 'Colaborador Orientación: pauta 1.º observación',               3.00, 5),
+    (6, 5, 'Colaborador Orientación: pauta 2.º observación',               5.00, 6),
+    (7, 5, 'Integración curricular: TANEP',                               20.00, 7),
+    (8, 5, 'Integración curricular: Informe final (Producto 3)',          27.00, 8);
+
 -- Coordinador inicial: datos y hash vienen de las variables definidas al instalar.
 -- El CHECK ck_usuario_password_bcrypt de la tabla rechaza cualquier cosa que no sea un hash BCrypt.
 INSERT INTO usuario (rol_id, nombre, apellidos, email, password_hash, activo) VALUES
@@ -189,4 +202,5 @@ COMMIT;
 SELECT (SELECT COUNT(*) FROM rol)                 AS roles,
        (SELECT COUNT(*) FROM asignatura_practica) AS asignaturas,
        (SELECT COUNT(*) FROM indicador)           AS indicadores_pauta,
+       (SELECT COUNT(*) FROM componente_nota)     AS componentes_nota,
        (SELECT COUNT(*) FROM usuario)             AS usuarios;

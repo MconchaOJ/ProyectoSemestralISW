@@ -28,6 +28,13 @@ public interface EvaluacionRepository extends JpaRepository<Evaluacion, Long> {
                             @Param("cursoId") Long cursoId,
                             @Param("usuarioEstudianteId") Long usuarioEstudianteId);
 
+    /** Panel del coordinador (HU-14): borradores y finalizadas de un grupo de inscripciones. */
+    @Query("""
+            select e from Evaluacion e
+            where e.inscripcion.id in :inscripcionIds
+            order by e.fechaClase, e.id""")
+    List<Evaluacion> findTodasPorInscripciones(@Param("inscripcionIds") Collection<Long> inscripcionIds);
+
     @Query("""
             select e from Evaluacion e
             where e.inscripcion.id in :inscripcionIds and e.estado = :estado

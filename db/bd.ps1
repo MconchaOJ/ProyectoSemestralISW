@@ -137,7 +137,7 @@ function Install-Bd {
     }
     Write-Host "  OK  Versión de MySQL compatible ($version >= $VersionMinimaMysql)" -ForegroundColor Green
 
-    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (22 tablas, trigger)'
+    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (25 tablas, trigger)'
     Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'seed.sql'))   'seed.sql (catálogo y datos de demo)'
 
     # Usuario de la aplicación: solo puede leer y escribir datos, no cambiar la estructura.
@@ -198,6 +198,10 @@ function Test-Bd {
         @('Segunda Escala SUS del mismo validador (HU-30)',       1062, 'uq_respuesta_sus_validador', "INSERT INTO respuesta_sus (validador_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10) VALUES (3,5,1,5,1,5,1,5,1,5,1); INSERT INTO respuesta_sus (validador_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10) VALUES (3,4,2,4,2,4,2,4,2,4,2)"),
         @('Criterio 10 en la rúbrica de 9 criterios (HU-30)',     3819, 'ck_rubrica_criterio_numero', "INSERT INTO respuesta_rubrica_experto (validador_id) VALUES (3); SET @ru = LAST_INSERT_ID(); INSERT INTO respuesta_rubrica_criterio (respuesta_id,numero,puntaje) VALUES (@ru,10,4)"),
         @('Lectura del jefe en una inscripción inexistente (HU-20)', 1452, 'fk_lectura_chat_inscripcion', "INSERT INTO lectura_chat_jefe_carrera (inscripcion_id,usuario_id) VALUES (99999,32)"),
+        @('Nota de un componente fuera de 1,0 a 7,0 (HU-09)',     3819, 'ck_nota_componente_nota', "INSERT INTO nota_componente (inscripcion_id,componente_id,nota,registrada_por) VALUES (11,4,7.5,5)"),
+        @('Segunda nota para el mismo componente (HU-09)',        1062, 'uq_nota_componente',      "INSERT INTO nota_componente (inscripcion_id,componente_id,nota,registrada_por) VALUES (11,1,6.0,5)"),
+        @('Componente de la nota con peso 0 (HU-09)',             3819, 'ck_componente_nota_peso', "INSERT INTO componente_nota (asignatura_id,nombre,peso,orden) VALUES (3,'X',0,1)"),
+        @('Inscripción en un equipo inexistente (HU-10)',         1452, 'fk_inscripcion_equipo',   "UPDATE inscripcion SET equipo_id = 99999 WHERE id = 18"),
         @('Borrar un usuario que tiene inscripciones (FK)',       1451, 'foreign key constraint fails', "DELETE FROM usuario WHERE id = 4"),
         @('La app no puede cambiar la estructura (DROP TABLE)',   1142, 'DROP command denied',     "DROP TABLE usuario")
     )

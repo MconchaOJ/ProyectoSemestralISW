@@ -208,6 +208,12 @@ erDiagram
     USUARIO ||--o{ DOCUMENTO_PLANIFICACION : "sube"
     EVALUACION ||--o{ DOCUMENTO_EVALUACION : "recibe"
     USUARIO ||--o{ DOCUMENTO_EVALUACION : "sube"
+    ASIGNATURA_PRACTICA ||--o{ COMPONENTE_NOTA : "estructura evaluativa (HU-09)"
+    INSCRIPCION ||--o{ NOTA_COMPONENTE : "tiene notas"
+    COMPONENTE_NOTA ||--o{ NOTA_COMPONENTE : "se califica en"
+    USUARIO ||--o{ NOTA_COMPONENTE : "registra (profesor del curso)"
+    ASIGNATURA_PRACTICA ||--o{ EQUIPO_PRACTICA : "agrupa en duplas o grupos (HU-10)"
+    EQUIPO_PRACTICA |o--o{ INSCRIPCION : "integra"
 
     ROL {
         int id PK
@@ -253,8 +259,10 @@ erDiagram
         bigint profesor_guia_id FK "puede ser nulo"
         bigint profesor_curso_id FK
         bigint tutor_id FK "nulo = sin tutor (HU-07)"
+        bigint equipo_id FK "nulo = individual (HU-10, migracion 013)"
         varchar estado "EN_CURSO, APROBADA, REPROBADA"
         decimal nota_final "nulo hasta el cierre"
+        decimal nota_calculada "ponderada con los componentes (HU-09, migracion 012)"
         date fecha_cierre "nula mientras esta EN_CURSO (HU-31)"
     }
     PAUTA {
@@ -367,6 +375,29 @@ erDiagram
         bigint subido_por_id FK
         datetime fecha_subida
     }
+    COMPONENTE_NOTA {
+        int id PK
+        int asignatura_id FK
+        varchar nombre "UK con la asignatura"
+        decimal peso "porcentaje; los de una asignatura suman 100"
+        int orden
+    }
+    NOTA_COMPONENTE {
+        bigint id PK
+        bigint inscripcion_id FK
+        int componente_id FK "UK con la inscripcion"
+        decimal nota "1,0 a 7,0"
+        bigint registrada_por FK "profesor del curso"
+        datetime fecha_registro
+    }
+    EQUIPO_PRACTICA {
+        bigint id PK
+        int asignatura_id FK
+        varchar periodo
+        varchar establecimiento "colegio compartido; nulo sin colegio"
+        varchar curso "curso compartido"
+        datetime fecha_creacion
+    }
     LECTURA_CHAT_JEFE_CARRERA {
         bigint id PK
         bigint inscripcion_id FK
@@ -449,6 +480,9 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 | `RESPUESTA_SUS` | La Escala SUS adaptada al chatbot de un validador: 10 ítems de 1 a 5 | El puntaje SUS (0 a 100) es una columna generada por la base (migración 011) | HU-30 |
 | `RESPUESTA_RUBRICA_EXPERTO` | La rúbrica de juicio experto de un validador, con sus 4 preguntas abiertas | Instrumento de la propuesta RetroPlani Mate V3 (migración 011) | HU-30 |
 | `RESPUESTA_RUBRICA_CRITERIO` | Un criterio (1 a 9) de esa rúbrica: puntaje de 1 a 4 y comentario | (migración 011) | HU-30 |
+| `COMPONENTE_NOTA` | Un componente de la estructura evaluativa de una asignatura (por ejemplo "TANEP", 20 %) | Los define el coordinador; los de una asignatura suman 100 (lo valida la aplicación). Práctica Pedagógica trae sus 8 componentes reales (migración 012) | HU-09 |
+| `NOTA_COMPONENTE` | La nota (1,0 a 7,0) de un componente en una inscripción | La registra el profesor del curso; con todas, la nota ponderada queda en `inscripcion.nota_calculada` (SUPUESTO S-78) | HU-09 |
+| `EQUIPO_PRACTICA` | Una dupla o un grupo de una misma asignatura y periodo | Comparte colegio y curso; el guía va en cada inscripción y debe ser el mismo (S-80). Cada integrante conserva su inscripción y sus evaluaciones (migración 013) | HU-10 |
 
 ## 5. Relaciones
 
@@ -488,6 +522,12 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 | `ESTUDIANTE` — `RESPUESTA_SUS` | 1 a 0..1 | Un validador responde la Escala SUS una sola vez (HU-30, migración 011) |
 | `ESTUDIANTE` — `RESPUESTA_RUBRICA_EXPERTO` | 1 a 0..1 | Un validador responde la rúbrica de juicio experto una sola vez |
 | `RESPUESTA_RUBRICA_EXPERTO` — `RESPUESTA_RUBRICA_CRITERIO` | 1 a 9 | Cada rúbrica tiene sus 9 criterios, con puntaje y comentario opcional |
+| `ASIGNATURA_PRACTICA` — `COMPONENTE_NOTA` | 1 a N | La estructura evaluativa de cada asignatura (HU-09, migración 012) |
+| `INSCRIPCION` — `NOTA_COMPONENTE` | 1 a N | Como máximo una nota por componente en cada inscripción |
+| `COMPONENTE_NOTA` — `NOTA_COMPONENTE` | 1 a N | Un componente con notas no se borra (FK RESTRICT; la aplicación responde 409) |
+| `USUARIO` — `NOTA_COMPONENTE` | 1 a N | El profesor del curso que registró la nota |
+| `ASIGNATURA_PRACTICA` — `EQUIPO_PRACTICA` | 1 a N | Solo en asignaturas DUPLA o GRUPO (HU-10, migración 013) |
+| `EQUIPO_PRACTICA` — `INSCRIPCION` | 0..1 a N | Una inscripción está como máximo en un equipo; la dupla tiene 2 y el grupo de 2 a 4 (lo valida la aplicación, S-79) |
 
 ## 6. Reglas que el diagrama no puede mostrar
 
@@ -525,7 +565,7 @@ stateDiagram-v2
 ## 7. Qué se implementa en el Sprint 1
 
 - El script SQL (`db/schema.sql`, con `db/seed.sql` y `db/bd.ps1` para cargarlo) crea **las 16 tablas** con sus claves y restricciones (16 `PRIMARY KEY`, 24 `FOREIGN KEY`, 13 `UNIQUE`, 34 `CHECK` y los índices de las consultas de HU-02 a HU-05), y carga datos semilla (roles, las 6 asignaturas, la pauta de observación con sus 3 dimensiones y 20 indicadores, y 20 estudiantes de demostración) más usuarios ficticios (S-39). Ya está creada y verificada en el MySQL local (base `isw_practicas`).
-- La aplicación Spring Boot usa **16 entidades** (15 hasta el 26-oct): las 12 de HU-01 a HU-05, más `DOCUMENTO_PLANIFICACION`, `DOCUMENTO_EVALUACION` y `NOTA_VOZ`, activadas en la Fase E (22-sep). Desde el 26-oct (Sprint 2, HU-15) también `MENSAJE_CHATBOT`, y con HU-17 la tabla 17, `INSTRUCCIONES_CHATBOT` (entidad `CalibracionChatbot`, migración 008), y con HU-29 la 18, `DOCUMENTO_BASE_CONOCIMIENTO` (migración 009); en el cierre del chatbot, `LECTURA_CHAT_JEFE_CARRERA` (HU-20, migración 010) y `RESPUESTA_SUS`, `RESPUESTA_RUBRICA_EXPERTO` y `RESPUESTA_RUBRICA_CRITERIO` (HU-30, migración 011): las 22 tablas tienen entidad.
+- La aplicación Spring Boot usa **16 entidades** (15 hasta el 26-oct): las 12 de HU-01 a HU-05, más `DOCUMENTO_PLANIFICACION`, `DOCUMENTO_EVALUACION` y `NOTA_VOZ`, activadas en la Fase E (22-sep). Desde el 26-oct (Sprint 2, HU-15) también `MENSAJE_CHATBOT`, y con HU-17 la tabla 17, `INSTRUCCIONES_CHATBOT` (entidad `CalibracionChatbot`, migración 008), y con HU-29 la 18, `DOCUMENTO_BASE_CONOCIMIENTO` (migración 009); en el cierre del chatbot, `LECTURA_CHAT_JEFE_CARRERA` (HU-20, migración 010) y `RESPUESTA_SUS`, `RESPUESTA_RUBRICA_EXPERTO` y `RESPUESTA_RUBRICA_CRITERIO` (HU-30, migración 011): las 22 tablas tienen entidad. En el Sprint 2 (28-oct), `COMPONENTE_NOTA` y `NOTA_COMPONENTE` (HU-09, migración 012) y `EQUIPO_PRACTICA` (HU-10, migración 013): **25 tablas, todas con entidad** (25 `PRIMARY KEY`, 41 `FOREIGN KEY`, 20 `UNIQUE`, 52 `CHECK`).
 - Las cifras de puntaje (`puntaje_total`, `promedio`) se calculan al finalizar la evaluación y se guardan, para que el historial no tenga que recalcular.
 - Los documentos adjuntos y los audios de nota de voz se guardan en disco (`backend/adjuntos/`), fuera del control de versiones; la base solo guarda su ruta relativa.
 
@@ -535,7 +575,7 @@ stateDiagram-v2
 |---|---|
 | S-05 | El profesor del curso es el académico UBB; se modela como un usuario con rol propio, así que si fuera del colegio no cambia la estructura |
 | S-09 | **Resuelto el 22-sep:** el formato oficial ya se conoce (`FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx`) y trae más campos que los cinco de la entrevista. El modelo sigue con los cinco elementos por ahora: migrar `planificacion` queda para un sprint futuro (S-45) |
-| S-11 | ~~Un usuario tiene un solo rol~~ (desde el 2026-10-11, confirmado por el cliente: puede tener un segundo rol opcional en cuentas especiales, migración 004), y cada evaluación pertenece a una inscripción (un estudiante): **un estudiante reportó que en pareja cada alumno tiene su propia pauta**, que es justo lo que el modelo hace. Las duplas y grupos se modelarán en HU-10 con una tabla de agrupación |
+| S-11 | ~~Un usuario tiene un solo rol~~ (desde el 2026-10-11, confirmado por el cliente: puede tener un segundo rol opcional en cuentas especiales, migración 004), y cada evaluación pertenece a una inscripción (un estudiante): **un estudiante reportó que en pareja cada alumno tiene su propia pauta**, que es justo lo que el modelo hace. Las duplas y grupos se modelan desde el 28-oct con la tabla `EQUIPO_PRACTICA` (HU-10, migración 013): cada integrante sigue con su propia inscripción |
 | S-13 | No se modela la duración de las prácticas (semanas y horas), porque los documentos del cliente se contradicen (un estudiante reportó 2 semanas en Investigación en el Aula, como dice la ficha) |
 | S-14 | El semestre y las asignaturas aprobadas se guardan aquí (los ingresa el coordinador); hoy la carrera los ve en la malla de la Intranet, y una importación desde ahí queda como mejora futura |
 | S-16 | Aproximación al Sistema Escolar: `GRUPO` (de 4) y sin planificaciones; Ambientes de Aprendizaje: `DUPLA` con planificaciones; ninguna va a un colegio, así que no tienen guía. Fuente: un estudiante de PEM (2026-09-20), pendiente de confirmar. Cambió el modelo con la migración `db/migraciones/001` |

@@ -14,7 +14,7 @@
 services:
   # ── Base de datos ───────────────────────────────────────────────────────────
   database:
-    image: mysql:8.4
+    image: docker.io/library/mysql:8.4
     container_name: isw-mysql
     restart: unless-stopped
     env_file: .env.docker
@@ -78,7 +78,7 @@ services:
 
   # ── Frontend Web (Nginx Proxy en puerto 8017) ────────────────────────────────
   frontend:
-    image: nginx:alpine
+    image: docker.io/library/nginx:alpine
     container_name: isw-frontend
     restart: unless-stopped
     ports:

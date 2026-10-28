@@ -15,11 +15,15 @@ public record HistorialDto(EstudianteDto estudiante, List<AsignaturaAprobadaDto>
                                         BigDecimal notaFinal) {
     }
 
-    /** Una inscripción con sus evaluaciones FINALIZADAS y todas sus planificaciones (con su estado actual). */
+    /**
+     * Una inscripción con sus evaluaciones FINALIZADAS y todas sus planificaciones (con su estado actual).
+     * {@code equipo}: la dupla o el grupo con que trabajó (HU-10, criterio 3); nulo si fue individual.
+     */
     public record InscripcionHistorialDto(Long inscripcionId, AsignaturaDto asignatura, String periodo,
                                           EstadoInscripcion estado, BigDecimal notaFinal,
                                           UsuarioResumenDto profesorGuia, UsuarioResumenDto profesorCurso,
                                           List<EvaluacionResumenDto> evaluaciones,
-                                          List<PlanificacionResumenDto> planificaciones) {
+                                          List<PlanificacionResumenDto> planificaciones,
+                                          EquipoResumenDto equipo) {
     }
 }

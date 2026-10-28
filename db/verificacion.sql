@@ -11,12 +11,12 @@
 SELECT CONCAT('Conectado como ', CURRENT_USER(), ' a la base ', DATABASE(), ' (MySQL ', VERSION(), ')') AS conexion;
 
 -- -----------------------------------------------------------------------------
-SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 22)' AS verificacion;
+SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 25)' AS verificacion;
 SELECT COUNT(*) AS tablas
   FROM information_schema.tables
  WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
-SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, inscripcion 55, pauta 3, dimension 11, indicador 58, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat_jefe_carrera 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0)' AS verificacion;
+SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, inscripcion 55, pauta 3, dimension 11, indicador 58, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat_jefe_carrera 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0, componente_nota 8, nota_componente 11, equipo_practica 4)' AS verificacion;
 SELECT 'rol' AS tabla, COUNT(*) AS filas FROM rol
 UNION ALL SELECT 'usuario',                COUNT(*) FROM usuario
 UNION ALL SELECT 'estudiante',             COUNT(*) FROM estudiante
@@ -38,9 +38,12 @@ UNION ALL SELECT 'documento_base_conocimiento', COUNT(*) FROM documento_base_con
 UNION ALL SELECT 'lectura_chat_jefe_carrera',   COUNT(*) FROM lectura_chat_jefe_carrera
 UNION ALL SELECT 'respuesta_sus',               COUNT(*) FROM respuesta_sus
 UNION ALL SELECT 'respuesta_rubrica_experto',   COUNT(*) FROM respuesta_rubrica_experto
-UNION ALL SELECT 'respuesta_rubrica_criterio',  COUNT(*) FROM respuesta_rubrica_criterio;
+UNION ALL SELECT 'respuesta_rubrica_criterio',  COUNT(*) FROM respuesta_rubrica_criterio
+UNION ALL SELECT 'componente_nota',             COUNT(*) FROM componente_nota
+UNION ALL SELECT 'nota_componente',             COUNT(*) FROM nota_componente
+UNION ALL SELECT 'equipo_practica',             COUNT(*) FROM equipo_practica;
 
-SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 22, FOREIGN KEY 35, UNIQUE 18, CHECK 47)' AS verificacion;
+SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 25, FOREIGN KEY 41, UNIQUE 20, CHECK 52)' AS verificacion;
 SELECT constraint_type AS tipo, COUNT(*) AS cantidad
   FROM information_schema.table_constraints
  WHERE table_schema = DATABASE()
@@ -418,3 +421,36 @@ SELECT 'Rúbrica que no tiene sus 9 criterios' AS control, COUNT(*) AS violacion
  WHERE (SELECT COUNT(*) FROM respuesta_rubrica_criterio c WHERE c.respuesta_id = r.id) <> 9
 UNION ALL
 SELECT 'Puntaje SUS fuera de 0 a 100', COUNT(*) FROM respuesta_sus WHERE puntaje NOT BETWEEN 0 AND 100;
+
+SELECT '30. NOTA FINAL PONDERADA (HU-09, migración 012; esperado: 0 violaciones en cada fila)' AS verificacion;
+SELECT 'Asignatura con componentes que no suman 100 %' AS control, COUNT(*) AS violaciones
+  FROM (SELECT asignatura_id FROM componente_nota GROUP BY asignatura_id HAVING SUM(peso) <> 100) x
+UNION ALL
+SELECT 'Nota de un componente de otra asignatura', COUNT(*)
+  FROM nota_componente n JOIN inscripcion i ON i.id = n.inscripcion_id
+  JOIN componente_nota c ON c.id = n.componente_id
+ WHERE c.asignatura_id <> i.asignatura_id
+UNION ALL
+SELECT 'Nota calculada sin todas las notas de los componentes', COUNT(*)
+  FROM inscripcion i
+ WHERE i.nota_calculada IS NOT NULL
+   AND (SELECT COUNT(*) FROM nota_componente n WHERE n.inscripcion_id = i.id)
+       <> (SELECT COUNT(*) FROM componente_nota c WHERE c.asignatura_id = i.asignatura_id);
+
+SELECT '31. DUPLAS Y GRUPOS (HU-10, migración 013; esperado: 0 violaciones en cada fila)' AS verificacion;
+SELECT 'Integrante de otra asignatura o periodo que su equipo' AS control, COUNT(*) AS violaciones
+  FROM inscripcion i JOIN equipo_practica e ON e.id = i.equipo_id
+ WHERE i.asignatura_id <> e.asignatura_id OR i.periodo <> e.periodo
+UNION ALL
+SELECT 'Equipo con integrantes de distinto profesor guía', COUNT(*)
+  FROM (SELECT equipo_id FROM inscripcion WHERE equipo_id IS NOT NULL
+         GROUP BY equipo_id HAVING COUNT(DISTINCT IFNULL(profesor_guia_id, 0)) > 1) x
+UNION ALL
+SELECT 'Equipo en una asignatura individual', COUNT(*)
+  FROM equipo_practica e JOIN asignatura_practica a ON a.id = e.asignatura_id
+ WHERE a.modalidad = 'INDIVIDUAL'
+UNION ALL
+SELECT 'Dupla sin 2 integrantes o grupo de más de 4', COUNT(*)
+  FROM equipo_practica e JOIN asignatura_practica a ON a.id = e.asignatura_id
+ WHERE (a.modalidad = 'DUPLA' AND (SELECT COUNT(*) FROM inscripcion i WHERE i.equipo_id = e.id) <> 2)
+    OR (a.modalidad = 'GRUPO' AND (SELECT COUNT(*) FROM inscripcion i WHERE i.equipo_id = e.id) > 4);

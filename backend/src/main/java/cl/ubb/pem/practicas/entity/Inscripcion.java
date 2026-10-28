@@ -46,6 +46,11 @@ public class Inscripcion {
     @JoinColumn(name = "tutor_id")
     private Usuario tutor;
 
+    /** Dupla o grupo (HU-10); nulo = individual. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "equipo_id")
+    private EquipoPractica equipo;
+
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 20)
@@ -53,6 +58,10 @@ public class Inscripcion {
 
     @Column(name = "nota_final", precision = 3, scale = 1)
     private BigDecimal notaFinal;
+
+    /** Nota ponderada con la estructura evaluativa de la asignatura (HU-09); nula si falta algún componente. */
+    @Column(name = "nota_calculada", precision = 3, scale = 1)
+    private BigDecimal notaCalculada;
 
     /** Día en que se cerró (APROBADA o REPROBADA); nulo mientras está EN_CURSO. La cartola (HU-31) filtra por ella. */
     @Column(name = "fecha_cierre")

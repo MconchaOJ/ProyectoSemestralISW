@@ -11,7 +11,7 @@
 # =============================================================================
 
 # ── Etapa 1: compilación ─────────────────────────────────────────────────────
-FROM maven:3.9-eclipse-temurin-17 AS builder
+FROM docker.io/library/maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /build
 
@@ -26,7 +26,7 @@ RUN mvn package -B -DskipTests \
     && mv target/practicas-*.jar target/app.jar
 
 # ── Etapa 2: runtime ligero ──────────────────────────────────────────────────
-FROM eclipse-temurin:17-jre-jammy AS runtime
+FROM docker.io/library/eclipse-temurin:17-jre-jammy AS runtime
 
 # Metadatos de la imagen
 LABEL maintainer="equipo-isw"
