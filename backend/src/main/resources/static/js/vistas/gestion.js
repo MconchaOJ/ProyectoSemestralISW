@@ -225,6 +225,10 @@ function accionesInscripcion(i, ctx, coordinador) {
     if (ctx.actuaComo('PROFESOR_GUIA', i) || ctx.actuaComo('TUTOR', i)) {
       enlaces.push(html` <a class="btn btn-chico" href="#/evaluaciones/nueva?inscripcionId=${i.id}">${icono('check')} Evaluar</a>`);
     }
+    // HU-15/HU-16: el estudiante conversa con el asistente; su profesor guía lee la conversación
+    if (i.asignatura.chatbotHabilitado && (ctx.tiene('ESTUDIANTE') || ctx.actuaComo('PROFESOR_GUIA', i))) {
+      enlaces.push(html` <a class="btn btn-chico" href="#/chatbot/${i.id}">${icono('chat')} Asistente</a>`);
+    }
     if (coordinador && i.asignatura.llevaTutor) {
       enlaces.push(html` <button type="button" class="btn btn-chico" data-tutor-inscripcion="${i.id}">Tutor</button>`);
     }

@@ -28,4 +28,8 @@ public class Estudiante {
 
     @Column(name = "anio_ingreso", nullable = false)
     private Integer anioIngreso;
+
+    /** HU-30: participa en la validación del chatbot (migración 009). */
+    @Column(name = "validador_chatbot", nullable = false)
+    private Boolean validadorChatbot = false;
 }

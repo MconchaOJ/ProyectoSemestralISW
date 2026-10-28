@@ -8,6 +8,7 @@ import cl.ubb.pem.practicas.security.Roles;
 import cl.ubb.pem.practicas.security.UsuarioAutenticado;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import org.springframework.stereotype.Component;
 
 /**
@@ -71,19 +72,55 @@ public class AccesoService {
     }
 
     public boolean puedeVerInscripcion(Inscripcion i, UsuarioAutenticado actor) {
-        return veTodo(actor) || actor.roles().stream().anyMatch(r -> switch (r) {
-            case Roles.ESTUDIANTE -> i.getEstudiante().getUsuario().getId().equals(actor.id());
-            case Roles.PROFESOR_GUIA -> i.getProfesorGuia() != null && i.getProfesorGuia().getId().equals(actor.id());
-            case Roles.PROFESOR_CURSO -> i.getProfesorCurso().getId().equals(actor.id());
-            case Roles.TUTOR -> i.getTutor() != null && i.getTutor().getId().equals(actor.id());
-            default -> false;
-        });
+        return veTodo(actor) || actor.roles().stream().anyMatch(r -> participaComo(r, i, actor.id()));
     }
 
     public void exigirVerInscripcion(Inscripcion i, UsuarioAutenticado actor) {
         if (!puedeVerInscripcion(i, actor)) {
             throw new AccesoDenegadoException("No tienes acceso a esta inscripción.");
         }
+    }
+
+    /**
+     * Chat con el chatbot (HU-15 y HU-16). Es más privado que el resto de la inscripción porque la privacidad de los
+     * chats sigue abierta con el cliente (S-38). SUPUESTO S-60: lo leen solo el estudiante dueño y el profesor guía
+     * de ESA inscripción (HU-16, criterio 1: "de sus estudiantes asignados y de nadie más"). No lo leen el
+     * coordinador, el profesor del curso ni el tutor. Usa la misma regla de pertenencia que
+     * {@link #puedeVerInscripcion}, solo con esos dos roles.
+     * HU-20: además, el jefe de carrera (ver {@link #leeChatComoJefe}).
+     */
+    public boolean puedeVerChat(Inscripcion i, UsuarioAutenticado actor) {
+        return actor.roles().stream().filter(LEEN_EL_CHAT::contains).anyMatch(r -> participaComo(r, i, actor.id()))
+                || leeChatComoJefe(i, actor);
+    }
+
+    /**
+     * HU-20: el jefe de carrera lee, en solo lectura, la conversación de cualquier inscripción de una asignatura con
+     * chatbot (las dos prácticas finales), aunque no sea el guía. SUPUESTO S-66: sin aviso al estudiante, igual que el
+     * resto de su lectura global; la privacidad de los chats sigue abierta con el cliente (S-38).
+     */
+    public boolean leeChatComoJefe(Inscripcion i, UsuarioAutenticado actor) {
+        return actor.tieneRol(Roles.JEFE_CARRERA) && Boolean.TRUE.equals(i.getAsignatura().getChatbotHabilitado());
+    }
+
+    public void exigirVerChat(Inscripcion i, UsuarioAutenticado actor) {
+        if (!puedeVerChat(i, actor)) {
+            throw new AccesoDenegadoException(
+                    "Solo el estudiante, su profesor guía y el jefe de carrera pueden ver esta conversación.");
+        }
+    }
+
+    private static final Set<String> LEEN_EL_CHAT = Set.of(Roles.ESTUDIANTE, Roles.PROFESOR_GUIA);
+
+    /** ¿Esta persona participa en la inscripción con este rol (es el estudiante, su guía, su profesor o su tutor)? */
+    private static boolean participaComo(String rol, Inscripcion i, Long id) {
+        return switch (rol) {
+            case Roles.ESTUDIANTE -> i.getEstudiante().getUsuario().getId().equals(id);
+            case Roles.PROFESOR_GUIA -> i.getProfesorGuia() != null && i.getProfesorGuia().getId().equals(id);
+            case Roles.PROFESOR_CURSO -> i.getProfesorCurso().getId().equals(id);
+            case Roles.TUTOR -> i.getTutor() != null && i.getTutor().getId().equals(id);
+            default -> false;
+        };
     }
 
     /**

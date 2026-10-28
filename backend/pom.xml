@@ -55,7 +55,9 @@
             <version>${springdoc.version}</version>
         </dependency>
 
-        <!-- PDF de la cartola de prácticas (HU-31). Licencia LGPL/MPL, fork libre de iText -->
+        <!-- PDF de la cartola de prácticas (HU-31) y lectura del texto de los PDF que el chatbot revisa (HU-15).
+             Licencia LGPL/MPL, fork libre de iText. (El chatbot llama a Groq por HTTP con el RestClient de Spring:
+             no necesita un SDK propio.) -->
         <dependency>
             <groupId>com.github.librepdf</groupId>
             <artifactId>openpdf</artifactId>

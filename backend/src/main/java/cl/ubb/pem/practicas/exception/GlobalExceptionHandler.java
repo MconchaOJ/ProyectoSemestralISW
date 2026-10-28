@@ -62,6 +62,14 @@ public class GlobalExceptionHandler {
         return responder(HttpStatus.FORBIDDEN, ex.getMessage(), req);
     }
 
+    /** Un servicio externo (el modelo del chatbot, HU-15) no respondió: 503, el resto de la aplicación sigue en pie. */
+    @ExceptionHandler(ServicioExternoException.class)
+    ResponseEntity<ApiError> servicioExterno(ServicioExternoException ex, HttpServletRequest req) {
+        log.warn("Servicio externo no disponible en {}: {}", req.getRequestURI(),
+                ex.getCause() == null ? ex.getMessage() : ex.getCause().toString());
+        return responder(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), req);
+    }
+
     /** Lo lanza @PreAuthorize cuando el rol del token no está permitido en el endpoint. */
     @ExceptionHandler(AccessDeniedException.class)
     ResponseEntity<ApiError> rolNoPermitido(AccessDeniedException ex, HttpServletRequest req) {

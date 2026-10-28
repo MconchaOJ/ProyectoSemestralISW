@@ -137,7 +137,7 @@ function Install-Bd {
     }
     Write-Host "  OK  Versión de MySQL compatible ($version >= $VersionMinimaMysql)" -ForegroundColor Green
 
-    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (16 tablas, trigger)'
+    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (22 tablas, trigger)'
     Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'seed.sql'))   'seed.sql (catálogo y datos de demo)'
 
     # Usuario de la aplicación: solo puede leer y escribir datos, no cambiar la estructura.
@@ -194,6 +194,10 @@ function Test-Bd {
         @('Devolver una planificación sin comentario',            3819, 'ck_revision_comentario',  "INSERT INTO revision_planificacion (planificacion_id,revisor_id,etapa,decision) VALUES (4,2,'GUIA','OBSERVADA')"),
         @('Segunda nota de voz para la misma evaluación',         1062, 'uq_nota_voz_evaluacion',  "INSERT INTO nota_voz (evaluacion_id,archivo_ruta,duracion_segundos) VALUES (1,'a.mp3',30); INSERT INTO nota_voz (evaluacion_id,archivo_ruta,duracion_segundos) VALUES (1,'b.mp3',40)"),
         @('Documento de planificación más grande que 10 MB',      3819, 'ck_documento_planificacion_tamano', "INSERT INTO documento_planificacion (planificacion_id,nombre_archivo,ruta_archivo,tipo_mime,tamano_bytes,subido_por) VALUES (3,'x.pdf','planificaciones/x.pdf','application/pdf',99999999,6)"),
+        @('Escala SUS con un ítem fuera de 1 a 5 (HU-30)',       3819, 'ck_respuesta_sus_items',  "INSERT INTO respuesta_sus (validador_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10) VALUES (3,6,1,1,1,1,1,1,1,1,1)"),
+        @('Segunda Escala SUS del mismo validador (HU-30)',       1062, 'uq_respuesta_sus_validador', "INSERT INTO respuesta_sus (validador_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10) VALUES (3,5,1,5,1,5,1,5,1,5,1); INSERT INTO respuesta_sus (validador_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10) VALUES (3,4,2,4,2,4,2,4,2,4,2)"),
+        @('Criterio 10 en la rúbrica de 9 criterios (HU-30)',     3819, 'ck_rubrica_criterio_numero', "INSERT INTO respuesta_rubrica_experto (validador_id) VALUES (3); SET @ru = LAST_INSERT_ID(); INSERT INTO respuesta_rubrica_criterio (respuesta_id,numero,puntaje) VALUES (@ru,10,4)"),
+        @('Lectura del jefe en una inscripción inexistente (HU-20)', 1452, 'fk_lectura_chat_inscripcion', "INSERT INTO lectura_chat_jefe_carrera (inscripcion_id,usuario_id) VALUES (99999,32)"),
         @('Borrar un usuario que tiene inscripciones (FK)',       1451, 'foreign key constraint fails', "DELETE FROM usuario WHERE id = 4"),
         @('La app no puede cambiar la estructura (DROP TABLE)',   1142, 'DROP command denied',     "DROP TABLE usuario")
     )

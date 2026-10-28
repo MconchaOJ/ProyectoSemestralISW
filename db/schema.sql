@@ -1,10 +1,14 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 16 tablas con claves, restricciones e
--- índices (14 del Sprint 1 más documento_planificacion y documento_evaluacion,
--- de la Fase E). No contiene contraseñas (el usuario de la aplicación lo crea
--- db/bd.ps1 con su clave tomada de una variable de entorno).
+-- Implementa el MER de Sprint1/mer.md: 22 tablas con claves, restricciones e
+-- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
+-- la Fase E, instrucciones_chatbot de HU-17, documento_base_conocimiento de
+-- HU-29, lectura_chat_jefe_carrera de HU-20 y respuesta_sus,
+-- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30). No
+-- contiene contraseñas (el
+-- usuario de la aplicación lo crea db/bd.ps1 con su clave tomada de una
+-- variable de entorno).
 --
 -- ATENCIÓN: es re-ejecutable y, por eso, BORRA y vuelve a crear las tablas.
 -- Úsalo solo en desarrollo y demo. Cárgalo con db/bd.ps1 (o `source` en el
@@ -32,6 +36,12 @@ SET NAMES utf8mb4;
 -- Limpieza (orden inverso a las dependencias)
 -- -----------------------------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS respuesta_rubrica_criterio;
+DROP TABLE IF EXISTS respuesta_rubrica_experto;
+DROP TABLE IF EXISTS respuesta_sus;
+DROP TABLE IF EXISTS lectura_chat_jefe_carrera;
+DROP TABLE IF EXISTS documento_base_conocimiento;
+DROP TABLE IF EXISTS instrucciones_chatbot;
 DROP TABLE IF EXISTS mensaje_chatbot;
 DROP TABLE IF EXISTS nota_voz;
 DROP TABLE IF EXISTS documento_evaluacion;
@@ -94,6 +104,7 @@ CREATE TABLE estudiante (
     rut             VARCHAR(10) NOT NULL COMMENT 'Sin puntos y con guion, ej. 12345678-9',
     semestre_actual INT         NOT NULL COMMENT 'Parte del contexto del chatbot (S-14)',
     anio_ingreso    INT         NOT NULL,
+    validador_chatbot BOOLEAN   NOT NULL DEFAULT FALSE COMMENT 'TRUE = participa en la validación del chatbot (HU-30, migración 009)',
     CONSTRAINT pk_estudiante         PRIMARY KEY (id),
     CONSTRAINT uq_estudiante_usuario UNIQUE (usuario_id),
     CONSTRAINT uq_estudiante_rut     UNIQUE (rut),
@@ -420,7 +431,8 @@ CREATE TABLE documento_evaluacion (
 
 -- =============================================================================
 -- 7. Tablas de sprints posteriores (existen para que el modelo esté completo)
---    NOTA_VOZ: HU-11 y HU-12 (API ya construida en la Fase E). MENSAJE_CHATBOT: HU-15 y HU-16.
+--    NOTA_VOZ: HU-11 y HU-12 (API ya construida en la Fase E). MENSAJE_CHATBOT: HU-15 y HU-16
+--    (API construida en el Sprint 2, 2026-10-26; migración 007 agregó planificacion_id).
 -- =============================================================================
 
 CREATE TABLE nota_voz (
@@ -439,14 +451,118 @@ CREATE TABLE nota_voz (
 ) ENGINE = InnoDB COMMENT = 'Audio del evaluador al terminar la clase, con su transcripción';
 
 CREATE TABLE mensaje_chatbot (
-    id             BIGINT      NOT NULL AUTO_INCREMENT,
-    inscripcion_id BIGINT      NOT NULL,
-    autor          VARCHAR(12) NOT NULL COMMENT 'ESTUDIANTE, CHATBOT',
-    contenido      TEXT        NOT NULL,
-    fecha          DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    id               BIGINT      NOT NULL AUTO_INCREMENT,
+    inscripcion_id   BIGINT      NOT NULL,
+    planificacion_id BIGINT      NULL     COMMENT 'Planificación que el estudiante adjuntó a este mensaje (HU-15, migración 007); nulo = sin planificación',
+    autor            VARCHAR(12) NOT NULL COMMENT 'ESTUDIANTE, CHATBOT',
+    contenido        TEXT        NOT NULL,
+    fecha            DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     CONSTRAINT pk_mensaje_chatbot PRIMARY KEY (id),
     CONSTRAINT fk_mensaje_inscripcion FOREIGN KEY (inscripcion_id) REFERENCES inscripcion (id),
+    CONSTRAINT fk_mensaje_planificacion FOREIGN KEY (planificacion_id) REFERENCES planificacion (id),
     CONSTRAINT ck_mensaje_autor CHECK (autor IN ('ESTUDIANTE', 'CHATBOT')),
     -- Conversación de una inscripción en orden
-    INDEX ix_mensaje_inscripcion_fecha (inscripcion_id, fecha)
-) ENGINE = InnoDB COMMENT = 'Mensajes entre el estudiante y el chatbot, por inscripción';
+    INDEX ix_mensaje_inscripcion_fecha (inscripcion_id, fecha),
+    INDEX ix_mensaje_planificacion (planificacion_id)
+) ENGINE = InnoDB COMMENT = 'Mensajes entre el estudiante y el chatbot, por inscripción (HU-15; el guía los lee, HU-16)';
+
+-- HU-17 (migración 008): una sola fila con las instrucciones que calibra el coordinador. Sin fila, la aplicación usa
+-- el texto base de RetroPlani Mate (backend/src/main/resources/chatbot/instrucciones-base.txt).
+CREATE TABLE instrucciones_chatbot (
+    id             BIGINT   NOT NULL COMMENT 'Siempre 1: un solo texto para todo el sistema',
+    texto          TEXT     NOT NULL COMMENT 'Reglas, tono, expresiones y respuestas modelo del chatbot (HU-17)',
+    editado_por_id BIGINT   NULL     COMMENT 'Coordinador que lo editó por última vez; nulo = texto base sin editar',
+    fecha_edicion  DATETIME NULL     COMMENT 'Última edición; nulo = texto base sin editar',
+    validacion_abierta BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'TRUE = el chatbot solo responde a los validadores (HU-30, migración 009)',
+    CONSTRAINT pk_instrucciones_chatbot PRIMARY KEY (id),
+    CONSTRAINT fk_instrucciones_editado_por FOREIGN KEY (editado_por_id) REFERENCES usuario (id),
+    CONSTRAINT ck_instrucciones_fila_unica CHECK (id = 1),
+    CONSTRAINT ck_instrucciones_edicion CHECK ((editado_por_id IS NULL) = (fecha_edicion IS NULL))
+) ENGINE = InnoDB COMMENT = 'Configuración del chatbot: instrucciones del coordinador (HU-17) y validación (HU-30)';
+
+-- HU-29 (migración 009): documentos de referencia del chatbot, uno vigente por tipo. El archivo va a disco; la base
+-- guarda su ruta y el texto ya extraído (no se convierte un PDF largo en cada mensaje).
+CREATE TABLE documento_base_conocimiento (
+    id             BIGINT       NOT NULL AUTO_INCREMENT,
+    tipo           VARCHAR(40)  NOT NULL COMMENT 'Uno de los 10 documentos de la propuesta RetroPlani Mate',
+    nombre_archivo VARCHAR(255) NOT NULL,
+    ruta_archivo   VARCHAR(500) NOT NULL COMMENT 'Ruta relativa en disco (fuera de git)',
+    tipo_mime      VARCHAR(100) NOT NULL,
+    tamano_bytes   BIGINT       NOT NULL,
+    texto          MEDIUMTEXT   NOT NULL COMMENT 'Texto extraído del Word o PDF al subirlo',
+    subido_por_id  BIGINT       NOT NULL,
+    fecha_subida   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_documento_base_conocimiento PRIMARY KEY (id),
+    CONSTRAINT uq_documento_base_tipo UNIQUE (tipo),
+    CONSTRAINT fk_documento_base_subido_por FOREIGN KEY (subido_por_id) REFERENCES usuario (id),
+    CONSTRAINT ck_documento_base_tipo CHECK (tipo IN ('MOMENTOS_CLASE', 'RUBRICA_PLANIFICACION',
+        'DUA_DIVERSIFICACION', 'BANCO_COMENTARIOS', 'ENLACES_RECURSOS', 'BASES_CURRICULARES_7B_2M',
+        'BASES_CURRICULARES_3M_4M', 'ACCIONES_DUA', 'PLANIFICACION_COMENTADA_1', 'PLANIFICACION_COMENTADA_2')),
+    CONSTRAINT ck_documento_base_tamano CHECK (tamano_bytes > 0 AND tamano_bytes <= 10485760)
+) ENGINE = InnoDB COMMENT = 'Documentos de referencia del chatbot cargados por el coordinador (HU-29)';
+
+-- HU-20 (migración 010): cada lectura de un chat hecha por el jefe de carrera (el estudiante ve la última).
+CREATE TABLE lectura_chat_jefe_carrera (
+    id             BIGINT      NOT NULL AUTO_INCREMENT,
+    inscripcion_id BIGINT      NOT NULL,
+    usuario_id     BIGINT      NOT NULL COMMENT 'Jefe de carrera que leyó la conversación',
+    fecha          DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    CONSTRAINT pk_lectura_chat_jefe_carrera PRIMARY KEY (id),
+    CONSTRAINT fk_lectura_chat_inscripcion FOREIGN KEY (inscripcion_id) REFERENCES inscripcion (id),
+    CONSTRAINT fk_lectura_chat_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id),
+    INDEX ix_lectura_chat_inscripcion_fecha (inscripcion_id, fecha)
+) ENGINE = InnoDB COMMENT = 'Cada lectura de un chat del chatbot hecha por el jefe de carrera (HU-20)';
+
+-- HU-30 (migración 011): Escala SUS adaptada al chatbot (propuesta RetroPlani Mate V3), una por validador. El puntaje
+-- SUS de 0 a 100 lo calcula la base con la fórmula de Brooke: impares (respuesta - 1), pares (5 - respuesta), × 2,5.
+CREATE TABLE respuesta_sus (
+    id            BIGINT       NOT NULL AUTO_INCREMENT,
+    validador_id  BIGINT       NOT NULL COMMENT 'Estudiante validador que respondió',
+    item1         INT          NOT NULL,
+    item2         INT          NOT NULL,
+    item3         INT          NOT NULL,
+    item4         INT          NOT NULL,
+    item5         INT          NOT NULL,
+    item6         INT          NOT NULL,
+    item7         INT          NOT NULL,
+    item8         INT          NOT NULL,
+    item9         INT          NOT NULL,
+    item10        INT          NOT NULL,
+    puntaje       DECIMAL(5,2) GENERATED ALWAYS AS (((item1 - 1) + (5 - item2) + (item3 - 1) + (5 - item4)
+                      + (item5 - 1) + (5 - item6) + (item7 - 1) + (5 - item8) + (item9 - 1) + (5 - item10)) * 2.5) STORED
+                      COMMENT 'Puntaje SUS de 0 a 100 (fórmula de Brooke)',
+    fecha         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_respuesta_sus PRIMARY KEY (id),
+    CONSTRAINT uq_respuesta_sus_validador UNIQUE (validador_id),
+    CONSTRAINT fk_respuesta_sus_validador FOREIGN KEY (validador_id) REFERENCES estudiante (id),
+    CONSTRAINT ck_respuesta_sus_items CHECK (item1 BETWEEN 1 AND 5 AND item2 BETWEEN 1 AND 5 AND item3 BETWEEN 1 AND 5
+        AND item4 BETWEEN 1 AND 5 AND item5 BETWEEN 1 AND 5 AND item6 BETWEEN 1 AND 5 AND item7 BETWEEN 1 AND 5
+        AND item8 BETWEEN 1 AND 5 AND item9 BETWEEN 1 AND 5 AND item10 BETWEEN 1 AND 5)
+) ENGINE = InnoDB COMMENT = 'Escala SUS adaptada al chatbot, una por validador (HU-30)';
+
+-- HU-30 (migración 011): rúbrica de juicio experto, una por validador; sus 9 criterios van en la tabla siguiente.
+CREATE TABLE respuesta_rubrica_experto (
+    id            BIGINT   NOT NULL AUTO_INCREMENT,
+    validador_id  BIGINT   NOT NULL COMMENT 'Estudiante validador que respondió',
+    fortalezas    TEXT     NULL COMMENT 'Pregunta abierta 1',
+    debilidades   TEXT     NULL COMMENT 'Pregunta abierta 2',
+    mejoras       TEXT     NULL COMMENT 'Pregunta abierta 3',
+    recomendacion TEXT     NULL COMMENT 'Pregunta abierta 4',
+    fecha         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_respuesta_rubrica_experto PRIMARY KEY (id),
+    CONSTRAINT uq_respuesta_rubrica_validador UNIQUE (validador_id),
+    CONSTRAINT fk_respuesta_rubrica_validador FOREIGN KEY (validador_id) REFERENCES estudiante (id)
+) ENGINE = InnoDB COMMENT = 'Rúbrica de juicio experto del chatbot, una por validador (HU-30)';
+
+CREATE TABLE respuesta_rubrica_criterio (
+    id           BIGINT        NOT NULL AUTO_INCREMENT,
+    respuesta_id BIGINT        NOT NULL,
+    numero       INT           NOT NULL COMMENT 'Criterio 1 a 9 de la rúbrica',
+    puntaje      INT           NOT NULL COMMENT '1 logro insuficiente, 2 parcial, 3 adecuado, 4 alto',
+    comentario   VARCHAR(1000) NULL,
+    CONSTRAINT pk_respuesta_rubrica_criterio PRIMARY KEY (id),
+    CONSTRAINT uq_rubrica_criterio_numero UNIQUE (respuesta_id, numero),
+    CONSTRAINT fk_rubrica_criterio_respuesta FOREIGN KEY (respuesta_id) REFERENCES respuesta_rubrica_experto (id),
+    CONSTRAINT ck_rubrica_criterio_numero CHECK (numero BETWEEN 1 AND 9),
+    CONSTRAINT ck_rubrica_criterio_puntaje CHECK (puntaje BETWEEN 1 AND 4)
+) ENGINE = InnoDB COMMENT = 'Puntaje y comentario de cada criterio de la rúbrica de juicio experto (HU-30)';
