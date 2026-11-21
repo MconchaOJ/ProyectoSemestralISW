@@ -1342,3 +1342,21 @@ código nuevo ni cambio de esquema** (no hay migración): el bloque va en el cat
   13 pautas (la de observación de clase y las 12).
 - **Servidor / Docker:** una base ya instalada no recibe las pautas nuevas solas (`datos-iniciales.sql` se carga una
   vez, y el volumen de Docker no vuelve a cargar `seed.sql`). Hoy no hay servidor real, así que no se hizo un script aparte.
+
+## Sprint 2: HU-07, tutor en el formulario "Nueva inscripción" (2026-11-21)
+
+El coordinador elige el tutor **en el mismo formulario** de "Nueva inscripción" (antes: inscribir y después el botón
+«Tutor»). **Solo front-end** (`static/js/vistas/gestion.js`): el backend ya aceptaba `tutorId` opcional en
+`POST /api/inscripciones` y lo valida en la misma transacción que crea la inscripción.
+
+- **Por qué un solo POST y no POST + `PUT /tutor`:** es atómico (si el tutor no es válido no se crea nada y el error sale
+  en el mismo formulario); con dos llamadas, un fallo del PUT dejaba la inscripción creada sin tutor y reintentar daba 409
+  por inscripción duplicada.
+- Campo "Tutor (opcional)" con los tutores activos. **Solo se muestra** cuando la práctica elegida tiene `llevaTutor`
+  (hoy Práctica Profesional); en las demás queda oculto y deshabilitado (no se envía), y cambiar de práctica lo vacía.
+- El botón «Tutor» se mantiene para asignar, cambiar o quitar el tutor después (`PUT /api/inscripciones/{id}/tutor`).
+- **Comprobación:** 281 pruebas, 0 fallos (`HU07TutorIntegracionTest` 8/8). Recorrido en Chrome headless por el
+  protocolo DevTools (la extensión no estaba conectada): selector oculto en Aproximación, Trabajo Colaborativo y Práctica
+  Pedagógica, visible en Práctica Profesional; se vacía al cambiar a una práctica sin tutor; inscripción de Práctica
+  Profesional 2027-1 creada **con tutor en un solo paso** (la lista muestra "Tutor: Rodrigo Saavedra Figueroa" y la API
+  devuelve el tutor 33); sin errores de JavaScript. La base se recreó al final (`bd.ps1`).

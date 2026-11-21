@@ -240,9 +240,10 @@ function accionesInscripcion(i, ctx, coordinador) {
 }
 
 async function nuevaInscripcion(estudiantes, catalogo, alTerminar) {
-  const [guias, cursos] = await Promise.all([
+  const [guias, cursos, tutores] = await Promise.all([
     api.get('/api/profesores', { rol: 'PROFESOR_GUIA' }),
     api.get('/api/profesores', { rol: 'PROFESOR_CURSO' }),
+    api.get('/api/profesores', { rol: 'TUTOR' }),
   ]);
   const nombre = (p) => ({ valor: p.id, texto: `${p.nombre} ${p.apellidos}` });
 
@@ -259,11 +260,19 @@ async function nuevaInscripcion(estudiantes, catalogo, alTerminar) {
         vacioTexto: 'Elige primero la práctica', opciones: guias.map(nombre) }),
       campo({ nombre: 'profesorCursoId', etiqueta: 'Profesor del curso', tipo: 'select', requerido: true, atributos: { 'data-numero': true },
         opciones: cursos.map(nombre) }),
+      // HU-07: el tutor se elige al inscribir y va en el mismo POST (se crea todo o nada); solo se muestra en las
+      // prácticas que lo llevan. Después se cambia con el botón «Tutor» (PUT /api/inscripciones/{id}/tutor).
+      campo({ nombre: 'tutorId', etiqueta: 'Tutor (opcional)', tipo: 'select', completo: true,
+        atributos: { 'data-numero': true, disabled: true }, vacioTexto: 'Sin tutor',
+        ayuda: tutores.some((t) => t.activo) ? 'Tutor de la universidad. Se puede asignar o cambiar después con el botón «Tutor».'
+          : 'No hay tutores registrados: regístralos en la pestaña Profesores, o asígnalo después con el botón «Tutor».',
+        opciones: tutores.filter((t) => t.activo).map(nombre) }),
       html`<p class="ayuda completo" id="info-asignatura" style="grid-column:1/-1"></p>`,
     ],
     alEnviar: (datos) => {
       const cuerpo = { ...datos };
       if (!cuerpo.profesorGuiaId) delete cuerpo.profesorGuiaId;
+      if (!cuerpo.tutorId) delete cuerpo.tutorId;
       return api.post('/api/inscripciones', cuerpo);
     },
     alListo: (i) => { toast(`${i.estudiante.nombreCompleto} inscrito(a) en ${i.asignatura.nombre}.`); alTerminar(); },
@@ -273,8 +282,18 @@ async function nuevaInscripcion(estudiantes, catalogo, alTerminar) {
   const selAsig = m.form.elements.asignaturaId;
   const selGuia = m.form.elements.profesorGuiaId;
   const info = m.el.querySelector('#info-asignatura');
+  const selTutor = m.form.elements.tutorId;
+  const cajaTutor = selTutor.closest('.campo');
+  // Oculto y deshabilitado (no se envía) salvo en las prácticas con tutor (asignatura_practica.lleva_tutor).
+  const mostrarTutor = (lleva) => {
+    cajaTutor.hidden = !lleva;
+    selTutor.disabled = !lleva;
+    if (!lleva) selTutor.value = '';
+  };
+  mostrarTutor(false);
   selAsig.addEventListener('change', () => {
     const a = catalogo.find((x) => String(x.id) === selAsig.value);
+    mostrarTutor(Boolean(a?.llevaTutor));
     if (!a) { selGuia.disabled = true; selGuia.value = ''; info.textContent = ''; return; }
     selGuia.disabled = !a.requiereCentroEducativo;
     selGuia.required = a.requiereCentroEducativo;
