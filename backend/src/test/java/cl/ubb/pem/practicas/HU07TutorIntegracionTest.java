@@ -43,6 +43,31 @@ class HU07TutorIntegracionTest extends IntegracionBase {
     }
 
     @Test
+    void estanLasDocePautasDeLasPracticasFinales() throws Exception {   // carga completa (2026-11-21)
+        // "práctica|tipo|ámbito|observación|dimensiones|indicadores|puntaje máximo", como en las pautas impresas
+        List<String> filas = new ArrayList<>();
+        for (int asignatura : new int[] {5, 6}) {
+            for (JsonNode p : cuerpo(consultar("/api/pautas/gestion?asignaturaId=" + asignatura, COORDINADOR))) {
+                if ("OBSERVACION_CLASE".equals(p.get("ambito").asText())) continue;
+                assertThat(p.get("escalaMin").asInt()).isEqualTo(2);
+                assertThat(p.get("escalaMax").asInt()).isEqualTo(7);
+                assertThat(p.get("activa").asBoolean()).isTrue();
+                int dimensiones = cuerpo(consultar("/api/pautas/" + p.get("id").asInt(), COORDINADOR)).get("dimensiones").size();
+                filas.add(asignatura + "|" + p.get("tipoEvaluador").asText() + "|" + p.get("ambito").asText() + "|"
+                        + p.get("numeroObservacion").asInt() + "|" + dimensiones + "|" + p.get("totalIndicadores").asInt()
+                        + "|" + p.get("puntajeMaximo").asInt());
+            }
+        }
+        assertThat(filas).containsExactlyInAnyOrder(
+                "5|COLABORADOR|ESPECIALIDAD|1|4|19|133", "5|COLABORADOR|ESPECIALIDAD|2|4|23|161",
+                "5|COLABORADOR|ORIENTACION|1|5|18|126",  "5|COLABORADOR|ORIENTACION|2|5|23|161",
+                "6|COLABORADOR|ESPECIALIDAD|1|4|19|133", "6|TUTOR|ESPECIALIDAD|1|4|19|133",
+                "6|COLABORADOR|ESPECIALIDAD|2|4|23|161", "6|TUTOR|ESPECIALIDAD|2|4|23|161",
+                "6|COLABORADOR|ORIENTACION|1|5|18|126",  "6|TUTOR|ORIENTACION|1|5|18|126",
+                "6|COLABORADOR|ORIENTACION|2|5|23|161",  "6|TUTOR|ORIENTACION|2|5|23|161");
+    }
+
+    @Test
     void lasPautasDelTutorUsanEscalaDe2a7DimensionesAaDYPuntajeMaximoCalculado() throws Exception {   // criterios 1, 2 y 4
         JsonNode p = cuerpo(consultar("/api/pautas/3", TUTOR1).andExpect(status().isOk()));
         assertThat(p.get("tipoEvaluador").asText()).isEqualTo("TUTOR");

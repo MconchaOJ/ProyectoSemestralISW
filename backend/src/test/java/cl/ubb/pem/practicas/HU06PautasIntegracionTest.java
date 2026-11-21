@@ -91,8 +91,8 @@ class HU06PautasIntegracionTest extends IntegracionBase {
         // dimensiones en orden y los indicadores numerados en toda la pauta (como la pauta impresa)
         assertThat(p.get("dimensiones").findValuesAsText("nombre")).containsExactly("A. Planificación", "B. Gestión del aula");
         assertThat(p.get("dimensiones").get(1).get("indicadores").get(0).get("numero").asInt()).isEqualTo(3);
-        // cualquier rol la ve entre las pautas activas de la asignatura (más las 2 de Especialidad de HU-07)
-        consultar("/api/pautas?asignaturaId=6", CAMILA).andExpect(jsonPath("$.length()").value(3));
+        // cualquier rol la ve entre las pautas activas de la asignatura (más las 8 de Práctica Profesional de HU-07)
+        consultar("/api/pautas?asignaturaId=6", CAMILA).andExpect(jsonPath("$.length()").value(9));
         JsonNode gestion = cuerpo(consultar("/api/pautas/gestion?asignaturaId=6", COORDINADOR).andExpect(status().isOk()));
         assertThat(gestion.get(0).get("vigente").asBoolean()).isTrue();
         assertThat(gestion.get(0).get("evaluaciones").asLong()).isZero();

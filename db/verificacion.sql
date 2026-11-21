@@ -16,7 +16,7 @@ SELECT COUNT(*) AS tablas
   FROM information_schema.tables
  WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
-SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, inscripcion 55, pauta 3, dimension 11, indicador 58, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat_jefe_carrera 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0)' AS verificacion;
+SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, inscripcion 55, pauta 13, dimension 57, indicador 269, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat_jefe_carrera 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0)' AS verificacion;
 SELECT 'rol' AS tabla, COUNT(*) AS filas FROM rol
 UNION ALL SELECT 'usuario',                COUNT(*) FROM usuario
 UNION ALL SELECT 'estudiante',             COUNT(*) FROM estudiante
@@ -72,14 +72,14 @@ SELECT d.orden, d.nombre AS dimension, COUNT(i.id) AS indicadores,
  GROUP BY d.id, d.orden, d.nombre
  ORDER BY d.orden;
 
-SELECT '6b. CATÁLOGO HU-07: pautas de Práctica Profesional (esperado: 2 pautas, colaborador y tutor, Especialidad 1.ª observación, escala 2 a 7, 4 dimensiones, 19 indicadores, puntaje máximo 133)' AS verificacion;
-SELECT p.id, p.tipo_evaluador, p.ambito, p.numero_observacion AS observacion, p.escala_min, p.escala_max,
+SELECT '6b. CATÁLOGO HU-07: las 12 pautas de las prácticas finales (esperado: 8 de Práctica Profesional, colaborador y tutor, y 4 de Práctica Pedagógica, solo colaborador; escala 2 a 7; Especialidad 4 dimensiones, 19 o 23 indicadores, máximo 133 o 161; Orientación 5 dimensiones, 18 o 23 indicadores, máximo 126 o 161)' AS verificacion;
+SELECT p.id, p.asignatura_id AS practica, p.tipo_evaluador, p.ambito, p.numero_observacion AS observacion, p.escala_min, p.escala_max,
        COUNT(DISTINCT d.id) AS dimensiones, COUNT(i.id) AS indicadores, COUNT(i.id) * p.escala_max AS puntaje_maximo
   FROM pauta p
   JOIN dimension_pauta d ON d.pauta_id = p.id
   JOIN indicador i ON i.dimension_id = d.id
- WHERE p.asignatura_id = 6
- GROUP BY p.id, p.tipo_evaluador, p.ambito, p.numero_observacion, p.escala_min, p.escala_max
+ WHERE p.asignatura_id IN (5, 6)
+ GROUP BY p.id, p.asignatura_id, p.tipo_evaluador, p.ambito, p.numero_observacion, p.escala_min, p.escala_max
  ORDER BY p.id;
 
 -- -----------------------------------------------------------------------------

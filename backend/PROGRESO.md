@@ -1306,3 +1306,39 @@ fragmentos con la misma palabra gana el que más la trata.
 ### Qué queda (ya no es código)
 - **Confirmar con el cliente** S-38, S-59 (Groq: costo, privacidad y cuota), S-60, S-65 a S-75.
 - Aplicar las migraciones `007` a `011` en el servidor cuando exista.
+
+## Sprint 2: HU-07, las 12 pautas cargadas (2026-11-21)
+
+Se cargaron las **10 pautas que faltaban** de Especialidad y Orientación (antes había 2 de 12). Es **carga de datos, sin
+código nuevo ni cambio de esquema** (no hay migración): el bloque va en el catálogo de `db/seed.sql` y de
+`db/datos-iniciales.sql`, después de las pautas 2 y 3, con los mismos ids y textos en los dos archivos.
+
+- **Fuentes:** `Documents/6_Práctica Profesional.rar` → "Pautas de evaluación Práctica Profesional 2025-2" (8 .docx:
+  colaborador y tutor) y `Documents/5_Práctica Pedagógica.rar` → "Pautas Práctica Pedagógica 2025-2.zip" (4 .docx, solo
+  colaborador). Los textos se extrajeron de los .docx con un script y se copiaron **tal cual**. Control: el mismo
+  extractor reproduce exactamente las pautas 2 y 3 que ya estaban cargadas, y cada pauta nueva da el "PUNTAJE TOTAL" impreso.
+- **Ids:** pautas 4 a 13, dimensiones 12 a 57, indicadores 59 a 269. Indicadores numerados corridos en toda la pauta (S-56).
+
+| Id | Práctica | Pauta | Evaluador | Dim. | Indic. | Máx. |
+|---|---|---|---|---|---|---|
+| 4, 5 | Profesional | Especialidad 2.ª | Colaborador, tutor | A-D | 23 | 161 |
+| 6, 7 | Profesional | Orientación 1.ª | Colaborador, tutor | A-E | 18 | 126 |
+| 8, 9 | Profesional | Orientación 2.ª | Colaborador, tutor | A-E | 23 | 161 |
+| 10 | Pedagógica | Especialidad 1.ª | Colaborador | A-D | 19 | 133 |
+| 11 | Pedagógica | Especialidad 2.ª | Colaborador | A-D | 23 | 161 |
+| 12 | Pedagógica | Orientación 1.ª | Colaborador | A-E | 18 | 126 |
+| 13 | Pedagógica | Orientación 2.ª | Colaborador | A-E | 23 | 161 |
+
+- **Orientación tiene 5 dimensiones (A a E)**, no A-D: así vienen impresas (criterio 1 de HU-07: "dimensiones A a E").
+- **Errores de tipeo del original, corregidos** (por decisión del usuario: son restos de un reemplazo mal hecho en el
+  Word, no contenido real), con el texto de las pautas de Práctica Profesional: "responsabilidades PEDAGÓGICAes" →
+  "profesionales" (pauta 11), "desempeño PEDAGÓGICA futuro" → "desempeño profesional futuro" (pautas 12 y 13) y "las los
+  estudiantes" → "las/os estudiantes", como en la pauta del tutor (pautas 4 y 11).
+- **Pruebas:** `HU06PautasIntegracionTest` ahora espera 9 pautas activas en la asignatura 6 (antes 3); nueva
+  `HU07TutorIntegracionTest.estanLasDocePautasDeLasPracticasFinales` (práctica, tipo, ámbito, observación, dimensiones,
+  indicadores y puntaje máximo de las 12). **281 pruebas, 0 fallos**; `bd.ps1` 31/31 negativas.
+- `db/verificacion.sql`: conteos esperados pauta 13, dimensión 57, indicador 269; la consulta 6b lista las 12.
+- Comprobado por HTTP con la lista de la pantalla "Pautas de evaluación" (`GET /api/pautas/gestion` como coordinador):
+  13 pautas (la de observación de clase y las 12).
+- **Servidor / Docker:** una base ya instalada no recibe las pautas nuevas solas (`datos-iniciales.sql` se carga una
+  vez, y el volumen de Docker no vuelve a cargar `seed.sql`). Hoy no hay servidor real, así que no se hizo un script aparte.
