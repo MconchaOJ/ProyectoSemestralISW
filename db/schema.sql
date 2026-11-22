@@ -533,7 +533,7 @@ CREATE TABLE parametro_sistema (
     valor          INT          NOT NULL,
     minimo         INT          NOT NULL,
     maximo         INT          NOT NULL,
-    unidad         VARCHAR(20)  NOT NULL COMMENT 'dias o MB',
+    unidad         VARCHAR(20)  NOT NULL COMMENT 'días, MB o %',
     descripcion    VARCHAR(300) NOT NULL,
     editado_por    BIGINT       NULL     COMMENT 'Coordinador que lo cambio por ultima vez; nulo = valor inicial',
     fecha_edicion  DATETIME     NULL,

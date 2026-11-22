@@ -274,7 +274,7 @@ async function detalle(cont, ctx, id) {
       <div class="resultado-cifra"><span class="cifra">${promedio(ev.promedio)}</span><span class="cifra-etiqueta">promedio (escala ${pauta.escalaMin} a ${pauta.escalaMax})</span></div>
       <div class="resultado-detalle">
         <p><strong>${ev.puntajeTotal}</strong> de ${ev.puntajeMaximo} puntos posibles · ${ev.indicadoresRespondidos} de ${ev.indicadoresTotales} indicadores</p>
-        <p>Nota <strong>${nota(ev.nota)}</strong> <small>(escala de 1,0 a 7,0 con 60 % de exigencia: el 4,0 está en ${Math.round(ev.puntajeMaximo * 0.6 * 10) / 10} puntos)</small></p>
+        <p>Nota <strong>${nota(ev.nota)}</strong> <small>(calculada al finalizar con la exigencia vigente en ese momento; no cambia si después se ajusta)</small></p>
         <div class="barra-prom" role="img" aria-label="Promedio ${promedio(ev.promedio)} de ${pauta.escalaMax}"><span style="width:${pct}%"></span></div>
         <p class="subtitulo">Finalizada el ${fechaHora(ev.fechaFinalizacion)}. Ya no se puede modificar.</p>
       </div>

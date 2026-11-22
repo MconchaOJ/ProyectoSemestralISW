@@ -16,7 +16,10 @@ export function asignaturas() {
  * coordinador se vea en la pantalla siguiente; si la petición falla, rigen los valores de siempre.
  */
 export async function parametros() {
-  const porDefecto = { 'planificacion.dias_anticipacion': 3, 'panel.dias_atencion': 3, 'archivos.documento_mb': 10, 'archivos.audio_mb': 25 };
+  const porDefecto = {
+    'planificacion.dias_anticipacion': 3, 'panel.dias_atencion': 3, 'archivos.documento_mb': 10, 'archivos.audio_mb': 25,
+    'evaluacion.exigencia_pct': 60,
+  };
   try {
     return { ...porDefecto, ...Object.fromEntries((await api.get('/api/parametros')).map((p) => [p.clave, p.valor])) };
   } catch {
