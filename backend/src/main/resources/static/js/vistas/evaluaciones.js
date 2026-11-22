@@ -185,16 +185,18 @@ async function nueva(cont, ctx) {
   }
   selInsc.addEventListener('change', alCambiarInscripcion);
 
-  // Al vincular una planificación se adelantan la fecha y el objetivo (el guía puede corregirlos).
+  // Al vincular una planificación se adelantan la fecha, el objetivo, el establecimiento y el curso (formato
+  // oficial, S-45), solo en los campos vacíos: el guía puede corregirlos.
   selPlan.addEventListener('change', async () => {
     if (!selPlan.value) return;
     const opcion = selPlan.selectedOptions[0];
     if (opcion?.dataset.fecha && !form.elements.fechaClase.value) form.elements.fechaClase.value = opcion.dataset.fecha;
-    if (!form.elements.objetivoClase.value.trim()) {
+    const vacios = ['objetivoClase', 'establecimiento', 'curso'].filter((n) => !form.elements[n].value.trim());
+    if (vacios.length) {
       try {
         const p = await api.get(`/api/planificaciones/${selPlan.value}`);
-        if (p.objetivo && !form.elements.objetivoClase.value.trim()) form.elements.objetivoClase.value = p.objetivo;
-      } catch { /* el objetivo se puede escribir a mano */ }
+        vacios.forEach((n) => { if (p[n] && !form.elements[n].value.trim()) form.elements[n].value = p[n]; });
+      } catch { /* se pueden escribir a mano */ }
     }
   });
 

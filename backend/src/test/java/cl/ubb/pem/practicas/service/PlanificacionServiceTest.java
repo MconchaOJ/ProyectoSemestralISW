@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import cl.ubb.pem.practicas.Datos;
 import cl.ubb.pem.practicas.config.PlanificacionProperties;
@@ -85,16 +87,44 @@ class PlanificacionServiceTest {
         p.setTitulo("Ecuaciones");
         p.setEstado(estado);
         if (completa) {
+            // los campos del formato oficial de la carrera (S-45)
+            p.setEstablecimiento("Liceo");
+            p.setCurso("1° Medio B");
+            p.setUnidad("Álgebra");
+            p.setObjetivoAprendizaje("oa");
+            p.setObjetivoActitudinal("act");
+            p.setObjetivoClase("obj");
             p.setFechaClase(LocalDate.of(2026, 10, 7));
-            p.setObjetivo("obj");
-            p.setRecursos("rec");
-            p.setTiempos("tiem");
             p.setDuracionMinutos(90);
-            p.setEvaluacionAprendizaje("eval");
-            p.setInteraccionParticipantes("inter");
+            p.setRecursos("rec");
+            p.setInstrumentosEvaluacion("ins");
+            p.setInicio("ini");
+            p.setInicioMinutos(10);
+            p.setDesarrollo("des");
+            p.setDesarrolloMinutos(60);
+            p.setCierre("cie");
+            p.setCierreMinutos(20);
         }
         lenient().when(planificaciones.findById(10L)).thenReturn(Optional.of(p));
         return p;
+    }
+
+    /** Pedido de creación con solo título y objetivo de la clase (los demás campos vacíos). */
+    private static PlanificacionCrearRequest crearReq(String titulo, String objetivoClase) {
+        return new PlanificacionCrearRequest(3L, titulo, null, null, null, null, null, objetivoClase, null, null, null,
+                null, null, null, null, null, null, null);
+    }
+
+    /** Pedido de edición con todos los campos del formato completos (10 + 60 + 20 = 90 minutos). */
+    private static PlanificacionActualizarRequest actualizarCompleta(String titulo, String instrumentos) {
+        return new PlanificacionActualizarRequest(titulo, "Liceo", "1° Medio B", "Álgebra", "oa", "act", "obj",
+                LocalDate.of(2026, 10, 7), 90, "rec", instrumentos, "ini", 10, "des", 60, "cie", 20);
+    }
+
+    /** Pedido de creación con duración y minutos de las tres partes (S-76). */
+    private static PlanificacionCrearRequest crearConMinutos(int duracion, int inicio, int desarrollo, int cierre) {
+        return new PlanificacionCrearRequest(3L, "Con minutos", null, null, null, null, null, null, null, duracion, null,
+                null, null, inicio, null, desarrollo, null, cierre);
     }
 
     private static RevisionRequest aprobar() {
@@ -109,25 +139,34 @@ class PlanificacionServiceTest {
 
     @Test
     void crearDejaUnBorradorAunqueEsteIncompleto() {
-        PlanificacionDto dto = servicio.crear(new PlanificacionCrearRequest(3L, "Mi clase", null, "  ", null, null, null, null, null), estudiante);
+        PlanificacionDto dto = servicio.crear(crearReq("Mi clase", "  "), estudiante);
         assertThat(dto.estado()).isEqualTo(EstadoPlanificacion.BORRADOR);
-        assertThat(dto.objetivo()).isNull();      // el texto en blanco cuenta como vacío
+        assertThat(dto.objetivoClase()).isNull();      // el texto en blanco cuenta como vacío
         assertThat(dto.pendienteDe()).isEqualTo("ESTUDIANTE");
+    }
+
+    @Test
+    void lasTresPartesDebenSumarLaDuracionYSiNoNoSeGuardaNada() {   // supuesto S-76
+        assertThatThrownBy(() -> servicio.crear(crearConMinutos(90, 10, 60, 30), estudiante))
+                .isInstanceOf(ReglaNegocioException.class).hasMessageContaining("100").hasMessageContaining("90");
+        verify(planificaciones, never()).save(any(Planificacion.class));
+        assertThat(servicio.crear(crearConMinutos(90, 10, 60, 20), estudiante).inicioMinutos()).isEqualTo(10);
     }
 
     @Test
     void soloElEstudianteDeLaInscripcionPuedeCrearYSoloSiEstaEnCurso() {
         UsuarioAutenticado otro = new UsuarioAutenticado(7L, "o@demo.example", "ESTUDIANTE");
-        assertThatThrownBy(() -> servicio.crear(new PlanificacionCrearRequest(3L, "X", null, null, null, null, null, null, null), otro))
+        assertThatThrownBy(() -> servicio.crear(crearReq("X", null), otro))
                 .isInstanceOf(AccesoDenegadoException.class);
         inscripcion.setEstado(EstadoInscripcion.APROBADA);
-        assertThatThrownBy(() -> servicio.crear(new PlanificacionCrearRequest(3L, "X", null, null, null, null, null, null, null), estudiante))
+        assertThatThrownBy(() -> servicio.crear(crearReq("X", null), estudiante))
                 .isInstanceOf(ConflictoException.class);
     }
 
     @Test
     void soloSeEditaEnBorradorOConObservaciones() {
-        var req = new PlanificacionActualizarRequest("Nuevo título", null, null, null, null, null, null, null);
+        var req = new PlanificacionActualizarRequest("Nuevo título", null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null);
         for (EstadoPlanificacion bloqueado : new EstadoPlanificacion[]{EstadoPlanificacion.EN_REVISION_GUIA,
                 EstadoPlanificacion.EN_AUTORIZACION, EstadoPlanificacion.AUTORIZADA}) {
             planificacion(bloqueado, true);
@@ -152,7 +191,8 @@ class PlanificacionServiceTest {
     void paraEnviarTodosLosElementosSonObligatoriosYElMensajeDiceCuales() {
         planificacion(EstadoPlanificacion.BORRADOR, false);
         assertThatThrownBy(() -> servicio.enviar(10L, estudiante)).isInstanceOf(ReglaNegocioException.class)
-                .hasMessageContaining("fechaClase").hasMessageContaining("objetivo").hasMessageContaining("interaccionParticipantes");
+                .hasMessageContaining("establecimiento").hasMessageContaining("objetivoClase").hasMessageContaining("fechaClase")
+                .hasMessageContaining("cierreMinutos");
     }
 
     @Test
@@ -207,7 +247,7 @@ class PlanificacionServiceTest {
     @Test
     void aproximacionNoEntregaPlanificaciones() {
         inscripcion.getAsignatura().setRequierePlanificacion(false);
-        assertThatThrownBy(() -> servicio.crear(new PlanificacionCrearRequest(3L, "X", null, null, null, null, null, null, null), estudiante))
+        assertThatThrownBy(() -> servicio.crear(crearReq("X", null), estudiante))
                 .isInstanceOf(ConflictoException.class).hasMessageContaining("no se entregan planificaciones");
     }
 
@@ -294,7 +334,7 @@ class PlanificacionServiceTest {
         servicio.revisarComoProfesorDelCurso(10L, devolver("Falta la evaluación del aprendizaje"), cursoActor);
         assertThat(p.getEstado()).isEqualTo(EstadoPlanificacion.CON_OBSERVACIONES);
 
-        servicio.actualizar(10L, new PlanificacionActualizarRequest("Ecuaciones v2", LocalDate.of(2026, 10, 7), "obj", "rec", "tiem", 90, "eval mejorada", "inter"), estudiante);
+        servicio.actualizar(10L, actualizarCompleta("Ecuaciones v2", "instrumentos mejorados"), estudiante);
         servicio.enviar(10L, estudiante);
         assertThat(p.getEstado()).isEqualTo(EstadoPlanificacion.EN_REVISION_GUIA);   // vuelve al guía, no directo al curso
         servicio.revisarComoGuia(10L, aprobar(), guiaActor);
@@ -303,7 +343,7 @@ class PlanificacionServiceTest {
         assertThat(p.getEstado()).isEqualTo(EstadoPlanificacion.AUTORIZADA);
         assertThat(p.getRevisiones()).extracting(r -> r.getEtapa() + ":" + r.getDecision())
                 .containsExactly("GUIA:APROBADA", "CURSO:OBSERVADA", "GUIA:APROBADA", "CURSO:APROBADA");
-        var req = new PlanificacionActualizarRequest("x", null, null, null, null, null, null, null);
+        var req = actualizarCompleta("x", "ins");
         assertThatThrownBy(() -> servicio.actualizar(10L, req, estudiante)).isInstanceOf(ConflictoException.class);
     }
 }

@@ -19,12 +19,19 @@ const PENDIENTE = {
 const ETAPAS = { GUIA: 'Revisión del profesor guía', CURSO: 'Autorización del profesor del curso' };
 const QUIEN_REVISA = { GUIA: 'El profesor guía', CURSO: 'El profesor del curso' };
 
-/** Nombres para el usuario de los elementos que el servidor informa como faltantes ("[objetivo, documentoFormal]"). */
+/** Nombres para el usuario de los campos que el servidor informa como faltantes ("[unidad, documentoFormal]"). */
 const NOMBRE_ELEMENTO = {
-  fechaClase: 'fecha de la clase', objetivo: 'objetivo', recursos: 'recursos', tiempos: 'tiempos',
-  duracionMinutos: 'duración', evaluacionAprendizaje: 'evaluación del aprendizaje',
-  interaccionParticipantes: 'interacción de los participantes', documentoFormal: 'la planificación formal (Word o PDF) adjunta',
+  establecimiento: 'establecimiento', curso: 'curso', unidad: 'unidad',
+  objetivoAprendizaje: 'objetivo de aprendizaje / indicadores', objetivoActitudinal: 'objetivo actitudinal',
+  objetivoClase: 'objetivo de la clase', fechaClase: 'fecha de la clase', duracionMinutos: 'duración de la clase',
+  recursos: 'recursos', instrumentosEvaluacion: 'instrumentos de evaluación',
+  inicio: 'inicio', inicioMinutos: 'minutos del inicio', desarrollo: 'desarrollo', desarrolloMinutos: 'minutos del desarrollo',
+  cierre: 'cierre', cierreMinutos: 'minutos del cierre', documentoFormal: 'la planificación formal (Word o PDF) adjunta',
 };
+/** Asignatura del formato oficial (S-45): texto fijo, igual que Planificacion.ASIGNATURA_ESCOLAR del backend. */
+const ASIGNATURA_ESCOLAR = 'Matemática';
+/** Las tres partes de la descripción de la clase, cada una con su relato y sus minutos. */
+const PARTES = [['inicio', 'Inicio'], ['desarrollo', 'Desarrollo'], ['cierre', 'Cierre']];
 function traducirFaltantes(e) {
   if (typeof e?.message === 'string') {
     e.message = e.message.replace(/\[([^\]]+)\]/, (_, lista) => lista.split(',').map((x) => NOMBRE_ELEMENTO[x.trim()] ?? x.trim()).join(', '));
@@ -147,7 +154,7 @@ async function formulario(cont, ctx, idEdicion) {
   cont.innerHTML = html`
     ${cabecera({
       hu: 'HU-04', titulo: editando ? 'Editar planificación' : 'Nueva planificación',
-      subtitulo: 'Un borrador puede estar incompleto; para enviarla a revisión deben estar los cinco elementos del formato, la planificación formal en Word o PDF, y la clase debe ser dentro de al menos 3 días.',
+      subtitulo: `Formato de planificación didáctica diaria de la carrera (asignatura: ${ASIGNATURA_ESCOLAR}; el profesor/a, el año y el período salen de tu inscripción). Un borrador puede estar incompleto; para enviarla a revisión deben estar todos los campos, la planificación formal en Word o PDF, y la clase debe ser dentro de al menos 3 días.`,
       acciones: volver,
     })}
     ${editando && actual.estado === 'CON_OBSERVACIONES' ? ultimaObservacion(actual) : ''}
@@ -157,13 +164,21 @@ async function formulario(cont, ctx, idEdicion) {
         ${editando ? '' : campo({ nombre: 'inscripcionId', etiqueta: 'Inscripción', tipo: 'select', requerido: true, completo: true,
           atributos: { 'data-numero': true }, opciones: opcionesInscripcion(inscripciones), valor: ctx.consulta.get('inscripcionId') ?? (inscripciones.length === 1 ? inscripciones[0].id : '') })}
         ${campo({ nombre: 'titulo', etiqueta: 'Título de la clase', requerido: true, completo: true, valor: v.titulo ?? '', atributos: { maxlength: 200 } })}
-        ${campo({ nombre: 'fechaClase', etiqueta: 'Fecha de la clase', tipo: 'date', valor: v.fechaClase ?? '' })}
-        ${campo({ nombre: 'duracionMinutos', etiqueta: 'Duración (minutos)', tipo: 'number', valor: v.duracionMinutos ?? '', atributos: { min: 1, max: 600, placeholder: '90' } })}
-        ${campo({ nombre: 'objetivo', etiqueta: '1. Objetivo de la clase', tipo: 'textarea', completo: true, valor: v.objetivo ?? '', atributos: { maxlength: 5000 } })}
-        ${campo({ nombre: 'recursos', etiqueta: '2. Recursos', tipo: 'textarea', completo: true, valor: v.recursos ?? '', ayuda: 'Materiales, guías, tecnología que se usará.', atributos: { maxlength: 5000 } })}
-        ${campo({ nombre: 'tiempos', etiqueta: '3. Tiempos', tipo: 'textarea', completo: true, valor: v.tiempos ?? '', ayuda: 'Distribución de la clase: inicio, desarrollo y cierre.', atributos: { maxlength: 5000 } })}
-        ${campo({ nombre: 'evaluacionAprendizaje', etiqueta: '4. Evaluación del aprendizaje', tipo: 'textarea', completo: true, valor: v.evaluacionAprendizaje ?? '', atributos: { maxlength: 5000 } })}
-        ${campo({ nombre: 'interaccionParticipantes', etiqueta: '5. Interacción de los participantes con los recursos', tipo: 'textarea', completo: true, valor: v.interaccionParticipantes ?? '', atributos: { maxlength: 5000 } })}
+        ${campo({ nombre: 'establecimiento', etiqueta: 'Establecimiento', valor: v.establecimiento ?? '', atributos: { maxlength: 150 } })}
+        ${campo({ nombre: 'curso', etiqueta: 'Curso', valor: v.curso ?? '', atributos: { maxlength: 50, placeholder: '1° Medio B' } })}
+        ${campo({ nombre: 'unidad', etiqueta: 'Unidad', completo: true, valor: v.unidad ?? '', atributos: { maxlength: 200 } })}
+        ${campo({ nombre: 'objetivoAprendizaje', etiqueta: 'Objetivo de aprendizaje / indicadores de evaluación', tipo: 'textarea', completo: true, valor: v.objetivoAprendizaje ?? '', atributos: { maxlength: 5000 } })}
+        ${campo({ nombre: 'objetivoActitudinal', etiqueta: 'Objetivo de aprendizaje actitudinal', tipo: 'textarea', completo: true, valor: v.objetivoActitudinal ?? '', atributos: { maxlength: 5000 } })}
+        ${campo({ nombre: 'objetivoClase', etiqueta: 'Objetivo de la clase', tipo: 'textarea', completo: true, valor: v.objetivoClase ?? '', atributos: { maxlength: 5000 } })}
+        ${campo({ nombre: 'fechaClase', etiqueta: 'Fecha', tipo: 'date', valor: v.fechaClase ?? '' })}
+        ${campo({ nombre: 'duracionMinutos', etiqueta: 'Duración de la clase (minutos)', tipo: 'number', valor: v.duracionMinutos ?? '', atributos: { min: 1, max: 600, placeholder: '90' } })}
+        ${campo({ nombre: 'recursos', etiqueta: 'Recursos', tipo: 'textarea', completo: true, valor: v.recursos ?? '', ayuda: 'Materiales, guías, tecnología que se usará.', atributos: { maxlength: 5000 } })}
+        ${campo({ nombre: 'instrumentosEvaluacion', etiqueta: 'Instrumentos de evaluación', tipo: 'textarea', completo: true, valor: v.instrumentosEvaluacion ?? '', atributos: { maxlength: 5000 } })}
+        <h3 class="completo" style="grid-column:1/-1;margin:.5rem 0 0">Descripción de la clase</h3>
+        ${PARTES.map(([clave, nombre]) => html`
+          ${campo({ nombre: `${clave}Minutos`, etiqueta: `${nombre} (minutos)`, tipo: 'number', valor: v[`${clave}Minutos`] ?? '', atributos: { min: 1, max: 600, 'data-parte': true } })}
+          ${campo({ nombre: clave, etiqueta: `${nombre}: relato de lo que se realizará`, tipo: 'textarea', completo: true, valor: v[clave] ?? '', atributos: { maxlength: 5000 } })}`)}
+        <p class="ayuda" id="suma-minutos" style="grid-column:1/-1" aria-live="polite"></p>
         <div class="campo completo">
           <label for="f-documentoFormal">Planificación formal (Word o PDF)</label>
           <input type="file" id="f-documentoFormal" accept=".docx,.pdf">
@@ -181,6 +196,19 @@ async function formulario(cont, ctx, idEdicion) {
 
   const form = cont.querySelector('#form');
   let idActual = editando ? Number(idEdicion) : null; // tras crear el borrador, los siguientes guardados son PUT
+
+  // S-76: inicio + desarrollo + cierre debe sumar la duración (el servidor lo exige; aquí solo se avisa en vivo)
+  const suma = form.querySelector('#suma-minutos');
+  const actualizarSuma = () => {
+    const n = (nombre) => Number(form.elements[nombre].value) || 0;
+    const partes = n('inicioMinutos') + n('desarrolloMinutos') + n('cierreMinutos');
+    const total = n('duracionMinutos');
+    suma.textContent = `Inicio + desarrollo + cierre: ${partes} de ${total || '—'} minutos de la clase.`;
+    suma.classList.toggle('error-campo', total > 0 && partes > 0 && partes !== total);
+  };
+  ['duracionMinutos', 'inicioMinutos', 'desarrolloMinutos', 'cierreMinutos']
+    .forEach((nombre) => form.elements[nombre].addEventListener('input', actualizarSuma));
+  actualizarSuma();
 
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -238,6 +266,8 @@ async function detalle(cont, ctx, id) {
   const posicion = { BORRADOR: 'BORRADOR', CON_OBSERVACIONES: 'BORRADOR' }[p.estado] ?? p.estado;
   const indice = pasos.findIndex((s) => s.clave === posicion);
 
+  const dato = (texto) => texto || '—';
+  const minutos = (m) => (m ? `${m} minutos` : 'minutos sin completar');
   const bloque = (titulo, texto) => html`<div class="elemento"><h3>${titulo}</h3>${texto ? html`<p>${texto}</p>` : html`<p class="falta-texto">Sin completar.</p>`}</div>`;
 
   cont.innerHTML = html`
@@ -253,16 +283,24 @@ async function detalle(cont, ctx, id) {
         <div class="tarjeta">
           <div class="tarjeta-titulo"><h2>Planificación de la clase ${badge(p.estado)}</h2></div>
           <dl class="datos datos-2">
-            <div><dt>Fecha de la clase</dt><dd>${fecha(p.fechaClase)}</dd></div>
-            <div><dt>Duración</dt><dd>${p.duracionMinutos ? `${p.duracionMinutos} minutos` : '—'}</dd></div>
+            <div><dt>Profesor/a</dt><dd>${p.estudiante.nombreCompleto}</dd></div>
+            <div><dt>Año y período</dt><dd>${p.periodo}</dd></div>
+            <div><dt>Asignatura</dt><dd>${p.asignaturaEscolar}</dd></div>
+            <div><dt>Establecimiento</dt><dd>${dato(p.establecimiento)}</dd></div>
+            <div><dt>Curso</dt><dd>${dato(p.curso)}</dd></div>
+            <div><dt>Unidad</dt><dd>${dato(p.unidad)}</dd></div>
+            <div><dt>Fecha</dt><dd>${fecha(p.fechaClase)}</dd></div>
+            <div><dt>Duración de la clase</dt><dd>${minutos(p.duracionMinutos)}</dd></div>
             <div><dt>Creada</dt><dd>${fechaHora(p.fechaCreacion)}</dd></div>
             <div><dt>Última actualización</dt><dd>${fechaHora(p.fechaActualizacion)}</dd></div>
           </dl>
-          ${bloque('1. Objetivo de la clase', p.objetivo)}
-          ${bloque('2. Recursos', p.recursos)}
-          ${bloque('3. Tiempos', p.tiempos)}
-          ${bloque('4. Evaluación del aprendizaje', p.evaluacionAprendizaje)}
-          ${bloque('5. Interacción de los participantes con los recursos', p.interaccionParticipantes)}
+          ${bloque('Objetivo de aprendizaje / indicadores de evaluación', p.objetivoAprendizaje)}
+          ${bloque('Objetivo de aprendizaje actitudinal', p.objetivoActitudinal)}
+          ${bloque('Objetivo de la clase', p.objetivoClase)}
+          ${bloque('Recursos', p.recursos)}
+          ${bloque('Instrumentos de evaluación', p.instrumentosEvaluacion)}
+          <h3 style="margin:1rem 0 .25rem">Descripción de la clase</h3>
+          ${PARTES.map(([clave, nombre]) => bloque(`${nombre} (${minutos(p[`${clave}Minutos`])})`, p[clave]))}
         </div>
         <div id="documentos"></div>
       </div>

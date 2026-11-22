@@ -236,13 +236,26 @@ CREATE TABLE planificacion (
     id                        BIGINT       NOT NULL AUTO_INCREMENT,
     inscripcion_id            BIGINT       NOT NULL,
     titulo                    VARCHAR(200) NOT NULL,
+    -- Formato oficial de la carrera ("FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA", S-45, migración 012).
+    -- No se guardan: el nombre del profesor/a (el estudiante), el año y el período (inscripcion.periodo);
+    -- "Asignatura: Matemática" es un texto fijo.
+    establecimiento           VARCHAR(150) NULL,
+    curso                     VARCHAR(50)  NULL,
+    unidad                    VARCHAR(200) NULL,
+    objetivo_aprendizaje      TEXT         NULL COMMENT 'Objetivo de aprendizaje / indicadores de evaluacion',
+    objetivo_actitudinal      TEXT         NULL COMMENT 'Objetivo de aprendizaje actitudinal',
+    objetivo_clase            TEXT         NULL,
     fecha_clase               DATE         NULL,
-    objetivo                  TEXT         NULL,
-    recursos                  TEXT         NULL,
-    tiempos                   TEXT         NULL,
     duracion_minutos          INT          NULL,
-    evaluacion_aprendizaje    TEXT         NULL,
-    interaccion_participantes TEXT         NULL COMMENT 'Cómo interactúa cada participante con los recursos',
+    recursos                  TEXT         NULL,
+    instrumentos_evaluacion   TEXT         NULL,
+    -- Descripción de la clase en tres partes, cada una con su relato y sus minutos
+    inicio                    TEXT         NULL COMMENT 'Relato del inicio de la clase',
+    inicio_minutos            INT          NULL,
+    desarrollo                TEXT         NULL COMMENT 'Relato del desarrollo de la clase',
+    desarrollo_minutos        INT          NULL,
+    cierre                    TEXT         NULL COMMENT 'Relato del cierre de la clase',
+    cierre_minutos            INT          NULL,
     estado                    VARCHAR(20)  NOT NULL DEFAULT 'BORRADOR'
         COMMENT 'BORRADOR, EN_REVISION_GUIA, CON_OBSERVACIONES, EN_AUTORIZACION, AUTORIZADA',
     fecha_creacion            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -252,17 +265,29 @@ CREATE TABLE planificacion (
     CONSTRAINT ck_planificacion_estado CHECK (estado IN
         ('BORRADOR', 'EN_REVISION_GUIA', 'CON_OBSERVACIONES', 'EN_AUTORIZACION', 'AUTORIZADA')),
     CONSTRAINT ck_planificacion_duracion CHECK (duracion_minutos IS NULL OR duracion_minutos > 0),
+    CONSTRAINT ck_planificacion_minutos CHECK (
+        (inicio_minutos IS NULL OR inicio_minutos > 0)
+        AND (desarrollo_minutos IS NULL OR desarrollo_minutos > 0)
+        AND (cierre_minutos IS NULL OR cierre_minutos > 0)),
+    -- S-76: cuando están los cuatro, inicio + desarrollo + cierre = duración de la clase
+    CONSTRAINT ck_planificacion_tiempos CHECK (
+        inicio_minutos IS NULL OR desarrollo_minutos IS NULL OR cierre_minutos IS NULL OR duracion_minutos IS NULL
+        OR inicio_minutos + desarrollo_minutos + cierre_minutos = duracion_minutos),
     -- Un borrador (o una devuelta que se está corrigiendo) puede estar incompleto;
-    -- para estar en revisión, en autorización o autorizada, todos los elementos son obligatorios.
+    -- para estar en revisión, en autorización o autorizada, todos los campos del formato son obligatorios.
     CONSTRAINT ck_planificacion_completa CHECK (
         estado IN ('BORRADOR', 'CON_OBSERVACIONES')
-        OR (fecha_clase IS NOT NULL AND objetivo IS NOT NULL AND recursos IS NOT NULL
-            AND tiempos IS NOT NULL AND duracion_minutos IS NOT NULL
-            AND evaluacion_aprendizaje IS NOT NULL AND interaccion_participantes IS NOT NULL)),
+        OR (establecimiento IS NOT NULL AND curso IS NOT NULL AND unidad IS NOT NULL
+            AND objetivo_aprendizaje IS NOT NULL AND objetivo_actitudinal IS NOT NULL AND objetivo_clase IS NOT NULL
+            AND fecha_clase IS NOT NULL AND duracion_minutos IS NOT NULL AND recursos IS NOT NULL
+            AND instrumentos_evaluacion IS NOT NULL
+            AND inicio IS NOT NULL AND inicio_minutos IS NOT NULL
+            AND desarrollo IS NOT NULL AND desarrollo_minutos IS NOT NULL
+            AND cierre IS NOT NULL AND cierre_minutos IS NOT NULL)),
     -- Planificaciones de un estudiante por estado (bandeja del guía) y por fecha de clase
     INDEX ix_planificacion_inscripcion_estado (inscripcion_id, estado),
     INDEX ix_planificacion_inscripcion_fecha  (inscripcion_id, fecha_clase)
-) ENGINE = InnoDB COMMENT = 'Plan escrito de una clase, con el formato de la carrera (S-09)';
+) ENGINE = InnoDB COMMENT = 'Plan escrito de una clase, con el formato oficial de la carrera (S-45, migracion 012)';
 
 CREATE TABLE revision_planificacion (
     id              BIGINT      NOT NULL AUTO_INCREMENT,

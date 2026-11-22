@@ -190,7 +190,7 @@ Interfaz en HTML + CSS + JavaScript puro (sin frameworks, sin npm, sin CDN) en `
 | S-42 | La nota de voz (HU-11) se puede grabar con la evaluación en `BORRADOR` o ya `FINALIZADA`, porque es retroalimentación complementaria: no cambia el puntaje ni rompe la inmutabilidad de una evaluación finalizada (ni la aplicación ni la base lo impiden) | HU-11 |
 | S-43 | Tamaño y formatos de archivo: documentos hasta 10 MB (`.docx`/`.pdf` en planificaciones; `.docx`/`.xlsx`/`.pdf` en evaluaciones, `AlmacenamientoArchivosService.TAMANO_MAXIMO_DOCUMENTO`) y audio hasta 25 MB (`.webm`/`.ogg`/`.mp3`/`.wav`/`.m4a`, `TAMANO_MAXIMO_AUDIO`). Son decisiones propias, no confirmadas por el cliente | HU-11, HU-21, HU-22 |
 | S-44 | Se agregaron endpoints no pedidos explícitamente: `GET .../documentos` (listar, además de descargar uno) y `GET .../nota-voz/audio` (el audio en una ruta aparte de los metadatos), necesarios para que el front-end funcione | HU-11, HU-21, HU-22 |
-| S-45 | `planificacion` sigue con los cinco elementos de la entrevista (no los del formato oficial real del `.docx`, ver S-09 en `product-backlog.md`): migrar la entidad, los DTO, el formulario y las 146 pruebas existentes queda para un sprint futuro | HU-04 |
+| S-45 | **Resuelto el 2026-11-21 (migración 012):** `planificacion` pasó al formato oficial del `.docx`. Antes: `planificacion` seguía con los cinco elementos de la entrevista (no los del formato oficial real del `.docx`, ver S-09 en `product-backlog.md`): migrar la entidad, los DTO, el formulario y las 146 pruebas existentes queda para un sprint futuro | HU-04 |
 | S-46 | HU-15, HU-16, HU-17 y HU-20 se reescribieron en `product-backlog.md` con el contenido real de "RetroPlani Mate" (`ChatBot (1).rar`), pero siguen sin implementarse en este backend | HU-15, HU-16, HU-17, HU-20 |
 | S-47 | **Añadido el 22-sep (Fase H):** `PlanificacionService.enviar` exige `DocumentoPlanificacionRepository.existsByPlanificacionId`: sin al menos un documento adjunto, enviar a revisión da 400 (se suma a `elementosFaltantes()` como `"documentoFormal"`). Basta con que exista uno; no hay que volver a subirlo en cada reenvío. Decisión propia, no confirmada por el cliente | HU-04, HU-21 |
 
@@ -470,6 +470,7 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 | S-73 | (2026-10-26, HU-20) El estudiante ve la fecha de la **última** lectura del jefe, no la lista completa ni quién la hizo; la lista completa queda en la base para auditoría | HU-20 |
 | S-74 | (2026-10-26, HU-29) El orden de los fragmentos es TF-IDF con coseno (TF = 1 + ln veces, IDF de BM25) y las palabras cuentan desde 3 letras (para "DUA") | HU-29 |
 | S-75 | (2026-10-26, HU-30) La Escala SUS adaptada y la rúbrica de juicio experto (textos de la propuesta RetroPlani Mate V3, no inventados) las responde dentro del sistema cualquier **estudiante validador**, una vez cada una, con la validación abierta o cerrada; un juez experto usaría una cuenta de estudiante validador. En la propuesta son para los jueces; el instrumento de usuarios (formato de Andrés Seguel) no está en el material y no se construyó. No se guarda la identificación del juez (filiación, firma) | HU-30 |
+| S-76 | (2026-11-21, S-45) **SUPUESTO:** inicio + desarrollo + cierre (minutos) debe ser igual a la duración de la clase. El formato oficial pide minutos para la clase y para cada parte, pero no dice que deban calzar. Se comprueba cuando están los cuatro valores (un borrador puede tenerlos a medias): 400 al crear o editar si no calza (`PlanificacionService`, antes de tocar la entidad) y `ck_planificacion_tiempos` en la base | HU-04 |
 
 ## Problemas conocidos y limitaciones
 
@@ -490,7 +491,7 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 - Sprint 2: configurar pautas (HU-06), pautas de Práctica Pedagógica/Profesional y tutor (HU-07), informes (HU-08), nota final (HU-09), duplas (HU-10), cambiar la contraseña (HU-26), gestión de archivos de pautas formales (HU-25), configurar parámetros del sistema (HU-27), exportar el historial en PDF (HU-28).
 - Sprints 3 y 4: panel del coordinador, chatbot y su base de conocimiento (usará `GET /api/estudiantes/{id}/historial` como contexto; HU-15 a HU-17, HU-29, HU-30).
 - Agregar `@Version` en `Planificacion` y `Evaluacion` y paginación en los listados.
-- Migrar `Planificacion` al formato oficial real (S-45), cuando se decida el impacto en el formulario y en las 146 pruebas que ya lo usan.
+- ~~Migrar `Planificacion` al formato oficial real (S-45)~~: hecho el 2026-11-21 (migración 012).
 
 ## Migraciones de base de datos
 
@@ -1360,3 +1361,49 @@ El coordinador elige el tutor **en el mismo formulario** de "Nueva inscripción"
   Pedagógica, visible en Práctica Profesional; se vacía al cambiar a una práctica sin tutor; inscripción de Práctica
   Profesional 2027-1 creada **con tutor en un solo paso** (la lista muestra "Tutor: Rodrigo Saavedra Figueroa" y la API
   devuelve el tutor 33); sin errores de JavaScript. La base se recreó al final (`bd.ps1`).
+
+## Sprint 2: S-45, planificación con el formato oficial de la carrera (2026-11-21, rama `feature/s45-planificacion`)
+
+`planificacion` pasó de los elementos de la entrevista (objetivo, recursos, tiempos, evaluación del aprendizaje,
+interacción de los participantes) a los campos de **"FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx"**, la planificación
+oficial que entregó la carrera el 22-sep. Decisiones del usuario: opción C para los datos de demo, regla de la suma (S-76),
+documento adjunto obligatorio sin cambios (S-47), "Matemática" como texto fijo y `titulo` igual que antes.
+
+| Formato oficial | En el sistema |
+|---|---|
+| Nombre del profesor/a, año, período | No se guardan: el estudiante y `inscripcion.periodo` |
+| Asignatura ("Matemática") | Texto fijo (`Planificacion.ASIGNATURA_ESCOLAR`, `asignaturaEscolar` en el DTO) |
+| Establecimiento, curso, unidad | `establecimiento`, `curso`, `unidad` (nuevas) |
+| Objetivo de aprendizaje / indicadores; objetivo actitudinal | `objetivo_aprendizaje`, `objetivo_actitudinal` (nuevas) |
+| Objetivo de la clase | `objetivo_clase` (antes `objetivo`) |
+| Fecha, duración, recursos | `fecha_clase`, `duracion_minutos`, `recursos` (sin cambios) |
+| Instrumentos de evaluación | `instrumentos_evaluacion` (antes `evaluacion_aprendizaje`) |
+| Inicio, desarrollo y cierre, cada uno con sus minutos | `inicio`/`inicio_minutos`, `desarrollo`/`desarrollo_minutos`, `cierre`/`cierre_minutos` (nuevas; reemplazan `tiempos`) |
+| — | `interaccion_participantes` eliminada (no está en el formato) |
+
+- **Migración `012_formato_oficial_planificacion.sql`** (para una base ya instalada; `schema.sql` ya la incluye). Antes de
+  cambiar nada comprueba que cada planificación ya enviada tenga sus minutos legibles en `tiempos` y que sumen la duración;
+  si no, se detiene con un error que nombra los ids (nunca inventa minutos). Copia lo que calza, rellena lo que el formato
+  anterior no tenía con "(registrada con el formato anterior)" solo en las ya enviadas, borra las dos columnas viejas y
+  agrega `ck_planificacion_minutos`, `ck_planificacion_tiempos` (S-76) y la nueva `ck_planificacion_completa`.
+  **Probada** sobre la base vieja con las 19 planificaciones de demo (copió los minutos de las 17 que tenían `tiempos`) y
+  en una base aparte con una planificación sin minutos legibles (se detuvo sin cambios). La estructura que deja es
+  **idéntica** a la de `schema.sql` (columnas y restricciones comparadas en `information_schema`).
+- **Seed (opción C):** las 19 planificaciones de demo reescritas en el formato nuevo, con los mismos ids, inscripciones,
+  títulos, fechas, estados y fechas de creación (las revisiones y evaluaciones que las referencian no cambian). Colegio y
+  curso tomados de las evaluaciones del seed; las simulaciones de Ambientes de Aprendizaje dicen "Universidad del Bío-Bío
+  (simulación en aula)".
+- **Backend:** entidad, `CamposPlanificacion` (interfaz común de los dos request, así el servicio copia con un solo método),
+  `PlanificacionCrearRequest`, `PlanificacionActualizarRequest`, `PlanificacionDto`, `PlanificacionService` (S-76: 400 si la
+  suma no calza, validado **antes** de tocar la entidad) y el texto de la planificación que recibe el chatbot (`ChatbotService`).
+- **Front-end:** `planificaciones.js` (formulario en el orden del formato, con aviso en vivo de la suma; detalle con el
+  encabezado del formato y la "Descripción de la clase" en tres partes) y `evaluaciones.js` (al vincular una planificación
+  se completan también el establecimiento y el curso, además de la fecha y el objetivo).
+- **Pruebas:** **283, 0 fallos** (antes 281). `HU04PlanificacionIntegracionTest` y `PlanificacionServiceTest` adaptadas al
+  formato nuevo, más 2 pruebas nuevas de S-76 (una de integración y una unitaria). `bd.ps1`: **33/33 negativas** (2 nuevas:
+  minutos en 0 y suma que no calza).
+- **Navegador** (Chrome headless por el protocolo DevTools): Camila crea una planificación con los 16 campos (ya no están los
+  viejos); el aviso marca "100 de 90" y guardar da el 400 sin salir del formulario; con 10+60+20 se guarda, adjunta el PDF y
+  se envía a revisión; el detalle muestra "Matemática", colegio, curso, unidad e "Inicio (10 minutos)". El guía la ve, ve la
+  planificación 1 del seed en el formato nuevo y, en "Nueva evaluación", al vincular la planificación 3 se completan
+  establecimiento, curso y objetivo. Sin errores de JavaScript.

@@ -1,6 +1,7 @@
 package cl.ubb.pem.practicas.service;
 
 import cl.ubb.pem.practicas.config.PlanificacionProperties;
+import cl.ubb.pem.practicas.dto.CamposPlanificacion;
 import cl.ubb.pem.practicas.dto.PlanificacionActualizarRequest;
 import cl.ubb.pem.practicas.dto.PlanificacionCrearRequest;
 import cl.ubb.pem.practicas.dto.PlanificacionDto;
@@ -80,8 +81,7 @@ public class PlanificacionService {
         Planificacion p = new Planificacion();
         p.setInscripcion(inscripcion);
         p.setEstado(EstadoPlanificacion.BORRADOR);
-        copiarElementos(p, r.titulo(), r.fechaClase(), r.objetivo(), r.recursos(), r.tiempos(), r.duracionMinutos(),
-                r.evaluacionAprendizaje(), r.interaccionParticipantes());
+        copiarElementos(p, r);
         return PlanificacionDto.desde(planificaciones.save(p));
     }
 
@@ -93,8 +93,7 @@ public class PlanificacionService {
             throw new ConflictoException("La planificación está " + p.getEstado()
                     + ": solo se puede editar en BORRADOR o CON_OBSERVACIONES.");
         }
-        copiarElementos(p, r.titulo(), r.fechaClase(), r.objetivo(), r.recursos(), r.tiempos(), r.duracionMinutos(),
-                r.evaluacionAprendizaje(), r.interaccionParticipantes());
+        copiarElementos(p, r);
         return PlanificacionDto.desde(planificaciones.saveAndFlush(p));
     }
 
@@ -203,16 +202,34 @@ public class PlanificacionService {
         return i.getEstudiante().getUsuario().getId().equals(actor.id());
     }
 
-    private static void copiarElementos(Planificacion p, String titulo, LocalDate fecha, String objetivo, String recursos,
-                                        String tiempos, Integer duracion, String evaluacion, String interaccion) {
-        p.setTitulo(titulo.trim());
-        p.setFechaClase(fecha);
-        p.setObjetivo(limpiar(objetivo));
-        p.setRecursos(limpiar(recursos));
-        p.setTiempos(limpiar(tiempos));
-        p.setDuracionMinutos(duracion);
-        p.setEvaluacionAprendizaje(limpiar(evaluacion));
-        p.setInteraccionParticipantes(limpiar(interaccion));
+    /** Copia los campos del formato oficial (S-45) y comprueba que las tres partes sumen la duración (S-76). */
+    private static void copiarElementos(Planificacion p, CamposPlanificacion r) {
+        // SUPUESTO S-76: el formato pide minutos para la clase y para cada parte; deben calzar. Un borrador puede
+        // tener solo algunos (se comprueba cuando están los cuatro, igual que ck_planificacion_tiempos en la base).
+        // Se valida con el pedido, antes de tocar la entidad: si no calza, la planificación queda como estaba.
+        Integer suma = Planificacion.sumaDePartesQueNoCalza(r.duracionMinutos(), r.inicioMinutos(),
+                r.desarrolloMinutos(), r.cierreMinutos());
+        if (suma != null) {
+            throw new ReglaNegocioException("Inicio, desarrollo y cierre suman " + suma + " minutos, pero la duración de la clase es "
+                    + r.duracionMinutos() + " minutos: deben coincidir.");
+        }
+        p.setTitulo(r.titulo().trim());
+        p.setEstablecimiento(limpiar(r.establecimiento()));
+        p.setCurso(limpiar(r.curso()));
+        p.setUnidad(limpiar(r.unidad()));
+        p.setObjetivoAprendizaje(limpiar(r.objetivoAprendizaje()));
+        p.setObjetivoActitudinal(limpiar(r.objetivoActitudinal()));
+        p.setObjetivoClase(limpiar(r.objetivoClase()));
+        p.setFechaClase(r.fechaClase());
+        p.setDuracionMinutos(r.duracionMinutos());
+        p.setRecursos(limpiar(r.recursos()));
+        p.setInstrumentosEvaluacion(limpiar(r.instrumentosEvaluacion()));
+        p.setInicio(limpiar(r.inicio()));
+        p.setInicioMinutos(r.inicioMinutos());
+        p.setDesarrollo(limpiar(r.desarrollo()));
+        p.setDesarrolloMinutos(r.desarrolloMinutos());
+        p.setCierre(limpiar(r.cierre()));
+        p.setCierreMinutos(r.cierreMinutos());
     }
 
     /** Un texto vacío o solo con espacios cuenta como no completado (nulo). */

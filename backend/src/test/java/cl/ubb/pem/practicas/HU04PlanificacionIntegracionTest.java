@@ -36,12 +36,22 @@ class HU04PlanificacionIntegracionTest extends IntegracionBase {
         m.put("inscripcionId", inscripcionId);
         m.put("titulo", "Sistemas de ecuaciones 2x2");
         m.put("fechaClase", LocalDate.now().plusDays(10).toString());   // relativa a hoy: la regla exige 3 días de anticipación
-        m.put("objetivo", "Resolver sistemas de ecuaciones por sustitución.");
-        m.put("recursos", "Guía de problemas y pizarra.");
-        m.put("tiempos", "Inicio 10 min; desarrollo 65 min; cierre 15 min.");
+        // los campos del formato oficial de la carrera (S-45)
+        m.put("establecimiento", "Liceo Bicentenario Ejemplo");
+        m.put("curso", "1° Medio B");
+        m.put("unidad", "Álgebra y funciones");
+        m.put("objetivoAprendizaje", "Resolver sistemas de ecuaciones lineales. Indicadores: resuelven por sustitución.");
+        m.put("objetivoActitudinal", "Demostrar esfuerzo y perseverancia al resolver problemas.");
+        m.put("objetivoClase", "Resolver sistemas de ecuaciones por sustitución.");
         m.put("duracionMinutos", 90);
-        m.put("evaluacionAprendizaje", "Problema de cierre resuelto por cada estudiante.");
-        m.put("interaccionParticipantes", "Los estudiantes comparan estrategias en grupos.");
+        m.put("recursos", "Guía de problemas y pizarra.");
+        m.put("instrumentosEvaluacion", "Problema de cierre resuelto por cada estudiante.");
+        m.put("inicio", "Problema de dos incógnitas para activar conocimientos previos.");
+        m.put("inicioMinutos", 10);
+        m.put("desarrollo", "Los estudiantes comparan estrategias en grupos.");
+        m.put("desarrolloMinutos", 65);
+        m.put("cierre", "Problema de cierre individual.");
+        m.put("cierreMinutos", 15);   // 10 + 65 + 15 = 90 (S-76)
         return m;
     }
 
@@ -95,7 +105,7 @@ class HU04PlanificacionIntegracionTest extends IntegracionBase {
 
         // el estudiante corrige y reenvía
         Map<String, Object> mejorada = sinInscripcion(completa(3));
-        mejorada.put("evaluacionAprendizaje", "Ticket de salida y análisis de errores frecuentes.");
+        mejorada.put("instrumentosEvaluacion", "Ticket de salida y análisis de errores frecuentes.");
         reemplazar(base, CAMILA, mejorada).andExpect(status().isOk());
         enviar(base + "/enviar", CAMILA).andExpect(status().isOk());
         enviar(base + "/revision-guia", GUIA1, decision("APROBADA", "Ahora sí.")).andExpect(status().isOk())
@@ -146,7 +156,8 @@ class HU04PlanificacionIntegracionTest extends IntegracionBase {
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.estado").value("BORRADOR"))).get("id").asLong();
         sincronizar();
         JsonNode err = cuerpo(enviar("/api/planificaciones/" + id + "/enviar", CAMILA).andExpect(status().isBadRequest()));
-        assertThat(err.get("mensaje").asText()).contains("objetivo", "recursos", "tiempos", "evaluacionAprendizaje", "interaccionParticipantes");
+        assertThat(err.get("mensaje").asText()).contains("establecimiento", "unidad", "objetivoAprendizaje", "objetivoClase", "recursos",
+                "instrumentosEvaluacion", "inicioMinutos", "desarrollo", "cierreMinutos");
         // el borrador del seed (id 5) tampoco se puede enviar
         enviar("/api/planificaciones/5/enviar", CAMILA).andExpect(status().isBadRequest());
     }
@@ -156,7 +167,7 @@ class HU04PlanificacionIntegracionTest extends IntegracionBase {
         long id = cuerpo(enviar("/api/planificaciones", CAMILA, completa(3)).andExpect(status().isCreated())).get("id").asLong();
         JsonNode err = cuerpo(enviar("/api/planificaciones/" + id + "/enviar", CAMILA).andExpect(status().isBadRequest()));
         assertThat(err.get("mensaje").asText()).contains("documentoFormal");
-        assertThat(err.get("mensaje").asText()).doesNotContain("objetivo", "recursos");   // los demás campos sí están completos
+        assertThat(err.get("mensaje").asText()).doesNotContain("objetivoClase", "recursos", "inicio");   // los demás campos sí están completos
 
         adjuntarDocumentoFormal(id, CAMILA);
         enviar("/api/planificaciones/" + id + "/enviar", CAMILA).andExpect(status().isOk())
@@ -173,6 +184,35 @@ class HU04PlanificacionIntegracionTest extends IntegracionBase {
         Map<String, Object> duracionInvalida = completa(3);
         duracionInvalida.put("duracionMinutos", 0);
         enviar("/api/planificaciones", CAMILA, duracionInvalida).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void lasTresPartesDeLaClaseDebenSumarLaDuracion() throws Exception {   // S-45 y supuesto S-76
+        Map<String, Object> noCalza = completa(3);
+        noCalza.put("cierreMinutos", 30);   // 10 + 65 + 30 = 105, no 90
+        JsonNode err = cuerpo(enviar("/api/planificaciones", CAMILA, noCalza).andExpect(status().isBadRequest()));
+        assertThat(err.get("mensaje").asText()).contains("105", "90");
+
+        JsonNode p = cuerpo(enviar("/api/planificaciones", CAMILA, completa(3)).andExpect(status().isCreated()));
+        long id = p.get("id").asLong();
+        assertThat(p.get("asignaturaEscolar").asText()).isEqualTo("Matemática");   // texto fijo del formato
+        assertThat(p.get("periodo").asText()).isEqualTo("2026-2");                 // año y período, de la inscripción
+        assertThat(p.get("inicioMinutos").asInt()).isEqualTo(10);
+        assertThat(p.get("cierre").asText()).isEqualTo("Problema de cierre individual.");
+
+        // al editar tampoco puede dejar de calzar, y la planificación queda como estaba
+        Map<String, Object> editada = sinInscripcion(completa(3));
+        editada.put("desarrolloMinutos", 50);
+        reemplazar("/api/planificaciones/" + id, CAMILA, editada).andExpect(status().isBadRequest());
+        consultar("/api/planificaciones/" + id, CAMILA).andExpect(jsonPath("$.desarrolloMinutos").value(65));
+
+        // un borrador a medias no se compara hasta tener los cuatro valores
+        enviar("/api/planificaciones", CAMILA, Map.of("inscripcionId", 3, "titulo", "A medias",
+                "duracionMinutos", 90, "inicioMinutos", 10)).andExpect(status().isCreated());
+        // y los minutos de cada parte deben ser positivos
+        Map<String, Object> ceroMinutos = completa(3);
+        ceroMinutos.put("inicioMinutos", 0);
+        enviar("/api/planificaciones", CAMILA, ceroMinutos).andExpect(status().isBadRequest());
     }
 
     @Test

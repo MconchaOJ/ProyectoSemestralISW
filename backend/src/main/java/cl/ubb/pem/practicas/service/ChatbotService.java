@@ -271,13 +271,22 @@ public class ChatbotService {
         StringBuilder s = new StringBuilder("=== PLANIFICACIÓN EN REVISIÓN (adjuntada por el estudiante desde el sistema) ===\n");
         s.append("Título: ").append(p.getTitulo()).append('\n');
         s.append("Estado en el sistema: ").append(p.getEstado()).append('\n');
+        // Campos del formato oficial de la carrera, en su orden (S-45)
+        s.append("Asignatura: ").append(Planificacion.ASIGNATURA_ESCOLAR).append('\n');
+        s.append("Establecimiento: ").append(valor(p.getEstablecimiento())).append('\n');
+        s.append("Curso: ").append(valor(p.getCurso())).append('\n');
+        s.append("Unidad: ").append(valor(p.getUnidad())).append('\n');
+        s.append("Objetivo de aprendizaje / indicadores de evaluación: ").append(valor(p.getObjetivoAprendizaje())).append('\n');
+        s.append("Objetivo de aprendizaje actitudinal: ").append(valor(p.getObjetivoActitudinal())).append('\n');
+        s.append("Objetivo de la clase: ").append(valor(p.getObjetivoClase())).append('\n');
         s.append("Fecha de la clase: ").append(valor(p.getFechaClase())).append('\n');
-        s.append("Duración: ").append(p.getDuracionMinutos() == null ? "(sin completar)" : p.getDuracionMinutos() + " minutos").append('\n');
-        s.append("Objetivo: ").append(valor(p.getObjetivo())).append('\n');
+        s.append("Duración de la clase: ").append(minutos(p.getDuracionMinutos())).append('\n');
         s.append("Recursos: ").append(valor(p.getRecursos())).append('\n');
-        s.append("Tiempos: ").append(valor(p.getTiempos())).append('\n');
-        s.append("Evaluación del aprendizaje: ").append(valor(p.getEvaluacionAprendizaje())).append('\n');
-        s.append("Interacción de los participantes con los recursos: ").append(valor(p.getInteraccionParticipantes())).append('\n');
+        s.append("Instrumentos de evaluación: ").append(valor(p.getInstrumentosEvaluacion())).append('\n');
+        s.append("Descripción de la clase:\n");
+        s.append("- Inicio (").append(minutos(p.getInicioMinutos())).append("): ").append(valor(p.getInicio())).append('\n');
+        s.append("- Desarrollo (").append(minutos(p.getDesarrolloMinutos())).append("): ").append(valor(p.getDesarrollo())).append('\n');
+        s.append("- Cierre (").append(minutos(p.getCierreMinutos())).append("): ").append(valor(p.getCierre())).append('\n');
 
         List<DocumentoPlanificacion> docs = documentos.findByPlanificacionIdOrderByFechaSubidaAsc(p.getId());
         if (docs.isEmpty()) {
@@ -317,6 +326,10 @@ public class ChatbotService {
 
     private static String valor(Object v) {
         return v == null || v.toString().isBlank() ? "(sin completar)" : v.toString();
+    }
+
+    private static String minutos(Integer m) {
+        return m == null ? "minutos sin completar" : m + " minutos";
     }
 
     private String motivoNoDisponible(Inscripcion i) {

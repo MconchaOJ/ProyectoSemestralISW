@@ -312,13 +312,22 @@ erDiagram
         bigint id PK
         bigint inscripcion_id FK
         varchar titulo
+        varchar establecimiento "formato oficial (S-45, migracion 012)"
+        varchar curso
+        varchar unidad
+        text objetivo_aprendizaje "objetivo de aprendizaje / indicadores"
+        text objetivo_actitudinal
+        text objetivo_clase
         date fecha_clase
-        text objetivo
-        text recursos
-        text tiempos
         int duracion_minutos
-        text evaluacion_aprendizaje
-        text interaccion_participantes
+        text recursos
+        text instrumentos_evaluacion
+        text inicio
+        int inicio_minutos
+        text desarrollo
+        int desarrollo_minutos
+        text cierre
+        int cierre_minutos "inicio + desarrollo + cierre = duracion (S-76)"
         varchar estado "BORRADOR, EN_REVISION_GUIA, CON_OBSERVACIONES, EN_AUTORIZACION, AUTORIZADA"
         datetime fecha_creacion
         datetime fecha_actualizacion
@@ -534,7 +543,7 @@ stateDiagram-v2
 | ID | Supuesto |
 |---|---|
 | S-05 | El profesor del curso es el académico UBB; se modela como un usuario con rol propio, así que si fuera del colegio no cambia la estructura |
-| S-09 | **Resuelto el 22-sep:** el formato oficial ya se conoce (`FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx`) y trae más campos que los cinco de la entrevista. El modelo sigue con los cinco elementos por ahora: migrar `planificacion` queda para un sprint futuro (S-45) |
+| S-09 | **Resuelto el 22-sep:** el formato oficial ya se conoce (`FORMATO DE PLANIFICACIÓN DIDÁCTICA DIARIA.docx`) y trae más campos que los cinco de la entrevista. **Migrado el 2026-11-21 (S-45, migración 012):** `planificacion` tiene los campos del formato oficial; inicio, desarrollo y cierre con sus minutos, que suman la duración (S-76) |
 | S-11 | ~~Un usuario tiene un solo rol~~ (desde el 2026-10-11, confirmado por el cliente: puede tener un segundo rol opcional en cuentas especiales, migración 004), y cada evaluación pertenece a una inscripción (un estudiante): **un estudiante reportó que en pareja cada alumno tiene su propia pauta**, que es justo lo que el modelo hace. Las duplas y grupos se modelarán en HU-10 con una tabla de agrupación |
 | S-13 | No se modela la duración de las prácticas (semanas y horas), porque los documentos del cliente se contradicen (un estudiante reportó 2 semanas en Investigación en el Aula, como dice la ficha) |
 | S-14 | El semestre y las asignaturas aprobadas se guardan aquí (los ingresa el coordinador); hoy la carrera los ve en la malla de la Intranet, y una importación desde ahí queda como mejora futura |
