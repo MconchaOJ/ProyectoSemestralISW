@@ -473,6 +473,7 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 | S-76 | (2026-11-21, S-45) **SUPUESTO:** inicio + desarrollo + cierre (minutos) debe ser igual a la duración de la clase. El formato oficial pide minutos para la clase y para cada parte, pero no dice que deban calzar. Se comprueba cuando están los cuatro valores (un borrador puede tenerlos a medias): 400 al crear o editar si no calza (`PlanificacionService`, antes de tocar la entidad) y `ck_planificacion_tiempos` en la base | HU-04 |
 | S-77 | (2026-11-21, HU-10) **SUPUESTO, a confirmar con el cliente:** en una dupla o grupo **cada integrante sigue con su propia planificación** (y su propia inscripción y pauta, S-11); el grupo solo agrupa y muestra con quién trabajó. Si el cliente dice que la dupla entrega una sola planificación, hay que rehacer el flujo y los permisos de HU-04 | HU-10 |
 | S-78 | (2026-11-21, HU-10) Reglas de los grupos que aplica la aplicación: una dupla tiene **exactamente 2** integrantes y un grupo **de 2 a 4**; todos de la misma asignatura y periodo (también lo exige la base con la clave foránea compuesta), **EN_CURSO**, en ningún otro grupo y con el **mismo profesor guía**; el establecimiento y el curso solo se guardan en las prácticas que van a un colegio. Solo el coordinador arma, cambia o deshace grupos; un grupo con algún integrante ya cerrado no se deshace (409) | HU-10 |
+| S-79 | (2026-11-21, HU-14) **SUPUESTO:** en el panel, una planificación "requiere atención" si espera al guía o al profesor del curso más de 3 días (configurable: `app.panel.dias-atencion`), contados desde su última actualización. "Sin evaluar" solo cuenta en prácticas que van a un colegio | HU-14 |
 
 ## Problemas conocidos y limitaciones
 
@@ -1506,3 +1507,8 @@ al reemplazar, **borrar el audio viejo**. Sin cambios de esquema.
   errores de JavaScript.
 - **Observación:** `adjuntos/notas-voz` tenía 332 audios huérfanos de pruebas anteriores (`bd.ps1` limpia la base pero no
   el disco). No se borraron; las pruebas de reemplazo ya no dejan huérfanos nuevos.
+
+
+## Sprint 2: HU-14 panel de monitoreo (2026-11-21, rama `feature/hu14-panel`)
+
+`GET /api/reportes/panel?asignaturaId=&periodo=` (COORDINADOR y JEFE_CARRERA) y pantalla "Panel de monitoreo" (menú y acceso rápido del Inicio): cifras, planificaciones que esperan más de 3 días (S-79, la más antigua primero), estudiantes en curso sin evaluar y avance por práctica y período con enlace al informe de HU-08. Sin cambios de esquema. **302 pruebas, 0 fallos** (`HU14PanelIntegracionTest`, 4). Navegador: 9/9 sin errores de JavaScript.

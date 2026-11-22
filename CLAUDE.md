@@ -6,6 +6,7 @@ evaluar y monitorear las 6 prácticas de cada estudiante. El chatbot llega en un
 voz con transcripción ya está construida (Fase E). El detalle completo está en `RESUMEN.md`.
 
 ## Estado (actualizado 2026-11-21)
+- **2026-11-21: HU-14 panel de monitoreo** (rama `feature/hu14-panel`): `/api/reportes/panel`, coordinador y jefe de carrera; SUPUESTO S-79 (3 días). **302 pruebas.** HU-19 (correo) queda pendiente de la configuración del correo de la UBB.
 - **2026-11-21: HU-11 completa** (rama `feature/hu11-reemplazar-audio`): «Volver a grabar» en la nota de voz reemplaza el audio y borra el anterior del disco (después del commit). Sin cambios de esquema. **298 pruebas.**
 - **2026-11-21: HU-10 duplas y grupos** (rama `feature/hu10-grupos`). Migración `013`: tabla `grupo_practica` e `inscripcion.grupo_id` con clave foránea compuesta (misma asignatura y periodo). El coordinador arma, cambia o deshace duplas y grupos en "Estudiantes e inscripciones" (`/api/grupos`). **SUPUESTOS S-77** (cada integrante sigue con su propia planificación; a confirmar con el cliente) **y S-78** (dupla = 2, grupo = 2 a 4, mismo guía, EN_CURSO). El historial muestra con quién trabajó. **23 tablas, 13 migraciones, 295 pruebas, 35 negativas.** Detalle al final de `backend/PROGRESO.md`.
 - **2026-11-21: HU-08 informes y HU-28 historial en PDF** (rama `feature/hu08-informes`). Pantalla "Informes por asignatura" (coordinador y jefe de carrera): notas finales, evaluaciones por pauta con distribución en tramos, planificaciones y una fila por estudiante, y el mismo informe en PDF (`/api/reportes/asignatura[/pdf]`). El informe por estudiante es el historial en PDF (`/api/estudiantes/{id|me}/historial/pdf`, mismas reglas de acceso). Solo PDF, sin Excel (decisión del usuario). Sin cambios de esquema. **289 pruebas, 33 negativas.** Detalle al final de `backend/PROGRESO.md`.
@@ -42,7 +43,7 @@ voz con transcripción ya está construida (Fase E). El detalle completo está e
 
 ## Comandos
 - Base de datos: `.\db\bd.ps1` (borra y recrea las tablas con los datos de demo) o `.\db\bd.ps1 -Accion Verificar`.
-- Compilar y probar: `cd backend` y `mvn clean package` (298 pruebas). Sin pruebas: `-DskipTests`.
+- Compilar y probar: `cd backend` y `mvn clean package` (302 pruebas). Sin pruebas: `-DskipTests`.
 - Arrancar: `java -jar target\practicas-0.1.0-SNAPSHOT.jar`. Swagger en `http://localhost:8080/swagger-ui.html` (login → botón Authorize). Front-end en `http://localhost:8080`.
 
 ## Claves (regla estricta)

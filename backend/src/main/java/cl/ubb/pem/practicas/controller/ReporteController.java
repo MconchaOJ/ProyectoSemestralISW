@@ -1,8 +1,10 @@
 package cl.ubb.pem.practicas.controller;
 
 import cl.ubb.pem.practicas.dto.InformeAsignaturaDto;
+import cl.ubb.pem.practicas.dto.PanelDto;
 import cl.ubb.pem.practicas.service.CartolaPracticasService;
 import cl.ubb.pem.practicas.service.InformeAsignaturaService;
+import cl.ubb.pem.practicas.service.PanelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,10 +29,25 @@ public class ReporteController {
 
     private final CartolaPracticasService cartola;
     private final InformeAsignaturaService informes;
+    private final PanelService panel;
 
-    public ReporteController(CartolaPracticasService cartola, InformeAsignaturaService informes) {
+    public ReporteController(CartolaPracticasService cartola, InformeAsignaturaService informes, PanelService panel) {
         this.cartola = cartola;
         this.informes = informes;
+        this.panel = panel;
+    }
+
+    @GetMapping("/panel")
+    @PreAuthorize("hasAnyRole('COORDINADOR', 'JEFE_CARRERA')")
+    @Operation(summary = "Panel de monitoreo (HU-14)",
+            description = "Solo COORDINADOR y JEFE_CARRERA. Una fila por asignatura y periodo (inscritos, en curso, "
+                    + "planificaciones esperando al guía y al profesor del curso, evaluaciones finalizadas, estudiantes sin "
+                    + "evaluar) y lo que requiere atención: planificaciones que esperan revisión más de 3 días (S-79, "
+                    + "app.panel.dias-atencion) y estudiantes en curso sin ninguna evaluación finalizada en prácticas con guía. "
+                    + "Filtros opcionales por asignatura y periodo; 400 si el periodo no es AAAA-S. Solo lectura.")
+    public PanelDto panel(@RequestParam(required = false) Integer asignaturaId,
+                          @RequestParam(required = false) String periodo) {
+        return panel.panel(asignaturaId, periodo);
     }
 
     @GetMapping("/asignatura")

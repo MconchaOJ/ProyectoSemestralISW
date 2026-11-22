@@ -20,6 +20,7 @@ const VISTAS = {
   historial: () => import('./vistas/historial.js'),
   cartola: () => import('./vistas/cartola.js'),
   informes: () => import('./vistas/informes.js'),
+  panel: () => import('./vistas/panel.js'),
   pautas: () => import('./vistas/pautas.js'),
   chatbot: () => import('./vistas/chatbot.js'),
   'estilo-asistente': () => import('./vistas/estilo-asistente.js'),

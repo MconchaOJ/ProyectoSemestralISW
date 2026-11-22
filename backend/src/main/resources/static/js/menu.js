@@ -18,6 +18,8 @@ export const rolesDe = (usuario) => [usuario.rol, usuario.rolSecundario].filter(
 /** Funciones disponibles: funcionan contra la API real. `alias` = otras rutas que activan el mismo ítem. */
 export const FUNCIONES = [
   { ruta: 'cartola', icono: 'download', nombre: 'Cartola de prácticas', roles: [JEFE] },
+  // HU-14: panel de monitoreo (pendientes, evaluaciones y estudiantes sin evaluar)
+  { ruta: 'panel', icono: 'layers', nombre: 'Panel de monitoreo', roles: ['COORDINADOR', JEFE] },
   // HU-08: informe por asignatura y período (el coordinador y el jefe de carrera ven toda la carrera)
   { ruta: 'informes', icono: 'chart', nombre: 'Informes por asignatura', roles: ['COORDINADOR', JEFE] },
   { ruta: 'cuenta', icono: 'shield', nombre: 'Mi cuenta', roles: LECTURA },
@@ -67,6 +69,7 @@ export function itemActivo(seccion, roles) {
 /** Tarjetas de acceso rápido de la pantalla de inicio, por rol (con dos roles se suman: ver accesosPara). */
 export const ACCESOS = {
   COORDINADOR: [
+    { icono: 'layers', titulo: 'Panel de monitoreo', texto: 'Planificaciones atrasadas y estudiantes sin evaluar.', hash: '#/panel' },
     { icono: 'users', titulo: 'Registrar un estudiante', texto: 'Alta de estudiantes y profesores.', hash: '#/estudiantes' },
     { icono: 'clipboard', titulo: 'Inscribir en una práctica', texto: 'Asigna guía y profesor del curso.', hash: '#/inscripciones' },
     { icono: 'clock', titulo: 'Historial de un estudiante', texto: 'Recorrido por las 6 prácticas.', hash: '#/historial' },
@@ -98,6 +101,7 @@ export const ACCESOS = {
     { icono: 'clock', titulo: 'Historial de mis estudiantes', texto: 'Recorrido completo.', hash: '#/historial' },
   ],
   JEFE_CARRERA: [
+    { icono: 'layers', titulo: 'Panel de monitoreo', texto: 'Planificaciones atrasadas y estudiantes sin evaluar.', hash: '#/panel' },
     { icono: 'download', titulo: 'Cartola de prácticas', texto: 'PDF de las prácticas cerradas entre dos fechas.', hash: '#/cartola' },
     { icono: 'chart', titulo: 'Informe de una asignatura', texto: 'Promedios y distribución por período, en PDF.', hash: '#/informes' },
     { icono: 'clock', titulo: 'Historial de un estudiante', texto: 'Recorrido de cualquier estudiante (solo lectura).', hash: '#/historial' },
