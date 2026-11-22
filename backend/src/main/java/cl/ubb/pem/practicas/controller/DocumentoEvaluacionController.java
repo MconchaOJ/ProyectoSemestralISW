@@ -14,9 +14,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -43,6 +45,28 @@ public class DocumentoEvaluacionController {
     public DocumentoDto subir(@PathVariable Long evaluacionId, @RequestParam("archivo") MultipartFile archivo,
                               @AuthenticationPrincipal UsuarioAutenticado actor) {
         return documentos.subir(evaluacionId, archivo, actor);
+    }
+
+    @PutMapping(value = "/{docId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('PROFESOR_GUIA', 'TUTOR')")
+    @Operation(summary = "Reemplazar un documento de la evaluación (HU-22)",
+            description = "Solo el evaluador, con la evaluación en borrador o finalizada (S-82) y la inscripción EN_CURSO "
+                    + "(409 si está cerrada). El documento conserva su id; el archivo anterior se borra después del commit.")
+    public DocumentoDto reemplazar(@PathVariable Long evaluacionId, @PathVariable Long docId,
+                                   @RequestParam("archivo") MultipartFile archivo,
+                                   @AuthenticationPrincipal UsuarioAutenticado actor) {
+        return documentos.reemplazar(evaluacionId, docId, archivo, actor);
+    }
+
+    @DeleteMapping("/{docId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('PROFESOR_GUIA', 'TUTOR')")
+    @Operation(summary = "Borrar un documento de la evaluación (HU-22)",
+            description = "Solo el evaluador, con la evaluación en borrador o finalizada (S-82) y la inscripción EN_CURSO "
+                    + "(409 si está cerrada). El archivo se borra del disco después del commit.")
+    public void borrar(@PathVariable Long evaluacionId, @PathVariable Long docId,
+                       @AuthenticationPrincipal UsuarioAutenticado actor) {
+        documentos.borrar(evaluacionId, docId, actor);
     }
 
     @GetMapping

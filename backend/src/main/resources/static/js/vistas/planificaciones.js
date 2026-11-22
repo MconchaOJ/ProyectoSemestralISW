@@ -336,7 +336,9 @@ async function detalle(cont, ctx, id) {
   pintarAcciones(cont, ctx, p, insc);
   montarDocumentos(cont.querySelector('#documentos'), {
     base: `/api/planificaciones/${p.id}/documentos`,
-    puedeSubir: ctx.tiene('ESTUDIANTE'),
+    // HU-21: el estudiante sube, reemplaza o borra solo mientras la planificación está en sus manos
+    puedeSubir: ctx.tiene('ESTUDIANTE') && ['BORRADOR', 'CON_OBSERVACIONES'].includes(p.estado),
+    puedeModificar: ctx.tiene('ESTUDIANTE') && ['BORRADOR', 'CON_OBSERVACIONES'].includes(p.estado),
     ayuda: ['BORRADOR', 'CON_OBSERVACIONES'].includes(p.estado)
       ? 'Word (.docx) o PDF, máximo 10 MB. Obligatorio al menos uno para poder enviar a revisión.'
       : 'Word (.docx) o PDF, máximo 10 MB.',

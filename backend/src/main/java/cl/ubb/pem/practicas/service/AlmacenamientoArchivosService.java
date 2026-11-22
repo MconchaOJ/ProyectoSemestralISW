@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -89,6 +91,42 @@ public class AlmacenamientoArchivosService {
      * Borra un archivo ya guardado (HU-11: el audio viejo al reemplazar la nota de voz). No falla si ya no existe;
      * devuelve si lo borró. Nunca sale de la carpeta de adjuntos.
      */
+    /**
+     * HU-21/HU-22: borra el archivo cuando la transacción en curso se CONFIRMA (si se revierte, el archivo queda,
+     * porque la fila de la base también queda). Sin transacción activa, lo borra de inmediato.
+     */
+    public void borrarAlConfirmar(String rutaRelativa) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            borrar(rutaRelativa);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int estado) {
+                if (estado == STATUS_COMMITTED) {
+                    borrar(rutaRelativa);
+                }
+            }
+        });
+    }
+
+    /**
+     * HU-21/HU-22 (como HU-11): un archivo reemplaza a otro. Si la transacción se confirma se borra el viejo; si se
+     * revierte, el nuevo. Así el disco nunca queda con un archivo de más ni la base apunta a uno que no existe.
+     */
+    public void reemplazarAlConfirmar(String vieja, String nueva) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            borrar(vieja);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int estado) {
+                borrar(estado == STATUS_COMMITTED ? vieja : nueva);
+            }
+        });
+    }
+
     public boolean borrar(String rutaRelativa) {
         Path ruta = base.resolve(rutaRelativa).normalize();
         if (!ruta.startsWith(base) || ruta.equals(base)) {

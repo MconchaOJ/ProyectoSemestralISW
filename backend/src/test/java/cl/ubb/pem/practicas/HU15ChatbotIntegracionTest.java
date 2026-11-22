@@ -150,7 +150,9 @@ class HU15ChatbotIntegracionTest extends ChatbotIntegracionBase {
         escribir(CHAT_VALENTINA, VALENTINA, "Revisa esta", 9).andExpect(status().isBadRequest());
         escribir(CHAT_VALENTINA, VALENTINA, "Revisa esta", 999999).andExpect(status().isNotFound());
 
-        // Valentina sube su planificación formal en Word y una guía en PDF (HU-21)
+        // Valentina sube su planificación formal en Word y una guía en PDF (HU-21). Desde 2026-11-22 los documentos solo
+        // se suben con la planificación en borrador o con observaciones: la 8 (autorizada en el seed) vuelve a borrador.
+        em.createNativeQuery("UPDATE planificacion SET estado = 'BORRADOR' WHERE id = 8").executeUpdate();
         mvc.perform(multipart("/api/planificaciones/8/documentos", VALENTINA)
                         .file(archivo("archivo", "planificacion.docx",
                                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

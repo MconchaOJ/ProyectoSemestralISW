@@ -22,40 +22,40 @@ class DocumentosAdjuntosIntegracionTest extends IntegracionBase {
     @Test
     void elDuenoSubeUnDocumentoValidoYQuienVeLaPlanificacionLoDescarga() throws Exception {
         MockMultipartFile pdf = archivo("archivo", "planificacion.pdf", "application/pdf", PDF_PEQUENO);
-        JsonNode doc = cuerpo(mvc.perform(multipart("/api/planificaciones/3/documentos", CAMILA).file(pdf))
+        JsonNode doc = cuerpo(mvc.perform(multipart("/api/planificaciones/4/documentos", CAMILA).file(pdf))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nombreArchivo").value("planificacion.pdf"))
                 .andExpect(jsonPath("$.subidoPor.email").value(CAMILA)));
         long docId = doc.get("id").asLong();
 
-        consultar("/api/planificaciones/3/documentos", CAMILA).andExpect(jsonPath("$.length()").value(1));
+        consultar("/api/planificaciones/4/documentos", CAMILA).andExpect(jsonPath("$.length()").value(1));
         for (String vidente : new String[] {CAMILA, GUIA1, CURSO1, COORDINADOR}) {
-            consultar("/api/planificaciones/3/documentos/" + docId, vidente).andExpect(status().isOk());
+            consultar("/api/planificaciones/4/documentos/" + docId, vidente).andExpect(status().isOk());
         }
         // Diego no tiene relación con la inscripción 3 (es de Lorena/Trabajo Colaborativo, otra inscripción)
-        consultar("/api/planificaciones/3/documentos/" + docId, DIEGO).andExpect(status().isForbidden());
-        consultar("/api/planificaciones/3/documentos/" + docId, null).andExpect(status().isUnauthorized());
+        consultar("/api/planificaciones/4/documentos/" + docId, DIEGO).andExpect(status().isForbidden());
+        consultar("/api/planificaciones/4/documentos/" + docId, null).andExpect(status().isUnauthorized());
     }
 
     @Test
     void soloElDuenoDeLaPlanificacionPuedeSubirDocumentos() throws Exception {
         MockMultipartFile pdf = archivo("archivo", "planificacion.pdf", "application/pdf", PDF_PEQUENO);
-        mvc.perform(multipart("/api/planificaciones/3/documentos", DIEGO).file(pdf)).andExpect(status().isForbidden());
-        mvc.perform(multipart("/api/planificaciones/3/documentos", GUIA1).file(pdf)).andExpect(status().isForbidden());
-        mvc.perform(multipart("/api/planificaciones/3/documentos", COORDINADOR).file(pdf)).andExpect(status().isForbidden());
+        mvc.perform(multipart("/api/planificaciones/4/documentos", DIEGO).file(pdf)).andExpect(status().isForbidden());
+        mvc.perform(multipart("/api/planificaciones/4/documentos", GUIA1).file(pdf)).andExpect(status().isForbidden());
+        mvc.perform(multipart("/api/planificaciones/4/documentos", COORDINADOR).file(pdf)).andExpect(status().isForbidden());
     }
 
     @Test
     void rechazaUnaExtensionNoPermitidaEnPlanificacion() throws Exception {
         MockMultipartFile exe = archivo("archivo", "virus.exe", "application/octet-stream", PDF_PEQUENO);
-        mvc.perform(multipart("/api/planificaciones/3/documentos", CAMILA).file(exe)).andExpect(status().isBadRequest());
+        mvc.perform(multipart("/api/planificaciones/4/documentos", CAMILA).file(exe)).andExpect(status().isBadRequest());
     }
 
     @Test
     void rechazaUnArchivoMasGrandeQue10MbEnPlanificacion() throws Exception {
         byte[] grande = new byte[11 * 1024 * 1024];
         MockMultipartFile pdfGrande = archivo("archivo", "grande.pdf", "application/pdf", grande);
-        mvc.perform(multipart("/api/planificaciones/3/documentos", CAMILA).file(pdfGrande)).andExpect(status().isBadRequest());
+        mvc.perform(multipart("/api/planificaciones/4/documentos", CAMILA).file(pdfGrande)).andExpect(status().isBadRequest());
     }
 
     // ---------- Evaluaciones ----------
