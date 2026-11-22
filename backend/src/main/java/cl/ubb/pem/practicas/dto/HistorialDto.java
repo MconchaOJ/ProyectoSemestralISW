@@ -21,6 +21,7 @@ public record HistorialDto(EstudianteDto estudiante, List<AsignaturaAprobadaDto>
                                           UsuarioResumenDto profesorGuia, UsuarioResumenDto profesorCurso,
                                           List<EvaluacionResumenDto> evaluaciones,
                                           List<PlanificacionResumenDto> planificaciones,
-                                          List<String> companeros) {   // HU-10, criterio 3: con quién trabajó
+                                          List<String> companeros,     // HU-10, criterio 3: con quién trabajó
+                                          List<ProductoDto> productos) { // HU-18: informes y productos de la práctica
     }
 }

@@ -83,6 +83,8 @@ public class InformesXlsx {
                 "Puntaje", "Promedio", "Nota"));
         List<List<Object>> planes = new ArrayList<>();
         planes.add(fila("Práctica", "Período", "Título", "Fecha de la clase", "Estado"));
+        List<List<Object>> productos = new ArrayList<>();   // HU-18
+        productos.add(fila("Práctica", "Período", "Tipo", "Archivo", "Fecha de subida"));
         for (HistorialDto.InscripcionHistorialDto i : h.inscripciones()) {
             practicas.add(fila(i.asignatura().orden(), i.asignatura().nombre(), i.periodo(), i.estado().name(),
                     i.notaFinal(), i.profesorGuia() == null ? null : i.profesorGuia().nombreCompleto(),
@@ -95,9 +97,15 @@ public class InformesXlsx {
             for (PlanificacionResumenDto p : i.planificaciones()) {
                 planes.add(fila(i.asignatura().nombre(), i.periodo(), p.titulo(), p.fechaClase(), p.estado().name()));
             }
+            if (i.productos() != null) {
+                for (cl.ubb.pem.practicas.dto.ProductoDto p : i.productos()) {
+                    productos.add(fila(i.asignatura().nombre(), i.periodo(), p.tipoNombre(), p.nombreArchivo(),
+                            p.fechaSubida().toLocalDate()));
+                }
+            }
         }
         return new LibroXlsx().hoja("Estudiante", datos).hoja("Prácticas", practicas).hoja("Evaluaciones", evaluaciones)
-                .hoja("Planificaciones", planes).generar();
+                .hoja("Planificaciones", planes).hoja("Productos", productos).generar();
     }
 
     private static List<Object> fila(Object... celdas) {

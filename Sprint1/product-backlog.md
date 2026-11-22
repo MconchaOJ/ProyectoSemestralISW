@@ -56,7 +56,7 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-16 | El profesor guía ve el chat y la actividad del estudiante | Chatbot | Alta | por estimar | **2** (adelantada) | **Completa (26-oct)**; solo el guía de esa inscripción lee el chat (S-60) |
 | HU-17 | Calibrar el estilo del chatbot con el coordinador | Chatbot | Media | por estimar | **2** (adelantada) | **Completa (26-oct):** pantalla "Configuración del asistente" (solo coordinador) que edita un texto único en la base (migración 008), con el texto base de RetroPlani Mate V3 adaptado (S-65); probada con el modelo real de Groq: el chatbot cambia de estilo desde el siguiente mensaje. Rige también en conversaciones en curso y no guarda versiones (S-68) |
 | HU-20 | El jefe de carrera consulta los chats | Chatbot | Media | por estimar | **2** (adelantada) | **Completa (26-oct):** el jefe de carrera lee en solo lectura todos los chats de Práctica Pedagógica y Profesional, con lista filtrable; el estudiante ve en su chat que el jefe puede leer y cuándo lo hizo por última vez (criterio 3), y cada lectura queda en la base (`lectura_chat_jefe_carrera`, migración 010, criterio 4). Sigue siendo SUPUESTO S-66, a confirmar con el cliente |
-| HU-18 | Registrar informes y productos de la práctica | Documentos | Baja | por estimar | 5 o más | Pendiente |
+| HU-18 | Registrar informes y productos de la práctica | Documentos | Baja | por estimar | 5 o más | Hecha (Sprint 2, 22-nov) |
 | HU-21 | Adjuntar documentos a la planificación | Documentos | Media | 3 | **1** | **Construida y probada (22-sep, Fase E); borrar y reemplazar el 22-nov** |
 | HU-22 | Adjuntar el documento formal de la evaluación | Documentos | Media | 3 | **1** | **Construida y probada (22-sep, Fase E); borrar y reemplazar el 22-nov** |
 | HU-23 | Buscar estudiante por nombre, RUT o correo | Monitoreo | Media | 2 | **1** | **Construida y probada (22-sep, Fase E)** |
@@ -291,7 +291,8 @@ Estas seis historias iban para sprints futuros en la planificación original, pe
 
 #### HU-18 · Registrar informes y productos de la práctica
 **Como** estudiante, **quiero** subir mi informe final, mi diario de reflexión y mi proyecto de intervención, **para** que queden en mi recorrido.
-- **Prioridad:** Baja · **Sprint:** 5 o más
+- **Prioridad:** Baja · **Sprint:** 5 o más · **Hecha el 2026-11-22** (adelantada al Sprint 2, migración 019).
+- **Criterios (fijados por el equipo, SUPUESTOS S-93 y S-94):** (1) el estudiante sube un archivo Word o PDF a su inscripción indicando el tipo (informe final, diario de reflexión, proyecto de intervención u otro), con el tamaño máximo vigente; (2) solo él lo sube, reemplaza o borra, y solo con la inscripción EN_CURSO; (3) se admiten varios archivos por tipo y todos los tipos en las 6 prácticas; (4) quien puede ver la inscripción lo lista y lo descarga; (5) los productos aparecen en el historial (pantalla, PDF y Excel).
 
 #### HU-25 · Gestión de archivos de pautas formales
 **Como** coordinador, **quiero** subir y reemplazar los archivos oficiales de cada pauta de evaluación (PDF o Word firmados y timbrados), **para** tener siempre a mano el documento formal detrás de cada instrumento digitalizado.

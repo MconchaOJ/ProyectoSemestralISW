@@ -184,6 +184,10 @@ dl.cifras dd { margin: .1em 0 0; font-size: 1.3rem; font-weight: 800; color: var
 .campo-archivo-linea input[type="file"] { width: 100%; padding: .4rem; border: 1px dashed var(--borde); border-radius: 10px; background: var(--fondo); font-size: .85rem; }
 .form-documento .ayuda-campo { flex-basis: 100%; margin: 0; font-size: .8rem; color: var(--texto-suave); }
 .form-documento .error-campo { flex-basis: 100%; font-size: .82rem; color: var(--error); font-weight: 600; }
+/* HU-18: informes y productos en el historial */
+.productos { margin-top: .4rem; }
+.form-producto select { width: auto; flex: 0 0 auto; min-width: 13rem; }
+.form-producto { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
 .documentos { list-style: none; margin: 0; padding: 0; }
 .documento { display: flex; align-items: center; gap: .8rem; padding: .6rem 0; border-top: 1px solid var(--borde); }
 .documento:first-child { border-top: 0; }

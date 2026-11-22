@@ -41,6 +41,8 @@ public class HistorialPdfGenerador {
     private static final float[] ANCHOS_EVALUACION = {12, 40, 26, 10, 10};
     private static final String[] COLUMNAS_PLANIFICACION = {"Título", "Fecha de la clase", "Estado"};
     private static final float[] ANCHOS_PLANIFICACION = {56, 18, 26};
+    private static final String[] COLUMNAS_PRODUCTO = {"Tipo", "Archivo", "Subido el"};   // HU-18
+    private static final float[] ANCHOS_PRODUCTO = {28, 52, 20};
 
     private final Clock reloj;
 
@@ -99,6 +101,18 @@ public class HistorialPdfGenerador {
             for (EvaluacionResumenDto ev : i.evaluaciones()) {
                 fila(t, alterna, fecha(ev.fechaClase()), ev.pautaNombre(),
                         unir(ev.establecimiento(), ev.curso()), numero(ev.puntajeTotal()), numero(ev.promedio()));
+                alterna = !alterna;
+            }
+            documento.add(t);
+        }
+
+        // HU-18: informes y productos que subió el estudiante (solo si hay alguno, para no alargar el PDF)
+        if (i.productos() != null && !i.productos().isEmpty()) {
+            documento.add(new Paragraph("Informes y productos (" + i.productos().size() + ")", NEGRITA));
+            PdfPTable t = PdfEstilo.tabla(COLUMNAS_PRODUCTO, ANCHOS_PRODUCTO);
+            boolean alterna = false;
+            for (cl.ubb.pem.practicas.dto.ProductoDto p : i.productos()) {
+                fila(t, alterna, p.tipoNombre(), p.nombreArchivo(), fecha(p.fechaSubida().toLocalDate()));
                 alterna = !alterna;
             }
             documento.add(t);
