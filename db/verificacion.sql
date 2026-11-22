@@ -189,14 +189,15 @@ SELECT 'Nota externa (HU-09) de un componente de PAUTA o de otra asignatura que 
   JOIN inscripcion i ON i.id = n.inscripcion_id
  WHERE c.tipo <> 'EXTERNO' OR c.asignatura_id <> i.asignatura_id
 UNION ALL
-SELECT 'Evaluación FINALIZADA (HU-09) cuya nota no es la del 60 % de exigencia', COUNT(*)
+SELECT 'Evaluación FINALIZADA (HU-09) cuya nota no es la del 60 % de exigencia (mínimo = escala mínima de la pauta)', COUNT(*)
   FROM evaluacion e
   JOIN pauta p ON p.id = e.pauta_id
   JOIN (SELECT d.pauta_id, COUNT(*) AS n FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id
          GROUP BY d.pauta_id) c ON c.pauta_id = e.pauta_id
  WHERE e.estado = 'FINALIZADA'
    AND ABS(e.nota - IF(e.puntaje_total < 0.6 * c.n * p.escala_max,
-                       1 + 3 * e.puntaje_total / (0.6 * c.n * p.escala_max),
+                       LEAST(GREATEST(p.escala_min, 1), 3)
+                       + (4 - LEAST(GREATEST(p.escala_min, 1), 3)) * e.puntaje_total / (0.6 * c.n * p.escala_max),
                        4 + 3 * (e.puntaje_total - 0.6 * c.n * p.escala_max) / (0.4 * c.n * p.escala_max))) > 0.05;
 
 -- -----------------------------------------------------------------------------

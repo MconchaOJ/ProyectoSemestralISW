@@ -767,10 +767,12 @@ UPDATE evaluacion e
    SET e.estado             = 'FINALIZADA',
        e.puntaje_total      = r.total,
        e.promedio           = r.prom,
-       -- HU-09 (S-81): nota 1,0 a 7,0 al 60 % de exigencia sobre el máximo (indicadores x escala_max), como la app
+       -- HU-09 (S-81): 60 % de exigencia sobre el máximo (indicadores x escala_max), como la app; la nota mínima
+       -- (la de 0 puntos) es la escala mínima de la pauta, entre 1 y 3
        e.nota               = ROUND(CASE
                                   WHEN r.total < 0.6 * c.n * p.escala_max
-                                      THEN 1 + 3 * r.total / (0.6 * c.n * p.escala_max)
+                                      THEN LEAST(GREATEST(p.escala_min, 1), 3)
+                                           + (4 - LEAST(GREATEST(p.escala_min, 1), 3)) * r.total / (0.6 * c.n * p.escala_max)
                                   ELSE 4 + 3 * (r.total - 0.6 * c.n * p.escala_max) / (0.4 * c.n * p.escala_max)
                               END, 1),
        e.fecha_finalizacion = TIMESTAMP(e.fecha_clase, '13:00:00')
@@ -869,10 +871,12 @@ UPDATE evaluacion e
    SET e.estado             = 'FINALIZADA',
        e.puntaje_total      = r.total,
        e.promedio           = r.prom,
-       -- HU-09 (S-81): nota 1,0 a 7,0 al 60 % de exigencia sobre el máximo (indicadores x escala_max), como la app
+       -- HU-09 (S-81): 60 % de exigencia sobre el máximo (indicadores x escala_max), como la app; la nota mínima
+       -- (la de 0 puntos) es la escala mínima de la pauta, entre 1 y 3
        e.nota               = ROUND(CASE
                                   WHEN r.total < 0.6 * c.n * p.escala_max
-                                      THEN 1 + 3 * r.total / (0.6 * c.n * p.escala_max)
+                                      THEN LEAST(GREATEST(p.escala_min, 1), 3)
+                                           + (4 - LEAST(GREATEST(p.escala_min, 1), 3)) * r.total / (0.6 * c.n * p.escala_max)
                                   ELSE 4 + 3 * (r.total - 0.6 * c.n * p.escala_max) / (0.4 * c.n * p.escala_max)
                               END, 1),
        e.fecha_finalizacion = TIMESTAMP(e.fecha_clase, '13:00:00')

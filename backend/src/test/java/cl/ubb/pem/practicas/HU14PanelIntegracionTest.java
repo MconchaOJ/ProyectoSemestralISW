@@ -13,8 +13,9 @@ import org.junit.jupiter.api.Test;
 /**
  * HU-14: panel de monitoreo, contra la base real con los datos del seed (cada prueba se revierte). Trabajo
  * Colaborativo 2026-2: 5 inscritos en curso, la planificación 6 espera al guía y la 7 al profesor del curso, 3
- * evaluaciones finalizadas, y Camila (3) y Martina (34) sin evaluar. En toda la carrera esperan revisión 5
- * planificaciones (18, 11, 9, 6 y 7, todas hace más de 3 días) y hay 7 estudiantes en curso sin evaluar.
+ * evaluaciones finalizadas, y Camila (3) y Martina (34) sin evaluar. En toda la carrera esperan revisión 4
+ * planificaciones (11, 9, 6 y 7, todas hace más de 3 días; la 18 quedó en autorización en la inscripción 48, ya
+ * aprobada, y por eso no cuenta) y hay 7 estudiantes en curso sin evaluar.
  */
 class HU14PanelIntegracionTest extends IntegracionBase {
 
@@ -29,7 +30,7 @@ class HU14PanelIntegracionTest extends IntegracionBase {
         JsonNode p = panel("", COORDINADOR);
         assertThat(p.get("diasAtencion").asInt()).isEqualTo(3);
         assertThat(p.get("planificacionesEsperando").findValuesAsText("planificacionId"))
-                .containsExactly("18", "11", "9", "6", "7");   // la que más espera primero
+                .containsExactly("11", "9", "6", "7");   // la que más espera primero (la 18 es de una práctica cerrada)
         assertThat(p.get("planificacionesEsperando").get(0).get("diasEsperando").asLong()).isGreaterThan(3);
         assertThat(p.get("sinEvaluar")).hasSize(7);
         assertThat(p.get("totales").get("estudiantesSinEvaluar").asInt()).isEqualTo(7);

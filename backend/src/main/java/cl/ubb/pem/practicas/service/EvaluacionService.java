@@ -161,7 +161,9 @@ public class EvaluacionService {
         }
         int total = e.getRespuestas().stream().mapToInt(RespuestaIndicador::getPuntaje).sum();
         BigDecimal promedio = BigDecimal.valueOf(total).divide(BigDecimal.valueOf(indicadores.size()), 2, RoundingMode.HALF_UP);
-        BigDecimal nota = EscalaNotas.nota(total, indicadores.size() * e.getPauta().getEscalaMax());   // HU-09, S-81
+        // HU-09, S-81: 60 % de exigencia; la nota mínima es la escala mínima de la pauta (2,0 o 1,0)
+        BigDecimal nota = EscalaNotas.nota(total, indicadores.size() * e.getPauta().getEscalaMax(),
+                EscalaNotas.notaMinima(e.getPauta().getEscalaMin()));
         e.finalizar(total, promedio, nota, LocalDateTime.now());
         return EvaluacionDto.desde(evaluaciones.save(e));
     }

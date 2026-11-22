@@ -33,6 +33,7 @@ export async function render(cont, ctx) {
         <div class="acciones-form" style="grid-column:1/-1">
           <button type="submit" class="btn btn-primario" data-cargando="Cargando…">${icono('chart')} Ver informe</button>
           <button type="button" class="btn" id="btn-pdf" data-cargando="Generando…">${icono('download')} Descargar PDF</button>
+          <button type="button" class="btn" id="btn-xlsx" data-cargando="Generando…">${icono('download')} Descargar Excel</button>
         </div>
       </form>
     </div>
@@ -50,6 +51,7 @@ export async function render(cont, ctx) {
       : '<option value="">Sin inscripciones</option>';
     selPer.disabled = lista.length === 0;
     cont.querySelector('#btn-pdf').disabled = lista.length === 0;
+    cont.querySelector('#btn-xlsx').disabled = lista.length === 0;
   };
 
   const ver = async () => {
@@ -78,6 +80,17 @@ export async function render(cont, ctx) {
         api.archivo(`/api/reportes/asignatura/pdf?asignaturaId=${selAsig.value}&periodo=${encodeURIComponent(selPer.value)}`));
       descargarArchivo({ ...archivo, nombre: archivo.nombre === 'archivo' ? 'informe-asignatura.pdf' : archivo.nombre });
       toast('Informe descargado.');
+    } catch (e) {
+      if (e.status !== 401) toast(e.message, 'error');
+    }
+  });
+  // HU-08: el mismo informe en Excel (integrado del trabajo de Alej, LibroXlsx)
+  cont.querySelector('#btn-xlsx').addEventListener('click', async (ev) => {
+    try {
+      const archivo = await conCarga(ev.currentTarget, () =>
+        api.archivo(`/api/reportes/asignatura/xlsx?asignaturaId=${selAsig.value}&periodo=${encodeURIComponent(selPer.value)}`));
+      descargarArchivo({ ...archivo, nombre: archivo.nombre === 'archivo' ? 'informe-asignatura.xlsx' : archivo.nombre });
+      toast('Informe descargado en Excel.');
     } catch (e) {
       if (e.status !== 401) toast(e.message, 'error');
     }

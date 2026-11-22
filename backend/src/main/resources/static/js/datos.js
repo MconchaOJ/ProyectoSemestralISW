@@ -45,12 +45,15 @@ export const DESCRIPCION_ROL = {
   PROFESOR_CURSO: [
     'Autorizar (o devolver con observaciones) las planificaciones ya revisadas por el guía o, en el ciclo inicial, directamente enviadas.',
     'Ver las evaluaciones y el historial de los estudiantes de tu curso.',
+    'Definir la estructura evaluativa de tus asignaturas y escribir las notas externas (productos, informe final, TANEP) en «Notas finales»: las notas de pauta se calculan solas.',
   ],
   COORDINADOR: [
     'Registrar estudiantes y profesores, e inscribir a los estudiantes en una práctica.',
     'Cerrar inscripciones con su estado final y nota.',
     'Crear y editar las pautas de evaluación (si una pauta ya se usó, al editarla se crea una versión nueva).',
     'Ver todas las planificaciones, evaluaciones e historiales (los borradores de evaluación también).',
+    'Descargar informes por asignatura y por estudiante en PDF o Excel.',
+    'Monitorear en un panel las planificaciones pendientes, las evaluaciones hechas, los estudiantes sin evaluar y el avance de cada estudiante.',
   ],
   TUTOR: [
     'Evaluar las clases de los estudiantes de Práctica Profesional de los que eres tutor, con las pautas de tutor (Especialidad y Orientación, escala 2 a 7).',
@@ -58,6 +61,7 @@ export const DESCRIPCION_ROL = {
   ],
   JEFE_CARRERA: [
     'Obtener la cartola de prácticas: un PDF con las prácticas cerradas entre dos fechas (evidencia para la acreditación).',
+    'Descargar informes por asignatura y por estudiante en PDF o Excel.',
     'Ver las inscripciones, planificaciones, evaluaciones e historiales de todos los estudiantes, como el coordinador.',
     'Como jefe de carrera es solo lectura: no crea, edita, aprueba ni evalúa (si también eres profesor guía, eso lo haces con tus estudiantes asignados).',
   ],
