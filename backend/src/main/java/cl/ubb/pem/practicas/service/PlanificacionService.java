@@ -1,6 +1,5 @@
 package cl.ubb.pem.practicas.service;
 
-import cl.ubb.pem.practicas.config.PlanificacionProperties;
 import cl.ubb.pem.practicas.dto.CamposPlanificacion;
 import cl.ubb.pem.practicas.dto.PlanificacionActualizarRequest;
 import cl.ubb.pem.practicas.dto.PlanificacionCrearRequest;
@@ -48,18 +47,18 @@ public class PlanificacionService {
     private final UsuarioRepository usuarios;
     private final AccesoService acceso;
     private final Clock reloj;
-    private final PlanificacionProperties reglas;
+    private final ParametroService parametros;   // HU-27: los días de anticipación los edita el coordinador
     private final DocumentoPlanificacionRepository documentos;
 
     public PlanificacionService(PlanificacionRepository planificaciones, InscripcionRepository inscripciones,
                                 UsuarioRepository usuarios, AccesoService acceso, Clock reloj,
-                                PlanificacionProperties reglas, DocumentoPlanificacionRepository documentos) {
+                                ParametroService parametros, DocumentoPlanificacionRepository documentos) {
         this.planificaciones = planificaciones;
         this.inscripciones = inscripciones;
         this.usuarios = usuarios;
         this.acceso = acceso;
         this.reloj = reloj;
-        this.reglas = reglas;
+        this.parametros = parametros;
         this.documentos = documentos;
     }
 
@@ -118,9 +117,10 @@ public class PlanificacionService {
             throw new ReglaNegocioException("Para enviar la planificación a revisión faltan estos elementos: " + faltan + ".");
         }
         // S-35: se entrega con anticipación (un estudiante reportó "como mínimo unos 3 días antes de la clase").
-        LocalDate primeraFechaValida = LocalDate.now(reloj).plusDays(reglas.diasAnticipacionMinimos());
+        int diasAnticipacion = parametros.diasAnticipacion();
+        LocalDate primeraFechaValida = LocalDate.now(reloj).plusDays(diasAnticipacion);
         if (p.getFechaClase().isBefore(primeraFechaValida)) {
-            throw new ReglaNegocioException("La planificación debe entregarse con al menos " + reglas.diasAnticipacionMinimos()
+            throw new ReglaNegocioException("La planificación debe entregarse con al menos " + diasAnticipacion
                     + " días de anticipación: enviándola hoy, la clase debe ser el " + primeraFechaValida + " o después.");
         }
         // S-34: sin profesor guía (ciclo inicial, que no va a un colegio) la planificación va directo al profesor del curso.

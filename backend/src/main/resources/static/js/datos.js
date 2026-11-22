@@ -11,6 +11,19 @@ export function asignaturas() {
   return asignaturasEnMemoria;
 }
 
+/**
+ * HU-27: parámetros del sistema como { clave: valor }. Se piden cada vez (sin guardarlos) para que un cambio del
+ * coordinador se vea en la pantalla siguiente; si la petición falla, rigen los valores de siempre.
+ */
+export async function parametros() {
+  const porDefecto = { 'planificacion.dias_anticipacion': 3, 'panel.dias_atencion': 3, 'archivos.documento_mb': 10, 'archivos.audio_mb': 25 };
+  try {
+    return { ...porDefecto, ...Object.fromEntries((await api.get('/api/parametros')).map((p) => [p.clave, p.valor])) };
+  } catch {
+    return porDefecto;
+  }
+}
+
 /** "Camila Rojas Soto · Trabajo Colaborativo en el Aula (2026-2)" */
 export const etiquetaInscripcion = (i) =>
   `${i.estudiante.nombreCompleto} · ${i.asignatura.nombre} (${i.periodo})`;

@@ -55,8 +55,7 @@ public class NotaVozService {
         if (duracionSegundos == null || duracionSegundos <= 0) {
             throw new ReglaNegocioException("La duración de la nota de voz debe ser mayor que 0 segundos.");
         }
-        String ruta = almacenamiento.guardar("notas-voz", audio, EXTENSIONES_PERMITIDAS,
-                AlmacenamientoArchivosService.TAMANO_MAXIMO_AUDIO);
+        String ruta = almacenamiento.guardarAudio("notas-voz", audio, EXTENSIONES_PERMITIDAS);
         NotaVoz n = new NotaVoz();
         n.setEvaluacion(e);
         n.setArchivoRuta(ruta);
@@ -79,8 +78,7 @@ public class NotaVozService {
         if (duracionSegundos == null || duracionSegundos <= 0) {
             throw new ReglaNegocioException("La duración de la nota de voz debe ser mayor que 0 segundos.");
         }
-        String nueva = almacenamiento.guardar("notas-voz", audio, EXTENSIONES_PERMITIDAS,
-                AlmacenamientoArchivosService.TAMANO_MAXIMO_AUDIO);
+        String nueva = almacenamiento.guardarAudio("notas-voz", audio, EXTENSIONES_PERMITIDAS);
         String vieja = n.getArchivoRuta();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override

@@ -68,7 +68,9 @@ class PlanificacionServiceTest {
     void preparar() {
         // "Hoy" fijo: 20 de septiembre de 2026, con 3 días mínimos de anticipación -> la primera clase válida es el 23
         Clock hoy = Clock.fixed(Instant.parse("2026-09-20T15:00:00Z"), ZoneId.of("America/Santiago"));
-        servicio = new PlanificacionService(planificaciones, inscripciones, usuarios, acceso, hoy, new PlanificacionProperties(3), documentos);
+        servicio = new PlanificacionService(planificaciones, inscripciones, usuarios, acceso, hoy, new ParametroService(
+                org.mockito.Mockito.mock(cl.ubb.pem.practicas.repository.ParametroSistemaRepository.class), null, hoy,
+                new PlanificacionProperties(3), 3), documentos);   // sin filas: rige el valor inicial de 3 días
         inscripcion = Datos.inscripcion(3, Datos.estudiante(1, usuarioEstudiante), Datos.asignatura(3, true), guia, curso);
         lenient().when(inscripciones.findById(3L)).thenReturn(Optional.of(inscripcion));
         lenient().when(usuarios.findById(2L)).thenReturn(Optional.of(guia));

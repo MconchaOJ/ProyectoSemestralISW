@@ -1,11 +1,11 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 23 tablas con claves, restricciones e
+-- Implementa el MER de Sprint1/mer.md: 24 tablas con claves, restricciones e
 -- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
 -- la Fase E, instrucciones_chatbot de HU-17, documento_base_conocimiento de
 -- HU-29, lectura_chat_jefe_carrera de HU-20 y respuesta_sus,
--- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30, y grupo_practica de HU-10). No
+-- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30, grupo_practica de HU-10 y parametro_sistema de HU-27). No
 -- contiene contraseñas (el
 -- usuario de la aplicación lo crea db/bd.ps1 con su clave tomada de una
 -- variable de entorno).
@@ -42,6 +42,7 @@ DROP TABLE IF EXISTS respuesta_sus;
 DROP TABLE IF EXISTS lectura_chat_jefe_carrera;
 DROP TABLE IF EXISTS documento_base_conocimiento;
 DROP TABLE IF EXISTS instrucciones_chatbot;
+DROP TABLE IF EXISTS parametro_sistema;
 DROP TABLE IF EXISTS mensaje_chatbot;
 DROP TABLE IF EXISTS nota_voz;
 DROP TABLE IF EXISTS documento_evaluacion;
@@ -513,6 +514,23 @@ CREATE TABLE mensaje_chatbot (
     INDEX ix_mensaje_inscripcion_fecha (inscripcion_id, fecha),
     INDEX ix_mensaje_planificacion (planificacion_id)
 ) ENGINE = InnoDB COMMENT = 'Mensajes entre el estudiante y el chatbot, por inscripción (HU-15; el guía los lee, HU-16)';
+
+-- HU-27 (migración 014): reglas operativas que edita el coordinador; rigen desde la petición siguiente. Cada una
+-- guarda su rango (S-80). Los tamaños de archivo solo se pueden bajar: el techo de 10 MB de los documentos también
+-- lo fijan ck_documento_*_tamano, y el de 25 MB del audio queda bajo el límite de subida de Spring (30 MB).
+CREATE TABLE parametro_sistema (
+    clave          VARCHAR(50)  NOT NULL,
+    valor          INT          NOT NULL,
+    minimo         INT          NOT NULL,
+    maximo         INT          NOT NULL,
+    unidad         VARCHAR(20)  NOT NULL COMMENT 'dias o MB',
+    descripcion    VARCHAR(300) NOT NULL,
+    editado_por    BIGINT       NULL     COMMENT 'Coordinador que lo cambio por ultima vez; nulo = valor inicial',
+    fecha_edicion  DATETIME     NULL,
+    CONSTRAINT pk_parametro_sistema PRIMARY KEY (clave),
+    CONSTRAINT fk_parametro_editado_por FOREIGN KEY (editado_por) REFERENCES usuario (id),
+    CONSTRAINT ck_parametro_rango CHECK (minimo <= maximo AND valor BETWEEN minimo AND maximo)
+) ENGINE = InnoDB COMMENT = 'Reglas operativas editables por el coordinador (HU-27)';
 
 -- HU-17 (migración 008): una sola fila con las instrucciones que calibra el coordinador. Sin fila, la aplicación usa
 -- el texto base de RetroPlani Mate (backend/src/main/resources/chatbot/instrucciones-base.txt).

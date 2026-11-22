@@ -41,6 +41,8 @@ export const FUNCIONES = [
   { ruta: 'chatbot', icono: 'chat', nombre: 'Asistente de planificación', roles: ['ESTUDIANTE', 'PROFESOR_GUIA'] },
   // HU-17: el coordinador calibra el estilo del asistente
   { ruta: 'estilo-asistente', icono: 'sliders', nombre: 'Configuración del asistente', roles: COORD },
+  // HU-27: reglas operativas (anticipación, umbral del panel, tamaños de archivo)
+  { ruta: 'parametros', icono: 'key', nombre: 'Parámetros del sistema', roles: COORD },
 ];
 
 const tieneAlguno = (item, roles) => item.roles.some((r) => roles.includes(r));
@@ -76,6 +78,7 @@ export const ACCESOS = {
     { icono: 'file', titulo: 'Seguimiento de planificaciones', texto: 'Estado de cada clase planificada.', hash: '#/planificaciones' },
     { icono: 'clipboard', titulo: 'Pautas de evaluación', texto: 'Crear y editar pautas (con versiones).', hash: '#/pautas' },
     { icono: 'sliders', titulo: 'Configuración del asistente', texto: 'Estilo, base de conocimiento y validación.', hash: '#/estilo-asistente' },
+    { icono: 'key', titulo: 'Parámetros del sistema', texto: 'Anticipación, umbral del panel y tamaños de archivo.', hash: '#/parametros' },
     { icono: 'chart', titulo: 'Informe de una asignatura', texto: 'Promedios y distribución por período, en PDF.', hash: '#/informes' },
   ],
   PROFESOR_GUIA: [

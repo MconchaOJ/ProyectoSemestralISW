@@ -46,8 +46,7 @@ public class DocumentoPlanificacionService {
         if (!p.getInscripcion().getEstudiante().getUsuario().getId().equals(actor.id())) {
             throw new AccesoDenegadoException("Solo el estudiante dueño de la planificación puede subir documentos.");
         }
-        String ruta = almacenamiento.guardar("planificaciones", archivo, EXTENSIONES_PERMITIDAS,
-                AlmacenamientoArchivosService.TAMANO_MAXIMO_DOCUMENTO);
+        String ruta = almacenamiento.guardarDocumento("planificaciones", archivo, EXTENSIONES_PERMITIDAS);
         DocumentoPlanificacion d = new DocumentoPlanificacion();
         d.setPlanificacion(p);
         d.setNombreArchivo(archivo.getOriginalFilename());

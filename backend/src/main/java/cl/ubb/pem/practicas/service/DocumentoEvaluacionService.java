@@ -47,8 +47,7 @@ public class DocumentoEvaluacionService {
         if (!e.getEvaluador().getId().equals(actor.id())) {
             throw new AccesoDenegadoException("Solo el profesor guía evaluador puede subir documentos a esta evaluación.");
         }
-        String ruta = almacenamiento.guardar("evaluaciones", archivo, EXTENSIONES_PERMITIDAS,
-                AlmacenamientoArchivosService.TAMANO_MAXIMO_DOCUMENTO);
+        String ruta = almacenamiento.guardarDocumento("evaluaciones", archivo, EXTENSIONES_PERMITIDAS);
         DocumentoEvaluacion d = new DocumentoEvaluacion();
         d.setEvaluacion(e);
         d.setNombreArchivo(archivo.getOriginalFilename());

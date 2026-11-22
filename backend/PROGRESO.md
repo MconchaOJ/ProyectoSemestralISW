@@ -474,6 +474,7 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 | S-77 | (2026-11-21, HU-10) **SUPUESTO, a confirmar con el cliente:** en una dupla o grupo **cada integrante sigue con su propia planificación** (y su propia inscripción y pauta, S-11); el grupo solo agrupa y muestra con quién trabajó. Si el cliente dice que la dupla entrega una sola planificación, hay que rehacer el flujo y los permisos de HU-04 | HU-10 |
 | S-78 | (2026-11-21, HU-10) Reglas de los grupos que aplica la aplicación: una dupla tiene **exactamente 2** integrantes y un grupo **de 2 a 4**; todos de la misma asignatura y periodo (también lo exige la base con la clave foránea compuesta), **EN_CURSO**, en ningún otro grupo y con el **mismo profesor guía**; el establecimiento y el curso solo se guardan en las prácticas que van a un colegio. Solo el coordinador arma, cambia o deshace grupos; un grupo con algún integrante ya cerrado no se deshace (409) | HU-10 |
 | S-79 | (2026-11-21, HU-14) **SUPUESTO:** en el panel, una planificación "requiere atención" si espera al guía o al profesor del curso más de 3 días (configurable: `app.panel.dias-atencion`), contados desde su última actualización. "Sin evaluar" solo cuenta en prácticas que van a un colegio | HU-14 |
+| S-80 | (2026-11-22, HU-27) **SUPUESTO:** rangos de los parámetros: anticipación 0 a 14 días, umbral del panel 1 a 30 días, documento 1 a 10 MB y audio 1 a 25 MB. Los tamaños solo se pueden bajar: el techo de 10 MB también lo fija la base (`ck_documento_*_tamano`) y el de 25 MB queda bajo el límite de subida de Spring (30 MB). Los intentos de login, el JWT y el chatbot no se exponen | HU-27 |
 
 ## Problemas conocidos y limitaciones
 
@@ -1512,3 +1513,12 @@ al reemplazar, **borrar el audio viejo**. Sin cambios de esquema.
 ## Sprint 2: HU-14 panel de monitoreo (2026-11-21, rama `feature/hu14-panel`)
 
 `GET /api/reportes/panel?asignaturaId=&periodo=` (COORDINADOR y JEFE_CARRERA) y pantalla "Panel de monitoreo" (menú y acceso rápido del Inicio): cifras, planificaciones que esperan más de 3 días (S-79, la más antigua primero), estudiantes en curso sin evaluar y avance por práctica y período con enlace al informe de HU-08. Sin cambios de esquema. **302 pruebas, 0 fallos** (`HU14PanelIntegracionTest`, 4). Navegador: 9/9 sin errores de JavaScript.
+
+
+## Sprint 2: HU-27 parámetros del sistema (2026-11-22, rama `feature/hu27-parametros`)
+
+- **Migración `014`:** tabla `parametro_sistema` (clave, valor, mínimo, máximo, unidad, descripción, quién y cuándo) con `ck_parametro_rango`; carga los 4 parámetros. Probada sobre una base con el esquema de `main`: misma estructura que `schema.sql`. La unidad "días" va como literal hexadecimal UTF-8 para que el archivo siga en ASCII. **24 tablas, 14 migraciones.** Los 4 parámetros también en `seed.sql` y `datos-iniciales.sql`.
+- **Backend:** `ParametroService` lee el valor de la base en cada petición (criterio 2; si falta la fila, rige el valor de `application.properties`). Lo usan `PlanificacionService` (anticipación), `PanelService` (umbral) y `AlmacenamientoArchivosService` (`guardarDocumento` / `guardarAudio`, nunca sobre el techo). `GET /api/parametros` (cualquier usuario autenticado) y `PUT /api/parametros/{clave}` (solo COORDINADOR; 400 fuera de rango, 404 clave desconocida).
+- **Front-end:** pantalla "Parámetros del sistema" (menú y acceso rápido del coordinador) con un formulario por parámetro, su rango y quién lo cambió. Los textos "al menos N días" y "máximo N MB" (planificación, documentos, base de conocimiento) muestran el valor vigente (`parametros()` en `datos.js`).
+- **Pruebas:** **307, 0 fallos** (5 nuevas en `HU27ParametrosIntegracionTest`: lectura, efecto inmediato en el envío de una planificación, tamaño máximo bajado a 1 MB, umbral del panel, rango y roles). `bd.ps1` **36/36** (1 nueva). `pruebas-version-mysql.ps1` en verde.
+- **Navegador** (Chrome headless): el coordinador ve los 4 parámetros, un valor fuera de rango muestra el error, guarda anticipación 0 y documento 5 MB; Camila ve de inmediato "al menos 0 días" y "máximo 5 MB"; el guía no tiene la pantalla. Sin errores de JavaScript.

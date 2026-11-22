@@ -2,7 +2,6 @@ package cl.ubb.pem.practicas.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -56,7 +55,7 @@ class NotaVozServiceTest {
         n.setArchivoRuta("notas-voz/vieja.webm");
         when(evaluaciones.findById(1L)).thenReturn(Optional.of(e));
         when(notasVoz.findByEvaluacionId(1L)).thenReturn(Optional.of(n));
-        when(almacenamiento.guardar(anyString(), any(), anySet(), anyLong())).thenReturn("notas-voz/nueva.webm");
+        when(almacenamiento.guardarAudio(anyString(), any(), anySet())).thenReturn("notas-voz/nueva.webm");
         when(notasVoz.save(any(NotaVoz.class))).thenAnswer(inv -> inv.getArgument(0));
         TransactionSynchronizationManager.initSynchronization();
     }

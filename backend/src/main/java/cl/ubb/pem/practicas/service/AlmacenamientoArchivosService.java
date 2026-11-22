@@ -30,9 +30,22 @@ public class AlmacenamientoArchivosService {
     public static final long TAMANO_MAXIMO_AUDIO = 25L * 1024 * 1024;
 
     private final Path base;
+    private final ParametroService parametros;
 
-    public AlmacenamientoArchivosService(@Value("${app.adjuntos.directorio:adjuntos}") String directorio) {
+    public AlmacenamientoArchivosService(@Value("${app.adjuntos.directorio:adjuntos}") String directorio,
+                                         ParametroService parametros) {
         this.base = Paths.get(directorio).toAbsolutePath().normalize();
+        this.parametros = parametros;
+    }
+
+    /** Guarda un documento adjunto con el tamaño máximo vigente (HU-27; nunca sobre 10 MB). */
+    public String guardarDocumento(String subcarpeta, MultipartFile archivo, Set<String> extensionesPermitidas) {
+        return guardar(subcarpeta, archivo, extensionesPermitidas, parametros.tamanoMaximoDocumento());
+    }
+
+    /** Guarda el audio de una nota de voz con el tamaño máximo vigente (HU-27; nunca sobre 25 MB). */
+    public String guardarAudio(String subcarpeta, MultipartFile archivo, Set<String> extensionesPermitidas) {
+        return guardar(subcarpeta, archivo, extensionesPermitidas, parametros.tamanoMaximoAudio());
     }
 
     /**

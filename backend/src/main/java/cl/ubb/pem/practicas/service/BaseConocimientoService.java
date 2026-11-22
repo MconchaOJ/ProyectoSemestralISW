@@ -81,8 +81,7 @@ public class BaseConocimientoService {
                     + "guardar como .docx desde el procesador de texto.");
         }
         String texto = extraer(archivo, esPdf);
-        String ruta = almacenamiento.guardar("base-conocimiento", archivo, EXTENSIONES_PERMITIDAS,
-                AlmacenamientoArchivosService.TAMANO_MAXIMO_DOCUMENTO);
+        String ruta = almacenamiento.guardarDocumento("base-conocimiento", archivo, EXTENSIONES_PERMITIDAS);
 
         DocumentoBaseConocimiento d = documentos.findByTipo(tipo).orElseGet(DocumentoBaseConocimiento::new);
         d.setTipo(tipo);

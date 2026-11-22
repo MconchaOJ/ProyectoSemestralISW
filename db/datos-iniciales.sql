@@ -477,6 +477,17 @@ INSERT INTO usuario (rol_id, nombre, apellidos, email, password_hash, activo) VA
 
 COMMIT;
 
+-- Parámetros del sistema (HU-27, migración 014): valores iniciales y rango que puede usar el coordinador (S-80)
+INSERT INTO parametro_sistema (clave, valor, minimo, maximo, unidad, descripcion) VALUES
+    ('planificacion.dias_anticipacion', 3, 0, 14, 'días',
+        'Días mínimos entre enviar una planificación a revisión y la fecha de la clase (S-35)'),
+    ('panel.dias_atencion', 3, 1, 30, 'días',
+        'Días que puede esperar revisión una planificación antes de aparecer en "requiere atención" del panel (S-79)'),
+    ('archivos.documento_mb', 10, 1, 10, 'MB',
+        'Tamaño máximo de un documento adjunto (planificación, evaluación o base de conocimiento)'),
+    ('archivos.audio_mb', 25, 1, 25, 'MB',
+        'Tamaño máximo del audio de una nota de voz');
+
 -- Resumen de lo cargado
 SELECT (SELECT COUNT(*) FROM rol)                 AS roles,
        (SELECT COUNT(*) FROM asignatura_practica) AS asignaturas,

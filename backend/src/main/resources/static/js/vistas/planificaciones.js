@@ -4,7 +4,7 @@
 //   #/planificaciones/{id}           detalle, flujo y acciones según rol y estado
 //   #/planificaciones/{id}/editar    editar un borrador o una planificación con observaciones (estudiante)
 import { api } from '../api.js';
-import { opcionesInscripcion } from '../datos.js';
+import { opcionesInscripcion, parametros } from '../datos.js';
 import { montarDocumentos } from '../documentos.js';
 import {
   alerta, alertaError, alertaForm, badge, cabecera, cajaAlertaForm, campo, cargando, confirmar, conCarga, datosForm,
@@ -120,6 +120,7 @@ async function lista(cont, ctx) {
 // ============================ FORMULARIO (crear / editar) ============================
 async function formulario(cont, ctx, idEdicion) {
   const editando = idEdicion !== null;
+  const diasAnticipacion = (await parametros())['planificacion.dias_anticipacion'];   // HU-27
   ctx.titulo(editando ? 'Editar planificación' : 'Nueva planificación');
   const volver = html`<a class="btn btn-fantasma" href="${editando ? `#/planificaciones/${idEdicion}` : '#/planificaciones'}">${icono('back')} Volver</a>`;
 
@@ -154,7 +155,7 @@ async function formulario(cont, ctx, idEdicion) {
   cont.innerHTML = html`
     ${cabecera({
       hu: 'HU-04', titulo: editando ? 'Editar planificación' : 'Nueva planificación',
-      subtitulo: `Formato de planificación didáctica diaria de la carrera (asignatura: ${ASIGNATURA_ESCOLAR}; el profesor/a, el año y el período salen de tu inscripción). Un borrador puede estar incompleto; para enviarla a revisión deben estar todos los campos, la planificación formal en Word o PDF, y la clase debe ser dentro de al menos 3 días.`,
+      subtitulo: `Formato de planificación didáctica diaria de la carrera (asignatura: ${ASIGNATURA_ESCOLAR}; el profesor/a, el año y el período salen de tu inscripción). Un borrador puede estar incompleto; para enviarla a revisión deben estar todos los campos, la planificación formal en Word o PDF, y la clase debe ser dentro de al menos ${diasAnticipacion} días.`,
       acciones: volver,
     })}
     ${editando && actual.estado === 'CON_OBSERVACIONES' ? ultimaObservacion(actual) : ''}

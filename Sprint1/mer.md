@@ -183,6 +183,7 @@ erDiagram
     USUARIO |o--o{ INSCRIPCION : "es tutor de"
     ASIGNATURA_PRACTICA ||--o{ GRUPO_PRACTICA : "agrupa en duplas o grupos"
     GRUPO_PRACTICA |o--o{ INSCRIPCION : "integra (HU-10)"
+    USUARIO |o--o{ PARAMETRO_SISTEMA : "edita (HU-27)"
     ASIGNATURA_PRACTICA ||--o{ PAUTA : "define"
     PAUTA ||--|{ DIMENSION_PAUTA : "se compone de"
     DIMENSION_PAUTA ||--|{ INDICADOR : "agrupa"
@@ -259,6 +260,16 @@ erDiagram
         decimal nota_final "nulo hasta el cierre"
         date fecha_cierre "nula mientras esta EN_CURSO (HU-31)"
         bigint grupo_id FK "dupla o grupo; nulo = sin grupo (HU-10)"
+    }
+    PARAMETRO_SISTEMA {
+        varchar clave PK "HU-27, migracion 014"
+        int valor "entre minimo y maximo (CHECK)"
+        int minimo
+        int maximo
+        varchar unidad
+        varchar descripcion
+        bigint editado_por FK "nulo = valor inicial"
+        datetime fecha_edicion
     }
     GRUPO_PRACTICA {
         bigint id PK

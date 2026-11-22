@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,16 +48,15 @@ public class PanelService {
     private final PlanificacionRepository planificaciones;
     private final EvaluacionRepository evaluaciones;
     private final Clock reloj;
-    private final int diasAtencion;
+    private final ParametroService parametros;   // HU-27: el umbral lo edita el coordinador
 
     public PanelService(InscripcionRepository inscripciones, PlanificacionRepository planificaciones,
-                        EvaluacionRepository evaluaciones, Clock reloj,
-                        @Value("${app.panel.dias-atencion:3}") int diasAtencion) {
+                        EvaluacionRepository evaluaciones, Clock reloj, ParametroService parametros) {
         this.inscripciones = inscripciones;
         this.planificaciones = planificaciones;
         this.evaluaciones = evaluaciones;
         this.reloj = reloj;
-        this.diasAtencion = diasAtencion;
+        this.parametros = parametros;
     }
 
     public PanelDto panel(Integer asignaturaId, String periodo) {
@@ -73,6 +71,7 @@ public class PanelService {
                 : evaluaciones.findPorInscripciones(ids, EstadoEvaluacion.FINALIZADA);
         Set<Long> conEvaluacion = finalizadas.stream().map(e -> e.getInscripcion().getId()).collect(Collectors.toSet());
         LocalDateTime ahora = LocalDateTime.now(reloj);
+        int diasAtencion = parametros.diasAtencionPanel();
 
         // Filas: una por asignatura y periodo, del periodo más reciente al más antiguo y por orden de la práctica
         Map<String, List<Inscripcion>> grupos = todas.stream()

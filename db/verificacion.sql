@@ -11,16 +11,17 @@
 SELECT CONCAT('Conectado como ', CURRENT_USER(), ' a la base ', DATABASE(), ' (MySQL ', VERSION(), ')') AS conexion;
 
 -- -----------------------------------------------------------------------------
-SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 23)' AS verificacion;
+SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 24)' AS verificacion;
 SELECT COUNT(*) AS tablas
   FROM information_schema.tables
  WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
-SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, grupo_practica 2, inscripcion 55 (6 en un grupo), pauta 13, dimension 57, indicador 269, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat_jefe_carrera 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0)' AS verificacion;
+SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, parametro_sistema 4, grupo_practica 2, inscripcion 55 (6 en un grupo), pauta 13, dimension 57, indicador 269, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat_jefe_carrera 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0)' AS verificacion;
 SELECT 'rol' AS tabla, COUNT(*) AS filas FROM rol
 UNION ALL SELECT 'usuario',                COUNT(*) FROM usuario
 UNION ALL SELECT 'estudiante',             COUNT(*) FROM estudiante
 UNION ALL SELECT 'asignatura_practica',    COUNT(*) FROM asignatura_practica
+UNION ALL SELECT 'parametro_sistema',      COUNT(*) FROM parametro_sistema
 UNION ALL SELECT 'grupo_practica',         COUNT(*) FROM grupo_practica
 UNION ALL SELECT 'inscripcion',            COUNT(*) FROM inscripcion
 UNION ALL SELECT 'pauta',                  COUNT(*) FROM pauta

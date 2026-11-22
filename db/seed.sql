@@ -437,6 +437,17 @@ INSERT INTO indicador (id, dimension_id, numero, descripcion) VALUES
     (268, 57, 22, 'Analiza críticamente su desempeño durante las clases, a partir de los resultados de aprendizaje de las y los estudiantes.'),
     (269, 57, 23, 'Presenta anticipadamente la planificación de la clase, de acuerdo a unidad didáctica, para su debida retroalimentación.');
 
+-- Parámetros del sistema (HU-27, migración 014): valores iniciales y rango que puede usar el coordinador (S-80)
+INSERT INTO parametro_sistema (clave, valor, minimo, maximo, unidad, descripcion) VALUES
+    ('planificacion.dias_anticipacion', 3, 0, 14, 'días',
+        'Días mínimos entre enviar una planificación a revisión y la fecha de la clase (S-35)'),
+    ('panel.dias_atencion', 3, 1, 30, 'días',
+        'Días que puede esperar revisión una planificación antes de aparecer en "requiere atención" del panel (S-79)'),
+    ('archivos.documento_mb', 10, 1, 10, 'MB',
+        'Tamaño máximo de un documento adjunto (planificación, evaluación o base de conocimiento)'),
+    ('archivos.audio_mb', 25, 1, 25, 'MB',
+        'Tamaño máximo del audio de una nota de voz');
+
 -- =============================================================================
 -- PARTE 2 - DEMO (datos ficticios, S-15)
 -- =============================================================================

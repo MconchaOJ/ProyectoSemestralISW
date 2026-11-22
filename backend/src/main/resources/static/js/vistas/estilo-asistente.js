@@ -5,6 +5,7 @@
 // HU-30 · Y la validación: con ella abierta, el asistente solo responde a los estudiantes validadores; los
 //         validadores responden la Escala SUS y la rúbrica de juicio experto, y aquí se ven los resultados.
 import { api } from '../api.js';
+import { parametros } from '../datos.js';
 import {
   alerta, alertaError, cabecera, confirmar, conCarga, decimal, fechaHora, html, icono, promedio, toast, toastError, vacio,
 } from '../ui.js';
@@ -13,12 +14,13 @@ const kb = (bytes) => `${Math.max(1, Math.round(bytes / 1024)).toLocaleString('e
 
 /** HU-29: los 10 documentos de la propuesta RetroPlani Mate, cada uno con su archivo vigente o sin cargar. */
 async function baseConocimiento(caja, ctx) {
-  const docs = await api.get('/api/chatbot/base-conocimiento');
+  const [docs, params] = await Promise.all([api.get('/api/chatbot/base-conocimiento'), parametros()]);
+  const mb = params['archivos.documento_mb'];   // HU-27
   if (!ctx.vigente()) return;
   const cargados = docs.filter((d) => d.cargado).length;
   caja.innerHTML = html`
     <div class="tarjeta-titulo"><h2 id="t-base">Base de conocimiento</h2><small class="ayuda">${cargados} de ${docs.length} documentos cargados</small></div>
-    <p class="ayuda">Documentos de referencia de la carrera (Word o PDF con texto, máximo 10 MB). En cada mensaje el asistente recibe solo los fragmentos más relacionados con la planificación que revisa. Sin documentos funciona igual, solo con sus instrucciones.</p>
+    <p class="ayuda">Documentos de referencia de la carrera (Word o PDF con texto, máximo ${mb} MB). En cada mensaje el asistente recibe solo los fragmentos más relacionados con la planificación que revisa. Sin documentos funciona igual, solo con sus instrucciones.</p>
     <div class="tabla-contenedor"><table class="tabla">
       <thead><tr><th>Documento</th><th>Archivo vigente</th><th class="acciones">Acciones</th></tr></thead>
       <tbody>${docs.map((d) => html`<tr>

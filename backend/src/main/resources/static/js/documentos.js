@@ -1,6 +1,7 @@
 // Sección "Documentos" reutilizable (Fase E, punto 3): subir y listar los archivos adjuntos de una
 // planificación o de una evaluación. `base` ya trae el id del recurso, por ejemplo
 // "/api/planificaciones/3/documentos" o "/api/evaluaciones/7/documentos".
+import { parametros } from './datos.js';
 import { api, descargarArchivo } from './api.js';
 import { fechaHora, html, icono, toastError, vacio } from './ui.js';
 
@@ -24,7 +25,10 @@ function filaDocumento(d) {
  * Pinta la tarjeta "Documentos" dentro de `cont` (un elemento ya en el DOM).
  * @param {{base: string, puedeSubir: boolean, tiposAceptados?: string, ayuda?: string}} opciones
  */
-export async function montarDocumentos(cont, { base, puedeSubir, tiposAceptados = '.docx,.pdf', ayuda = 'Word (.docx) o PDF, máximo 10 MB.' }) {
+export async function montarDocumentos(cont, { base, puedeSubir, tiposAceptados = '.docx,.pdf', ayuda: ayudaBase = 'Word (.docx) o PDF, máximo 10 MB.' }) {
+  // HU-27: el tamaño máximo vigente lo fija el coordinador
+  const mb = (await parametros())['archivos.documento_mb'];
+  const ayuda = ayudaBase.replace(/máximo \d+ MB/, `máximo ${mb} MB`);
   cont.innerHTML = html`<div class="tarjeta">
     <div class="tarjeta-titulo"><h2>Documentos</h2></div>
     ${puedeSubir ? html`<form id="form-documento" class="form-documento" novalidate>
