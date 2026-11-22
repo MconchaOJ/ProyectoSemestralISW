@@ -34,12 +34,20 @@ public final class EscalaNotas {
 
     /** Nota de un puntaje sobre un máximo, con el 60 % de exigencia y la nota mínima dada (la de 0 puntos). */
     public static BigDecimal nota(int puntaje, int maximo, BigDecimal notaMinima) {
+        return nota(puntaje, maximo, notaMinima, EXIGENCIA);
+    }
+
+    /**
+     * Nota de un puntaje sobre un máximo con la exigencia dada (fracción: 0,60 = 60 %; desde el 22-nov es el parámetro
+     * evaluacion.exigencia_pct de HU-27) y la nota mínima dada (la de 0 puntos).
+     */
+    public static BigDecimal nota(int puntaje, int maximo, BigDecimal notaMinima, BigDecimal exigencia) {
         if (maximo <= 0 || puntaje < 0 || puntaje > maximo) {
             throw new IllegalArgumentException("Puntaje " + puntaje + " fuera de 0.." + maximo);
         }
         BigDecimal p = BigDecimal.valueOf(puntaje);
         BigDecimal max = BigDecimal.valueOf(maximo);
-        BigDecimal corte = max.multiply(EXIGENCIA);
+        BigDecimal corte = max.multiply(exigencia);
         BigDecimal nota = p.compareTo(corte) < 0
                 ? notaMinima.add(CUATRO.subtract(notaMinima).multiply(p).divide(corte, PRECISION))
                 : CUATRO.add(TRES.multiply(p.subtract(corte)).divide(max.subtract(corte), PRECISION));

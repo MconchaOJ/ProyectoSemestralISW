@@ -43,8 +43,9 @@ export const FUNCIONES = [
   { ruta: 'chatbot', icono: 'chat', nombre: 'Asistente de planificación', roles: ['ESTUDIANTE', 'PROFESOR_GUIA'] },
   // HU-17: el coordinador calibra el estilo del asistente
   { ruta: 'estilo-asistente', icono: 'sliders', nombre: 'Configuración del asistente', roles: COORD },
-  // HU-27: reglas operativas (anticipación, umbral del panel, tamaños de archivo)
-  { ruta: 'parametros', icono: 'key', nombre: 'Parámetros del sistema', roles: COORD },
+  // HU-27: reglas operativas (anticipación, umbral del panel, tamaños de archivo, exigencia de la escala). El jefe de
+  // carrera entra para editar solo la exigencia de la escala de notas.
+  { ruta: 'parametros', icono: 'key', nombre: 'Parámetros del sistema', roles: ['COORDINADOR', JEFE] },
 ];
 
 const tieneAlguno = (item, roles) => item.roles.some((r) => roles.includes(r));
@@ -111,6 +112,7 @@ export const ACCESOS = {
     { icono: 'layers', titulo: 'Panel de monitoreo', texto: 'Planificaciones atrasadas y estudiantes sin evaluar.', hash: '#/panel' },
     { icono: 'download', titulo: 'Cartola de prácticas', texto: 'PDF de las prácticas cerradas entre dos fechas.', hash: '#/cartola' },
     { icono: 'chart', titulo: 'Informe de una asignatura', texto: 'Promedios y distribución por período, en PDF.', hash: '#/informes' },
+    { icono: 'key', titulo: 'Exigencia de la escala de notas', texto: 'Porcentaje del puntaje que corresponde al 4,0.', hash: '#/parametros' },
     { icono: 'clock', titulo: 'Historial de un estudiante', texto: 'Recorrido de cualquier estudiante (solo lectura).', hash: '#/historial' },
     { icono: 'check', titulo: 'Evaluaciones de clases', texto: 'Todas las evaluaciones (solo lectura).', hash: '#/evaluaciones' },
     { icono: 'chat', titulo: 'Conversaciones del asistente', texto: 'Chats de Práctica Pedagógica y Profesional.', hash: '#/chatbot' },

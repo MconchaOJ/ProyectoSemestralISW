@@ -67,7 +67,9 @@ class EvaluacionServiceTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new EvaluacionService(evaluaciones, inscripciones, pautas, planificaciones, usuarios, acceso);
+        ParametroService parametros = org.mockito.Mockito.mock(ParametroService.class);
+        lenient().when(parametros.exigencia()).thenReturn(new java.math.BigDecimal("0.60"));
+        servicio = new EvaluacionService(evaluaciones, inscripciones, pautas, planificaciones, usuarios, acceso, parametros);
         inscripcion = Datos.inscripcion(3, estudiante, asignatura, guia, curso);
         pauta = pautaDePrueba();
         lenient().when(inscripciones.findById(3L)).thenReturn(Optional.of(inscripcion));

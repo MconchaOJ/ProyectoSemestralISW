@@ -36,9 +36,10 @@ public class ParametroController {
     }
 
     @PutMapping("/{clave}")
-    @PreAuthorize("hasRole('COORDINADOR')")
+    @PreAuthorize("hasAnyRole('COORDINADOR', 'JEFE_CARRERA')")
     @Operation(summary = "Cambiar un parámetro (HU-27)",
-            description = "Solo COORDINADOR. Rige desde la petición siguiente. 400 si el valor está fuera del rango del "
+            description = "Solo COORDINADOR; la exigencia de la escala de notas (evaluacion.exigencia_pct) también "
+                    + "JEFE_CARRERA (403 los demás parámetros). Rige desde la petición siguiente. 400 si el valor está fuera del rango del "
                     + "parámetro (S-80); 404 si la clave no existe. Los tamaños de archivo solo se pueden bajar del techo "
                     + "actual (10 MB los documentos, 25 MB el audio).")
     public ParametroDto actualizar(@PathVariable String clave, @Valid @RequestBody ParametroDto.Cambio cambio,

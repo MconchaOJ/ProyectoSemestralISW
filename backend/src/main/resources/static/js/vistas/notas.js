@@ -6,7 +6,7 @@
 // Usa GET/PUT /api/asignaturas/{id}/estructura-evaluativa, GET /api/notas y PUT/DELETE
 // /api/inscripciones/{id}/notas-externas/{componenteId}.
 import { api } from '../api.js';
-import { asignaturas } from '../datos.js';
+import { asignaturas, parametros } from '../datos.js';
 import {
   alerta, alertaError, badge, cabecera, campo, cargando, conCarga, confirmar, html, icono, modalFormulario, nota,
   toast, vacio,
@@ -16,14 +16,15 @@ const TIPO = { PAUTA: 'De pauta', EXTERNO: 'Externo' };
 
 export async function render(cont, ctx) {
   ctx.titulo('Notas finales');
-  const [catalogo, inscripciones] = await Promise.all([asignaturas(), api.get('/api/inscripciones')]);
+  const [catalogo, inscripciones, params] = await Promise.all([asignaturas(), api.get('/api/inscripciones'), parametros()]);
+  const exigencia = params['evaluacion.exigencia_pct'] ?? 60;
   const periodos = (asignaturaId) => [...new Set(inscripciones.filter((i) => String(i.asignatura.id) === String(asignaturaId))
     .map((i) => i.periodo))].sort().reverse();
 
   cont.innerHTML = html`
     ${cabecera({
       hu: 'HU-09', titulo: 'Notas finales',
-      subtitulo: 'La nota final de cada práctica según su estructura evaluativa: una parte sale de las evaluaciones con pauta del sistema (nota de 1,0 a 7,0 con 60 % de exigencia) y otra la escribe el profesor del curso (productos, informe final, TANEP). Mientras falten notas se muestra la nota parcial con el porcentaje ya evaluado.',
+      subtitulo: `La nota final de cada práctica según su estructura evaluativa: una parte sale de las evaluaciones con pauta del sistema (nota de 1,0 a 7,0 con ${exigencia} % de exigencia) y otra la escribe el profesor del curso (productos, informe final, TANEP). Mientras falten notas se muestra la nota parcial con el porcentaje ya evaluado.`,
     })}
     <div class="tarjeta">
       <form id="form-notas" class="rejilla-form" novalidate>

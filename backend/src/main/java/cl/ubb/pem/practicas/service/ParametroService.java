@@ -3,11 +3,14 @@ package cl.ubb.pem.practicas.service;
 import cl.ubb.pem.practicas.config.PlanificacionProperties;
 import cl.ubb.pem.practicas.dto.ParametroDto;
 import cl.ubb.pem.practicas.entity.ParametroSistema;
+import cl.ubb.pem.practicas.exception.AccesoDenegadoException;
 import cl.ubb.pem.practicas.exception.RecursoNoEncontradoException;
 import cl.ubb.pem.practicas.exception.ReglaNegocioException;
 import cl.ubb.pem.practicas.repository.ParametroSistemaRepository;
 import cl.ubb.pem.practicas.repository.UsuarioRepository;
+import cl.ubb.pem.practicas.security.Roles;
 import cl.ubb.pem.practicas.security.UsuarioAutenticado;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
  * cada petición, así que un cambio rige desde la siguiente (criterio 2). Si falta la fila de un parámetro (una base sin
  * la migración 014), se usa el valor de application.properties o el de siempre. El rango de cada uno (S-80) lo
  * comprueban este servicio (400) y la base (ck_parametro_rango).
+ *
+ * 2026-11-22: la exigencia de la escala de notas (S-81, 60 %) pasa a ser un parámetro (migración 017). Es el único que
+ * también puede editar el JEFE_CARRERA (decisión del usuario); los demás, solo el COORDINADOR (403). Cambiarla rige para
+ * las evaluaciones que se finalicen después: la nota de una evaluación ya finalizada queda guardada y no cambia.
  */
 @Service
 public class ParametroService {
@@ -30,6 +37,10 @@ public class ParametroService {
     public static final String DIAS_ATENCION_PANEL = "panel.dias_atencion";
     public static final String DOCUMENTO_MB = "archivos.documento_mb";
     public static final String AUDIO_MB = "archivos.audio_mb";
+    public static final String EXIGENCIA_PCT = "evaluacion.exigencia_pct";
+    /** Roles que editan cada parámetro: la exigencia también el jefe de carrera; el resto, solo el coordinador. */
+    private static final List<String> SOLO_COORDINADOR = List.of(Roles.COORDINADOR);
+    private static final List<String> COORDINADOR_Y_JEFE = List.of(Roles.COORDINADOR, Roles.JEFE_CARRERA);
     private static final long MB = 1024L * 1024L;
     private static final Logger LOG = LoggerFactory.getLogger(ParametroService.class);
 
@@ -68,6 +79,16 @@ public class ParametroService {
         return Math.min(valor(AUDIO_MB, 25) * MB, AlmacenamientoArchivosService.TAMANO_MAXIMO_AUDIO);
     }
 
+    /** Exigencia de la escala de notas (S-81), como fracción: 60 % -> 0,60. */
+    public BigDecimal exigencia() {
+        return BigDecimal.valueOf(valor(EXIGENCIA_PCT, 60)).movePointLeft(2);
+    }
+
+    /** Roles que pueden editar este parámetro. */
+    public static List<String> rolesQueEditan(String clave) {
+        return EXIGENCIA_PCT.equals(clave) ? COORDINADOR_Y_JEFE : SOLO_COORDINADOR;
+    }
+
     @Transactional(readOnly = true)
     public List<ParametroDto> listar() {
         return parametros.findAllByOrderByClaveAsc().stream().map(ParametroDto::desde).toList();
@@ -77,6 +98,9 @@ public class ParametroService {
     public ParametroDto actualizar(String clave, int valor, UsuarioAutenticado actor) {
         ParametroSistema p = parametros.findById(clave)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe el parámetro «" + clave + "»."));
+        if (rolesQueEditan(clave).stream().noneMatch(actor::tieneRol)) {
+            throw new AccesoDenegadoException("Solo el coordinador puede cambiar «" + p.getDescripcion() + "».");
+        }
         if (valor < p.getMinimo() || valor > p.getMaximo()) {
             throw new ReglaNegocioException("«" + p.getDescripcion() + "» debe estar entre " + p.getMinimo() + " y "
                     + p.getMaximo() + " " + p.getUnidad() + ".");
@@ -86,7 +110,7 @@ public class ParametroService {
         p.setEditadoPor(usuarios.getReferenceById(actor.id()));
         p.setFechaEdicion(LocalDateTime.now(reloj));
         ParametroSistema guardado = parametros.saveAndFlush(p);
-        LOG.info("El coordinador {} cambió el parámetro {}: {} -> {}", actor.id(), clave, anterior, valor);
+        LOG.info("El usuario {} cambió el parámetro {}: {} -> {}", actor.id(), clave, anterior, valor);
         return ParametroDto.desde(guardado);
     }
 

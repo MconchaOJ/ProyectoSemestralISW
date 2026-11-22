@@ -486,7 +486,9 @@ INSERT INTO parametro_sistema (clave, valor, minimo, maximo, unidad, descripcion
     ('archivos.documento_mb', 10, 1, 10, 'MB',
         'Tamaño máximo de un documento adjunto (planificación, evaluación o base de conocimiento)'),
     ('archivos.audio_mb', 25, 1, 25, 'MB',
-        'Tamaño máximo del audio de una nota de voz');
+        'Tamaño máximo del audio de una nota de voz'),
+    ('evaluacion.exigencia_pct', 60, 50, 70, '%',
+        'Exigencia de la escala de notas: porcentaje del puntaje máximo de la pauta que corresponde al 4,0 (S-81)');
 
 -- Estructura evaluativa de Práctica Pedagógica (HU-09, migración 015), del documento oficial de la carrera:
 -- 26 % sale de las 4 pautas del sistema (ids 10 a 13) y 74 % de componentes externos que escribe el profesor del curso.
