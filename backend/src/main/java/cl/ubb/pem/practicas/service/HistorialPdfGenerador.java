@@ -85,6 +85,10 @@ public class HistorialPdfGenerador {
         documento.add(new Paragraph("Estado: " + estado(i.estado()) + "  ·  Nota final: " + numero(i.notaFinal())
                 + "  ·  Profesor guía: " + (i.profesorGuia() == null ? "no lleva" : i.profesorGuia().nombreCompleto())
                 + "  ·  Profesor del curso: " + i.profesorCurso().nombreCompleto(), SUBTITULO));
+        if (!i.companeros().isEmpty()) {   // HU-10, criterio 3: con quién trabajó
+            String tipo = i.asignatura().modalidad() == cl.ubb.pem.practicas.entity.Modalidad.DUPLA ? "dupla" : "grupo";
+            documento.add(new Paragraph("Trabajó en " + tipo + " con: " + String.join(", ", i.companeros()), SUBTITULO));
+        }
 
         documento.add(new Paragraph("Evaluaciones finalizadas (" + i.evaluaciones().size() + ")", NEGRITA));
         if (i.evaluaciones().isEmpty()) {

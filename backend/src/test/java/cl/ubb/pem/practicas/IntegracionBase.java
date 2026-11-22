@@ -78,6 +78,10 @@ public abstract class IntegracionBase {
                 .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(cuerpo)));
     }
 
+    protected ResultActions borrar(String url, String email) throws Exception {
+        return mvc.perform(autenticar(MockMvcRequestBuilders.delete(url), email));
+    }
+
     private MockHttpServletRequestBuilder autenticar(MockHttpServletRequestBuilder req, String email) {
         return email == null ? req : req.header("Authorization", "Bearer " + token(email));
     }

@@ -1,7 +1,6 @@
 package cl.ubb.pem.practicas;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.web.servlet.ResultActions;
 
 /**
  * HU-06: configurar pautas de evaluación, contra la base real (cada prueba se revierte).
@@ -20,10 +18,6 @@ import org.springframework.test.web.servlet.ResultActions;
  * es un BORRADOR de Marcos (guía 1) sobre la inscripción 3.
  */
 class HU06PautasIntegracionTest extends IntegracionBase {
-
-    private ResultActions borrar(String url, String email) throws Exception {
-        return mvc.perform(delete(url).header("Authorization", "Bearer " + token(email)));
-    }
 
     /** Pauta de Especialidad con tutor (como las de HU-07): escala 2 a 7, dimensiones A y B. */
     private static Map<String, Object> pautaTutor(String nombre) {

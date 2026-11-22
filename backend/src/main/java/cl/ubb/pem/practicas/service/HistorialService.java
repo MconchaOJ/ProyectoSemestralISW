@@ -98,7 +98,8 @@ public class HistorialService {
                         evaluacionesPorInscripcion.getOrDefault(i.getId(), List.of()).stream()
                                 .map(EvaluacionResumenDto::desde).toList(),
                         planificacionesPorInscripcion.getOrDefault(i.getId(), List.of()).stream()
-                                .map(PlanificacionResumenDto::desde).toList()))
+                                .map(PlanificacionResumenDto::desde).toList(),
+                        i.companeros().stream().map(c -> c.getEstudiante().getUsuario().getNombreCompleto()).toList()))
                 .toList();
 
         // Criterio 4: lo que el chatbot necesitará como contexto (S-14)

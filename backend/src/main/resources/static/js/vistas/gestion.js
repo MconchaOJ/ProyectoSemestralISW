@@ -4,7 +4,7 @@
 import { api } from '../api.js';
 import { asignaturas } from '../datos.js';
 import {
-  MODALIDADES, alertaError, badge, cabecera, campo, cargando, debounce, esc, html, icono, modalFormulario,
+  MODALIDADES, alerta, alertaError, badge, cabecera, campo, cargando, confirmar, debounce, esc, html, icono, modalFormulario,
   nombreRol, nota, toast, vacio,
 } from '../ui.js';
 
@@ -147,7 +147,8 @@ export function tablaInscripciones(lista, { acciones = null } = {}) {
     <thead><tr><th>Estudiante</th><th>Práctica</th><th>Período</th><th>Profesor guía</th><th>Profesor del curso</th><th>Estado</th><th class="num">Nota</th>${acciones ? html`<th></th>` : ''}</tr></thead>
     <tbody>${lista.map((i) => html`<tr>
       <td><strong>${i.estudiante.nombreCompleto}</strong><br><small>${i.estudiante.rut}</small></td>
-      <td>${i.asignatura.nombre}<br><small>${MODALIDADES[i.asignatura.modalidad] ?? i.asignatura.modalidad}</small></td>
+      <td>${i.asignatura.nombre}<br><small>${MODALIDADES[i.asignatura.modalidad] ?? i.asignatura.modalidad}</small>
+        ${i.companeros?.length ? html`<br><small class="companeros">${i.asignatura.modalidad === 'DUPLA' ? 'Dupla' : 'Grupo'} con: ${i.companeros.map((c) => c.nombreCompleto).join(', ')}</small>` : ''}</td>
       <td>${i.periodo}</td>
       <td>${i.profesorGuia ? i.profesorGuia.nombreCompleto : html`<small>No lleva guía</small>`}
         ${i.tutor ? html`<br><small>Tutor: ${i.tutor.nombreCompleto}</small>` : i.asignatura.llevaTutor ? html`<br><small>Sin tutor asignado</small>` : ''}</td>
@@ -201,6 +202,9 @@ async function tabInscripciones(zona, ctx, { coordinador }) {
       lista.querySelectorAll('[data-tutor-inscripcion]').forEach((b) => {
         b.addEventListener('click', () => asignarTutor(datos.find((x) => String(x.id) === b.dataset.tutorInscripcion), cargar));
       });
+      lista.querySelectorAll('[data-grupo-inscripcion]').forEach((b) => {
+        b.addEventListener('click', () => armarGrupo(datos.find((x) => String(x.id) === b.dataset.grupoInscripcion), cargar));
+      });
     } catch (e) {
       if (mio === pedido) lista.innerHTML = alertaError(e).toString();
     }
@@ -228,6 +232,10 @@ function accionesInscripcion(i, ctx, coordinador) {
     // HU-15/HU-16: el estudiante conversa con el asistente; su profesor guía lee la conversación
     if (i.asignatura.chatbotHabilitado && (ctx.tiene('ESTUDIANTE') || ctx.actuaComo('PROFESOR_GUIA', i))) {
       enlaces.push(html` <a class="btn btn-chico" href="#/chatbot/${i.id}">${icono('chat')} Asistente</a>`);
+    }
+    // HU-10: dupla o grupo, solo en las prácticas que no son individuales
+    if (coordinador && i.asignatura.modalidad !== 'INDIVIDUAL') {
+      enlaces.push(html` <button type="button" class="btn btn-chico" data-grupo-inscripcion="${i.id}">${i.asignatura.modalidad === 'DUPLA' ? 'Dupla' : 'Grupo'}</button>`);
     }
     if (coordinador && i.asignatura.llevaTutor) {
       enlaces.push(html` <button type="button" class="btn btn-chico" data-tutor-inscripcion="${i.id}">Tutor</button>`);
@@ -300,6 +308,67 @@ async function nuevaInscripcion(estudiantes, catalogo, alTerminar) {
     if (!a.requiereCentroEducativo) selGuia.value = '';
     selGuia.options[0].textContent = a.requiereCentroEducativo ? 'Seleccione…' : 'No aplica: esta práctica no va a un colegio';
     info.textContent = `Modalidad: ${MODALIDADES[a.modalidad]}. ${a.requiereCentroEducativo ? 'Se realiza en un colegio: el profesor guía es obligatorio.' : 'No se realiza en un colegio: no lleva profesor guía.'}${a.requierePlanificacion ? '' : ' No entrega planificaciones.'}`;
+  });
+}
+
+/**
+ * HU-10: formar, cambiar o deshacer la dupla o el grupo de una inscripción (solo el coordinador). Los candidatos son
+ * las otras inscripciones EN_CURSO de la misma práctica y período que no están en otro grupo. Cada integrante conserva
+ * su inscripción, su pauta y sus planificaciones (S-77); el servidor exige el mismo guía y el tamaño (S-78).
+ */
+async function armarGrupo(inscripcion, alTerminar) {
+  if (!inscripcion) return;
+  const a = inscripcion.asignatura;
+  const dupla = a.modalidad === 'DUPLA';
+  const [mismas, actual] = await Promise.all([
+    api.get('/api/inscripciones', { asignaturaId: a.id, periodo: inscripcion.periodo }),
+    inscripcion.grupoId ? api.get(`/api/grupos/${inscripcion.grupoId}`) : Promise.resolve(null),
+  ]);
+  const enEste = new Set((actual?.integrantes ?? []).map((x) => x.inscripcionId));
+  const candidatos = mismas.filter((x) => x.id !== inscripcion.id && x.estado === 'EN_CURSO'
+    && (!x.grupoId || x.grupoId === inscripcion.grupoId));
+  const guia = (x) => (x.profesorGuia ? x.profesorGuia.nombreCompleto : 'sin guía');
+
+  const m = modalFormulario({
+    titulo: `${dupla ? 'Dupla' : 'Grupo'} de ${inscripcion.estudiante.nombreCompleto}`, chico: true,
+    textoOk: inscripcion.grupoId ? 'Guardar cambios' : `Formar ${dupla ? 'dupla' : 'grupo'}`,
+    introduccion: html`<p>${a.nombre} · ${inscripcion.periodo} · guía: <strong>${guia(inscripcion)}</strong></p>
+      <p class="ayuda">${dupla ? 'Elige a su compañero o compañera (exactamente 1).' : 'Elige de 1 a 3 compañeros (grupos de hasta 4).'}
+        Deben tener el mismo profesor guía. Cada uno sigue con su propia inscripción, pauta y planificaciones.</p>
+      ${inscripcion.grupoId ? html`<p><button type="button" class="btn btn-chico btn-peligro" id="deshacer-grupo">Deshacer ${dupla ? 'la dupla' : 'el grupo'}</button></p>` : ''}`,
+    campos: [
+      candidatos.length
+        ? html`<fieldset class="campo completo" style="grid-column:1/-1"><legend>Compañeros</legend>
+          ${candidatos.map((x) => html`<label style="display:block"><input type="checkbox" data-companero value="${x.id}" ${enEste.has(x.id) ? 'checked' : ''}>
+            ${x.estudiante.nombreCompleto} <small>(guía: ${guia(x)})</small></label>`)}</fieldset>`
+        : alerta('aviso', 'No hay otras inscripciones en curso de esta práctica y período sin grupo.'),
+      ...(a.requiereCentroEducativo ? [
+        campo({ nombre: 'establecimiento', etiqueta: 'Establecimiento que comparten', valor: actual?.establecimiento ?? '', atributos: { maxlength: 150 } }),
+        campo({ nombre: 'curso', etiqueta: 'Curso', valor: actual?.curso ?? '', atributos: { maxlength: 50, placeholder: '1° Medio B' } }),
+      ] : []),
+    ],
+    alEnviar: (datos) => {
+      const ids = [inscripcion.id, ...[...m.form.querySelectorAll('[data-companero]:checked')].map((c) => Number(c.value))];
+      const cuerpo = { inscripcionIds: ids, establecimiento: datos.establecimiento ?? null, curso: datos.curso ?? null };
+      return inscripcion.grupoId ? api.put(`/api/grupos/${inscripcion.grupoId}`, cuerpo) : api.post('/api/grupos', cuerpo);
+    },
+    alListo: (g) => {
+      toast(`${dupla ? 'Dupla guardada' : 'Grupo guardado'}: ${g.integrantes.map((x) => x.estudiante.nombreCompleto).join(', ')}.`);
+      alTerminar();
+    },
+  });
+  m.el.querySelector('#deshacer-grupo')?.addEventListener('click', async () => {
+    const ok = await confirmar({ titulo: `Deshacer ${dupla ? 'la dupla' : 'el grupo'}`, peligro: true, textoOk: 'Deshacer',
+      mensaje: 'Los integrantes quedan sin grupo. Sus inscripciones, evaluaciones y planificaciones no cambian.' });
+    if (!ok) return;
+    try {
+      await api.del(`/api/grupos/${inscripcion.grupoId}`);
+      m.cerrar();
+      toast(`${dupla ? 'Dupla deshecha' : 'Grupo deshecho'}.`);
+      alTerminar();
+    } catch (e) {
+      if (e.status !== 401) toast(e.message, 'error');
+    }
   });
 }
 

@@ -1,11 +1,11 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 22 tablas con claves, restricciones e
+-- Implementa el MER de Sprint1/mer.md: 23 tablas con claves, restricciones e
 -- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
 -- la Fase E, instrucciones_chatbot de HU-17, documento_base_conocimiento de
 -- HU-29, lectura_chat_jefe_carrera de HU-20 y respuesta_sus,
--- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30). No
+-- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30, y grupo_practica de HU-10). No
 -- contiene contraseñas (el
 -- usuario de la aplicación lo crea db/bd.ps1 con su clave tomada de una
 -- variable de entorno).
@@ -54,6 +54,7 @@ DROP TABLE IF EXISTS indicador;
 DROP TABLE IF EXISTS dimension_pauta;
 DROP TABLE IF EXISTS pauta;
 DROP TABLE IF EXISTS inscripcion;
+DROP TABLE IF EXISTS grupo_practica;
 DROP TABLE IF EXISTS asignatura_practica;
 DROP TABLE IF EXISTS estudiante;
 DROP TABLE IF EXISTS usuario;
@@ -137,6 +138,24 @@ CREATE TABLE asignatura_practica (
     CONSTRAINT ck_asignatura_tutor     CHECK (lleva_tutor = FALSE OR requiere_centro_educativo = TRUE)
 ) ENGINE = InnoDB COMMENT = 'Las 6 asignaturas de práctica de la carrera';
 
+-- Dupla o grupo de práctica (HU-10, migración 013): junta inscripciones de la misma asignatura y periodo.
+-- Cada integrante conserva su inscripción, su pauta (S-11) y sus planificaciones (S-77): el grupo solo agrupa.
+-- Las demás reglas (dupla = 2, grupo = 2 a 4, mismo guía, solo EN_CURSO) las aplica la aplicación (S-78).
+CREATE TABLE grupo_practica (
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    asignatura_id   INT          NOT NULL,
+    periodo         VARCHAR(6)   NOT NULL COMMENT 'Ej. 2026-2',
+    establecimiento VARCHAR(150) NULL     COMMENT 'Colegio que comparten (solo practicas que van a un colegio)',
+    curso           VARCHAR(50)  NULL     COMMENT 'Curso del colegio que comparten',
+    fecha_creacion  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_grupo_practica PRIMARY KEY (id),
+    -- Destino de la clave foránea compuesta de inscripcion
+    CONSTRAINT uq_grupo_practica_asignatura_periodo UNIQUE (id, asignatura_id, periodo),
+    CONSTRAINT fk_grupo_practica_asignatura FOREIGN KEY (asignatura_id) REFERENCES asignatura_practica (id),
+    CONSTRAINT ck_grupo_practica_periodo CHECK (periodo REGEXP '^[0-9]{4}-[12]$'),
+    INDEX ix_grupo_practica_asignatura_periodo (asignatura_id, periodo)
+) ENGINE = InnoDB COMMENT = 'Dupla o grupo de practica: junta inscripciones de la misma asignatura y periodo (HU-10)';
+
 CREATE TABLE inscripcion (
     id                BIGINT       NOT NULL AUTO_INCREMENT,
     estudiante_id     BIGINT       NOT NULL,
@@ -145,7 +164,8 @@ CREATE TABLE inscripcion (
     profesor_guia_id  BIGINT       NULL     COMMENT 'Nulo en el ciclo inicial (no va al colegio)',
     profesor_curso_id BIGINT       NOT NULL COMMENT 'Quien autoriza las clases (S-05)',
     tutor_id          BIGINT       NULL     COMMENT 'Tutor de la universidad (solo Práctica Profesional); nulo = sin tutor (HU-07, migración 006)',
-    estado            VARCHAR(20)  NOT NULL DEFAULT 'EN_CURSO' COMMENT 'EN_CURSO, APROBADA, REPROBADA',
+    grupo_id          BIGINT       NULL     COMMENT 'Dupla o grupo (HU-10, migracion 013); nulo = sin grupo',
+    estado           VARCHAR(20)  NOT NULL DEFAULT 'EN_CURSO' COMMENT 'EN_CURSO, APROBADA, REPROBADA',
     nota_final        DECIMAL(3,1) NULL     COMMENT 'Nulo hasta el cierre',
     fecha_cierre      DATE         NULL     COMMENT 'Día en que se cerró (APROBADA o REPROBADA); nulo mientras está EN_CURSO (HU-31, migración 003)',
     CONSTRAINT pk_inscripcion PRIMARY KEY (id),
@@ -157,6 +177,9 @@ CREATE TABLE inscripcion (
     CONSTRAINT fk_inscripcion_guia       FOREIGN KEY (profesor_guia_id)  REFERENCES usuario (id),
     CONSTRAINT fk_inscripcion_curso      FOREIGN KEY (profesor_curso_id) REFERENCES usuario (id),
     CONSTRAINT fk_inscripcion_tutor      FOREIGN KEY (tutor_id)          REFERENCES usuario (id),
+    -- Compuesta: el grupo debe ser de la misma asignatura y periodo que la inscripción (HU-10)
+    CONSTRAINT fk_inscripcion_grupo      FOREIGN KEY (grupo_id, asignatura_id, periodo)
+        REFERENCES grupo_practica (id, asignatura_id, periodo),
     CONSTRAINT ck_inscripcion_periodo CHECK (periodo REGEXP '^[0-9]{4}-[12]$'),
     CONSTRAINT ck_inscripcion_estado  CHECK (estado IN ('EN_CURSO', 'APROBADA', 'REPROBADA')),
     CONSTRAINT ck_inscripcion_nota    CHECK (nota_final IS NULL OR nota_final BETWEEN 1.0 AND 7.0),

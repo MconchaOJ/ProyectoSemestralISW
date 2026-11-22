@@ -137,7 +137,7 @@ function Install-Bd {
     }
     Write-Host "  OK  Versión de MySQL compatible ($version >= $VersionMinimaMysql)" -ForegroundColor Green
 
-    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (22 tablas, trigger)'
+    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (23 tablas, trigger)'
     Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'seed.sql'))   'seed.sql (catálogo y datos de demo)'
 
     # Usuario de la aplicación: solo puede leer y escribir datos, no cambiar la estructura.
@@ -178,6 +178,8 @@ function Test-Bd {
         @('Periodo con formato inválido',                         3819, 'ck_inscripcion_periodo',  "INSERT INTO inscripcion (estudiante_id,asignatura_id,periodo,profesor_curso_id) VALUES (5,2,'2026-3',4)"),
         @('Inscripción EN_CURSO con nota final',                  3819, 'ck_inscripcion_nota_cierre', "INSERT INTO inscripcion (estudiante_id,asignatura_id,periodo,profesor_curso_id,estado,nota_final) VALUES (5,2,'2026-2',4,'EN_CURSO',5.0)"),
         @('Inscripción EN_CURSO con fecha de cierre',             3819, 'ck_inscripcion_fecha_cierre', "INSERT INTO inscripcion (estudiante_id,asignatura_id,periodo,profesor_curso_id,estado,fecha_cierre) VALUES (5,2,'2026-2',4,'EN_CURSO','2026-07-31')"),
+        @('Inscripción en un grupo de otra asignatura (HU-10)',    1452, 'fk_inscripcion_grupo',    "UPDATE inscripcion SET grupo_id = 1 WHERE id = 3"),
+        @('Inscripción en un grupo de otro periodo (HU-10)',       1452, 'fk_inscripcion_grupo',    "UPDATE inscripcion SET grupo_id = 1 WHERE id = 7"),
         @('Guía y profesor del curso son la misma persona',       3819, 'ck_inscripcion_profesores_distintos', "INSERT INTO inscripcion (estudiante_id,asignatura_id,periodo,profesor_guia_id,profesor_curso_id) VALUES (5,3,'2026-2',4,4)"),
         @('Chatbot habilitado en una asignatura que no es final', 3819, 'ck_asignatura_chatbot',   "UPDATE asignatura_practica SET chatbot_habilitado = TRUE WHERE id = 1"),
         @('Tutor que es también el guía de la inscripción (HU-07)', 3819, 'ck_inscripcion_tutor_distinto', "UPDATE inscripcion SET tutor_id = profesor_guia_id WHERE id = 17"),

@@ -7,13 +7,16 @@ import java.time.LocalDate;
 
 public record InscripcionDto(Long id, EstudianteResumenDto estudiante, AsignaturaDto asignatura, String periodo,
                              UsuarioResumenDto profesorGuia, UsuarioResumenDto profesorCurso, UsuarioResumenDto tutor,
-                             EstadoInscripcion estado, BigDecimal notaFinal, LocalDate fechaCierre) {
+                             EstadoInscripcion estado, BigDecimal notaFinal, LocalDate fechaCierre,
+                             Long grupoId, java.util.List<EstudianteResumenDto> companeros) {
 
     public static InscripcionDto desde(Inscripcion i) {
         return new InscripcionDto(i.getId(), EstudianteResumenDto.desde(i.getEstudiante()),
                 AsignaturaDto.desde(i.getAsignatura()), i.getPeriodo(),
                 UsuarioResumenDto.desde(i.getProfesorGuia()), UsuarioResumenDto.desde(i.getProfesorCurso()),
                 UsuarioResumenDto.desde(i.getTutor()),
-                i.getEstado(), i.getNotaFinal(), i.getFechaCierre());
+                i.getEstado(), i.getNotaFinal(), i.getFechaCierre(),
+                i.getGrupo() == null ? null : i.getGrupo().getId(),   // HU-10: dupla o grupo
+                i.companeros().stream().map(c -> EstudianteResumenDto.desde(c.getEstudiante())).toList());
     }
 }

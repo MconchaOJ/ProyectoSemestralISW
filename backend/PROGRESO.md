@@ -471,6 +471,8 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 | S-74 | (2026-10-26, HU-29) El orden de los fragmentos es TF-IDF con coseno (TF = 1 + ln veces, IDF de BM25) y las palabras cuentan desde 3 letras (para "DUA") | HU-29 |
 | S-75 | (2026-10-26, HU-30) La Escala SUS adaptada y la rúbrica de juicio experto (textos de la propuesta RetroPlani Mate V3, no inventados) las responde dentro del sistema cualquier **estudiante validador**, una vez cada una, con la validación abierta o cerrada; un juez experto usaría una cuenta de estudiante validador. En la propuesta son para los jueces; el instrumento de usuarios (formato de Andrés Seguel) no está en el material y no se construyó. No se guarda la identificación del juez (filiación, firma) | HU-30 |
 | S-76 | (2026-11-21, S-45) **SUPUESTO:** inicio + desarrollo + cierre (minutos) debe ser igual a la duración de la clase. El formato oficial pide minutos para la clase y para cada parte, pero no dice que deban calzar. Se comprueba cuando están los cuatro valores (un borrador puede tenerlos a medias): 400 al crear o editar si no calza (`PlanificacionService`, antes de tocar la entidad) y `ck_planificacion_tiempos` en la base | HU-04 |
+| S-77 | (2026-11-21, HU-10) **SUPUESTO, a confirmar con el cliente:** en una dupla o grupo **cada integrante sigue con su propia planificación** (y su propia inscripción y pauta, S-11); el grupo solo agrupa y muestra con quién trabajó. Si el cliente dice que la dupla entrega una sola planificación, hay que rehacer el flujo y los permisos de HU-04 | HU-10 |
+| S-78 | (2026-11-21, HU-10) Reglas de los grupos que aplica la aplicación: una dupla tiene **exactamente 2** integrantes y un grupo **de 2 a 4**; todos de la misma asignatura y periodo (también lo exige la base con la clave foránea compuesta), **EN_CURSO**, en ningún otro grupo y con el **mismo profesor guía**; el establecimiento y el curso solo se guardan en las prácticas que van a un colegio. Solo el coordinador arma, cambia o deshace grupos; un grupo con algún integrante ya cerrado no se deshace (409) | HU-10 |
 
 ## Problemas conocidos y limitaciones
 
@@ -1445,3 +1447,38 @@ de esquema.
   4 estudiantes, barras), descarga el PDF (se intercepta el archivo y es `application/pdf`), cambia de período y descarga el
   historial de Sebastián; el jefe de carrera ve el menú y el informe de Práctica Profesional 2026-2; el guía no tiene el
   menú ni puede abrir la pantalla; Camila descarga su propio historial. Sin errores de JavaScript.
+
+## Sprint 2: HU-10 duplas y grupos (2026-11-21, rama `feature/hu10-grupos`)
+
+Decisiones del usuario: tabla `grupo_practica`; **cada integrante sigue con su propia planificación** (el grupo solo agrupa,
+**SUPUESTO S-77**, a confirmar con el cliente); el coordinador arma los grupos; datos de demo nuevos.
+
+- **Migración `013_grupo_practica.sql`:** tabla `grupo_practica` (asignatura, periodo, establecimiento, curso) y columna
+  `inscripcion.grupo_id`. La clave foránea es **compuesta** `(grupo_id, asignatura_id, periodo)` →
+  `grupo_practica (id, asignatura_id, periodo)`: la base impide que una inscripción entre a un grupo de otra asignatura o
+  periodo. Probada sobre una base con el esquema y el seed de `main`: deja la misma estructura que `schema.sql`
+  (columnas, restricciones e índices comparados). **23 tablas, 13 migraciones.**
+- **Reglas (S-78), en `GrupoService`:** dupla = exactamente 2, grupo = 2 a 4; misma asignatura y periodo; nada en una
+  práctica INDIVIDUAL; todas EN_CURSO y en ningún otro grupo (409); el **mismo profesor guía** (criterio 1: la dupla
+  comparte guía, colegio y curso; el error dice el guía de cada uno); establecimiento y curso solo donde se va a un colegio.
+- **Endpoints nuevos (5):** `GET /api/grupos` y `GET /api/grupos/{id}` (COORDINADOR y JEFE_CARRERA), `POST /api/grupos`,
+  `PUT /api/grupos/{id}` (cambia integrantes; los que salen quedan sin grupo) y `DELETE /api/grupos/{id}` (409 si algún
+  integrante ya cerró la práctica), solo COORDINADOR. `InscripcionDto` trae `grupoId` y `companeros`, así que cada rol ve
+  con quién trabaja en las inscripciones que ya puede ver.
+- **Criterio 3:** el historial (pantalla y PDF de HU-28) muestra "Trabajó en dupla/grupo con: …".
+- **Front-end:** en "Estudiantes e inscripciones" la columna de la práctica muestra "Dupla con: …" o "Grupo con: …", y el
+  coordinador tiene el botón «Dupla» o «Grupo» en las inscripciones en curso de prácticas no individuales: un modal con
+  los candidatos (misma práctica y período, en curso, sin otro grupo, con el guía de cada uno), establecimiento y curso si
+  la práctica va a un colegio, y «Deshacer» con confirmación.
+- **Seed:** grupo 1 = Aproximación 2026-2 (inscripciones 18 a 21: Javiera, Matías, Antonia y Benjamín); grupo 2 = dupla
+  de Ambientes 2026-1 (25 y 27: Catalina y Tomás). En Trabajo Colaborativo 2026-2 cada estudiante tiene otro guía, así que
+  allí no hay duplas posibles con los datos actuales.
+- **Pruebas:** **295, 0 fallos** (antes 289): `HU10GruposIntegracionTest` (6: los del seed, formar una dupla y que la
+  planificación siga siendo de cada uno, todas las reglas con su código, cambiar integrantes y deshacer, roles, historial y
+  PDF). `borrar(...)` pasó de `HU06PautasIntegracionTest` a `IntegracionBase`. `bd.ps1`: **35/35** (2 nuevas: grupo de otra
+  asignatura y de otro periodo, rechazadas por la clave compuesta) y la verificación con 0 violaciones.
+- **Navegador** (Chrome headless), sin errores de JavaScript: el coordinador ve la dupla del seed, forma la dupla Josefa +
+  Vicente (solo aparece Vicente como candidato), ve el rechazo de Camila + Diego por guías distintos dentro del modal, ve
+  que Trabajo Colaborativo pide establecimiento y curso, deshace la dupla de Catalina y Tomás, y ve "Trabajó en grupo con"
+  en el historial de Javiera. Javiera ve su grupo sin botón para cambiarlo; el guía no tiene el botón. La prueba de HU-08
+  se repitió sobre el mismo `.jar`: 12/12.

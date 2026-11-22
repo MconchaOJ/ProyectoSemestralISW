@@ -616,6 +616,18 @@ INSERT INTO usuario (id, rol_id, nombre, apellidos, email, password_hash, activo
     (33, 6, 'Rodrigo', 'Saavedra Figueroa', 'tutor1@demo.example', @pw_demo, TRUE, '2026-10-16 09:00:00');
 UPDATE inscripcion SET tutor_id = 33 WHERE id = 17;
 
+-- Duplas y grupos (HU-10, 2026-11-21, migración 013). Cada integrante conserva su inscripción, su pauta y sus
+-- planificaciones (S-77): el grupo solo agrupa. Ninguna de estas prácticas va a un colegio, así que no hay
+-- establecimiento ni curso. Quedan sin grupo, para armarlos desde la página: Fernanda e Ignacio (Aproximación),
+-- Josefa y Vicente (Ambientes) y los de Trabajo Colaborativo 2026-2 (cada uno con un guía distinto).
+--   1: grupo de 4 en Aproximación al Sistema Escolar 2026-2 (Javiera, Matías, Antonia y Benjamín)
+--   2: dupla en Ambientes de Aprendizaje 2026-1 (Catalina y Tomás)
+INSERT INTO grupo_practica (id, asignatura_id, periodo, establecimiento, curso, fecha_creacion) VALUES
+    (1, 1, '2026-2', NULL, NULL, '2026-08-20 10:00:00'),
+    (2, 2, '2026-1', NULL, NULL, '2026-03-25 10:00:00');
+UPDATE inscripcion SET grupo_id = 1 WHERE id IN (18, 19, 20, 21);
+UPDATE inscripcion SET grupo_id = 2 WHERE id IN (25, 27);
+
 -- -----------------------------------------------------------------------------
 -- Planificaciones: hay una en cada estado del flujo para poder mostrarlas todas
 -- Desde S-45 (2026-11-21, migración 012) con los campos del formato oficial de la carrera (inicio, desarrollo

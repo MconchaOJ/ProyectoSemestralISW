@@ -11,16 +11,17 @@
 SELECT CONCAT('Conectado como ', CURRENT_USER(), ' a la base ', DATABASE(), ' (MySQL ', VERSION(), ')') AS conexion;
 
 -- -----------------------------------------------------------------------------
-SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 22)' AS verificacion;
+SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 23)' AS verificacion;
 SELECT COUNT(*) AS tablas
   FROM information_schema.tables
  WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
-SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, inscripcion 55, pauta 13, dimension 57, indicador 269, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat_jefe_carrera 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0)' AS verificacion;
+SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, grupo_practica 2, inscripcion 55 (6 en un grupo), pauta 13, dimension 57, indicador 269, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat_jefe_carrera 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0)' AS verificacion;
 SELECT 'rol' AS tabla, COUNT(*) AS filas FROM rol
 UNION ALL SELECT 'usuario',                COUNT(*) FROM usuario
 UNION ALL SELECT 'estudiante',             COUNT(*) FROM estudiante
 UNION ALL SELECT 'asignatura_practica',    COUNT(*) FROM asignatura_practica
+UNION ALL SELECT 'grupo_practica',         COUNT(*) FROM grupo_practica
 UNION ALL SELECT 'inscripcion',            COUNT(*) FROM inscripcion
 UNION ALL SELECT 'pauta',                  COUNT(*) FROM pauta
 UNION ALL SELECT 'dimension_pauta',        COUNT(*) FROM dimension_pauta
@@ -81,6 +82,24 @@ SELECT p.id, p.asignatura_id AS practica, p.tipo_evaluador, p.ambito, p.numero_o
  WHERE p.asignatura_id IN (5, 6)
  GROUP BY p.id, p.asignatura_id, p.tipo_evaluador, p.ambito, p.numero_observacion, p.escala_min, p.escala_max
  ORDER BY p.id;
+
+-- -----------------------------------------------------------------------------
+SELECT '6c. HU-10: duplas y grupos (esperado: grupo 1 = 4 integrantes de Aproximacion 2026-2 sin guia; grupo 2 = 2 de Ambientes 2026-1; 1 guia distinto por grupo como maximo)' AS verificacion;
+SELECT g.id, a.nombre AS asignatura, a.modalidad, g.periodo, COUNT(i.id) AS integrantes,
+       COUNT(DISTINCT i.profesor_guia_id) AS guias_distintos, SUM(i.profesor_guia_id IS NULL) AS sin_guia
+  FROM grupo_practica g
+  JOIN asignatura_practica a ON a.id = g.asignatura_id
+  LEFT JOIN inscripcion i ON i.grupo_id = g.id
+ GROUP BY g.id, a.nombre, a.modalidad, g.periodo
+ ORDER BY g.id;
+SELECT 'Grupo cuyos integrantes tienen distinto profesor guia (S-78)' AS control, COUNT(*) AS violaciones
+  FROM (SELECT grupo_id FROM inscripcion WHERE grupo_id IS NOT NULL
+         GROUP BY grupo_id HAVING COUNT(DISTINCT COALESCE(profesor_guia_id, 0)) > 1) x
+UNION ALL
+SELECT 'Dupla con mas de 2 integrantes o grupo con mas de 4 (S-78)', COUNT(*)
+  FROM (SELECT g.id FROM grupo_practica g JOIN asignatura_practica a ON a.id = g.asignatura_id
+          JOIN inscripcion i ON i.grupo_id = g.id
+         GROUP BY g.id, a.modalidad HAVING COUNT(*) > IF(a.modalidad = 'DUPLA', 2, 4)) y;
 
 -- -----------------------------------------------------------------------------
 SELECT '7. INTEGRIDAD: reglas del MER que la base debe cumplir (esperado: 0 violaciones en cada fila)' AS verificacion;

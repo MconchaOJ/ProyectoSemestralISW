@@ -143,6 +143,7 @@ function practica(i, propio) {
       <p class="equipo">
         <span>Profesor guía: <strong>${i.profesorGuia ? i.profesorGuia.nombreCompleto : 'no lleva'}</strong></span>
         <span>Profesor del curso: <strong>${i.profesorCurso?.nombreCompleto ?? '—'}</strong></span>
+        ${i.companeros?.length ? html`<span class="companeros">Trabajó en ${i.asignatura.modalidad === 'DUPLA' ? 'dupla' : 'grupo'} con: <strong>${i.companeros.join(', ')}</strong></span>` : ''}
       </p>
 
       ${evals.length > 0 ? html`

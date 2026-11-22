@@ -46,7 +46,7 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-07 | Pautas de Práctica Pedagógica y Profesional (con tutor) | Evaluación | Alta | por estimar | 2 | Pendiente |
 | HU-08 | Informes por asignatura y por estudiante | Monitoreo | Alta | por estimar | 2 | **Construida y probada (21-nov):** pantalla "Informes por asignatura" (coordinador y jefe de carrera) con notas finales, evaluaciones por pauta con su distribución, planificaciones y una fila por estudiante, y el mismo informe en PDF; el informe por estudiante es el historial en PDF (HU-28). Solo PDF (criterio 3: "PDF o Excel") |
 | HU-09 | Nota final ponderada de la asignatura | Evaluación | Media | por estimar | 2 | Pendiente |
-| HU-10 | Prácticas en dupla y en grupo | Gestión académica | Media | por estimar | 2 | Pendiente |
+| HU-10 | Prácticas en dupla y en grupo | Gestión académica | Media | por estimar | 2 | **Construida y probada (21-nov):** el coordinador forma, cambia o deshace duplas y grupos (migración 013, tabla `grupo_practica`); comparten guía y, en el colegio, establecimiento y curso; cada integrante conserva su inscripción, pauta y planificaciones (S-77); el historial muestra con quién trabajó |
 | HU-11 | Nota de voz del profesor evaluador | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** |
 | HU-12 | Pasar la nota de voz a texto | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** |
 | HU-13 | Exportar notas finales para Adecca | Integración | Media | por estimar | 3 | Pendiente |
@@ -62,7 +62,7 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-23 | Buscar estudiante por nombre, RUT o correo | Monitoreo | Media | 2 | **1** | **Construida y probada (22-sep, Fase E)** |
 | HU-24 | Accesos rápidos dentro del menú | Interfaz | Baja | 1 | **1** | **Construida (22-sep, Fase E)** |
 | HU-25 | Gestión de archivos de pautas formales | Evaluación | Baja | por estimar | 2 o más | Pendiente |
-| HU-26 | Cambiar la contraseña | Acceso | Media | por estimar | 2 | Pendiente |
+| HU-26 | Cambiar la contraseña | Acceso | Media | por estimar | 2 | **Construida y probada (11-oct):** `PUT /api/auth/password` y pantalla "Mi cuenta" |
 | HU-27 | Configurar los parámetros del sistema | Administración | Baja | por estimar | 2 o más | Pendiente |
 | HU-28 | Exportar el historial del estudiante en PDF | Monitoreo | Media | por estimar | 2 o más | **Construida y probada (21-nov, junto con HU-08):** botón «Descargar PDF» en el historial, mismas reglas de acceso, con fecha de generación |
 | HU-29 | Cargar la base de conocimiento del chatbot | Chatbot | Media | por estimar | **2** (adelantada) | **Completa (26-oct):** el coordinador sube o reemplaza los 10 documentos de la propuesta (Word/PDF, migración 009) y el chatbot recibe solo los fragmentos pertinentes, ordenados por TF-IDF (S-74; sin embeddings, S-70). Probada con el modelo real y documentos reales. **Limitación conocida, no pendiente de código:** que "responda solo con esos documentos" (criterio 2) lo cumple el modelo por instrucciones; garantizarlo exigiría otra arquitectura |

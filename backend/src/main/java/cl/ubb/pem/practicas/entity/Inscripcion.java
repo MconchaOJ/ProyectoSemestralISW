@@ -57,4 +57,18 @@ public class Inscripcion {
     /** Día en que se cerró (APROBADA o REPROBADA); nulo mientras está EN_CURSO. La cartola (HU-31) filtra por ella. */
     @Column(name = "fecha_cierre")
     private LocalDate fechaCierre;
+
+    /**
+     * Dupla o grupo (HU-10, migración 013); nulo = sin grupo. En la base la clave foránea es compuesta con la
+     * asignatura y el periodo, así que el grupo siempre es de la misma asignatura y periodo que esta inscripción.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "grupo_id")
+    private GrupoPractica grupo;
+
+    /** Los otros integrantes de su dupla o grupo, por apellido (vacío si no tiene grupo). */
+    public java.util.List<Inscripcion> companeros() {
+        return grupo == null ? java.util.List.of()
+                : grupo.integrantesOrdenados().stream().filter(i -> !i.getId().equals(id)).toList();
+    }
 }

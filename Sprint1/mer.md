@@ -181,6 +181,8 @@ erDiagram
     USUARIO |o--o{ INSCRIPCION : "es profesor guia de"
     USUARIO ||--o{ INSCRIPCION : "es profesor del curso de"
     USUARIO |o--o{ INSCRIPCION : "es tutor de"
+    ASIGNATURA_PRACTICA ||--o{ GRUPO_PRACTICA : "agrupa en duplas o grupos"
+    GRUPO_PRACTICA |o--o{ INSCRIPCION : "integra (HU-10)"
     ASIGNATURA_PRACTICA ||--o{ PAUTA : "define"
     PAUTA ||--|{ DIMENSION_PAUTA : "se compone de"
     DIMENSION_PAUTA ||--|{ INDICADOR : "agrupa"
@@ -256,6 +258,15 @@ erDiagram
         varchar estado "EN_CURSO, APROBADA, REPROBADA"
         decimal nota_final "nulo hasta el cierre"
         date fecha_cierre "nula mientras esta EN_CURSO (HU-31)"
+        bigint grupo_id FK "dupla o grupo; nulo = sin grupo (HU-10)"
+    }
+    GRUPO_PRACTICA {
+        bigint id PK
+        int asignatura_id FK
+        varchar periodo "misma asignatura y periodo que sus integrantes (FK compuesta)"
+        varchar establecimiento "solo practicas en un colegio"
+        varchar curso
+        datetime fecha_creacion
     }
     PAUTA {
         int id PK
