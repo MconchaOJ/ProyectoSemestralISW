@@ -4,7 +4,7 @@
 -- Implementa el MER de Sprint1/mer.md: 26 tablas con claves, restricciones e
 -- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
 -- la Fase E, instrucciones_chatbot de HU-17, documento_base_conocimiento de
--- HU-29, lectura_chat_jefe_carrera de HU-20 y respuesta_sus,
+-- HU-29, lectura_chat de HU-20 y respuesta_sus,
 -- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30, grupo_practica de HU-10, parametro_sistema de HU-27 y componente_evaluativo y
 -- nota_componente_externo de HU-09). No
 -- contiene contraseñas (el
@@ -42,6 +42,7 @@ DROP TABLE IF EXISTS componente_evaluativo;
 DROP TABLE IF EXISTS respuesta_rubrica_criterio;
 DROP TABLE IF EXISTS respuesta_rubrica_experto;
 DROP TABLE IF EXISTS respuesta_sus;
+DROP TABLE IF EXISTS lectura_chat;
 DROP TABLE IF EXISTS lectura_chat_jefe_carrera;
 DROP TABLE IF EXISTS documento_base_conocimiento;
 DROP TABLE IF EXISTS instrucciones_chatbot;
@@ -619,16 +620,20 @@ CREATE TABLE documento_base_conocimiento (
 ) ENGINE = InnoDB COMMENT = 'Documentos de referencia del chatbot cargados por el coordinador (HU-29)';
 
 -- HU-20 (migración 010): cada lectura de un chat hecha por el jefe de carrera (el estudiante ve la última).
-CREATE TABLE lectura_chat_jefe_carrera (
+-- HU-20 (migración 010; renombrada en la 018): cada lectura de un chat hecha por quien lo lee sin participar en la
+-- inscripción, el jefe de carrera o (desde el 2026-11-22) el coordinador, con el rol con que leyó.
+CREATE TABLE lectura_chat (
     id             BIGINT      NOT NULL AUTO_INCREMENT,
     inscripcion_id BIGINT      NOT NULL,
-    usuario_id     BIGINT      NOT NULL COMMENT 'Jefe de carrera que leyó la conversación',
+    usuario_id     BIGINT      NOT NULL COMMENT 'Jefe de carrera o coordinador que leyó la conversación',
+    rol            VARCHAR(20) NOT NULL COMMENT 'Rol con el que leyó: JEFE_CARRERA o COORDINADOR (migración 018)',
     fecha          DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    CONSTRAINT pk_lectura_chat_jefe_carrera PRIMARY KEY (id),
+    CONSTRAINT pk_lectura_chat PRIMARY KEY (id),
     CONSTRAINT fk_lectura_chat_inscripcion FOREIGN KEY (inscripcion_id) REFERENCES inscripcion (id),
     CONSTRAINT fk_lectura_chat_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id),
+    CONSTRAINT ck_lectura_chat_rol CHECK (rol IN ('JEFE_CARRERA', 'COORDINADOR')),
     INDEX ix_lectura_chat_inscripcion_fecha (inscripcion_id, fecha)
-) ENGINE = InnoDB COMMENT = 'Cada lectura de un chat del chatbot hecha por el jefe de carrera (HU-20)';
+) ENGINE = InnoDB COMMENT = 'Cada lectura de un chat del chatbot hecha por el jefe de carrera o el coordinador (HU-20)';
 
 -- HU-30 (migración 011): Escala SUS adaptada al chatbot (propuesta RetroPlani Mate V3), una por validador. El puntaje
 -- SUS de 0 a 100 lo calcula la base con la fórmula de Brooke: impares (respuesta - 1), pares (5 - respuesta), × 2,5.

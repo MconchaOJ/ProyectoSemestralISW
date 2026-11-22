@@ -147,7 +147,7 @@ class AccesoServiceTest {
     }
 
     @Test
-    void elChatLoLeenElEstudianteYSuGuiaPeroNoElCursoNiElTutorNiElCoordinador() {   // HU-15/HU-16, S-60
+    void elChatLoLeenElEstudianteYSuGuiaPeroNoElCursoNiElTutor() {   // HU-15/HU-16, S-60
         assertThat(acceso.puedeVerChat(inscripcion, actor(6, "ESTUDIANTE"))).isTrue();
         assertThat(acceso.puedeVerChat(inscripcion, actor(2, "PROFESOR_GUIA"))).isTrue();
         assertThat(acceso.puedeVerChat(inscripcion, actor(7, "ESTUDIANTE"))).isFalse();      // otro estudiante
@@ -155,8 +155,7 @@ class AccesoServiceTest {
         // ven la inscripción, pero no el chat: la privacidad de los chats sigue abierta con el cliente (S-38)
         inscripcion.setTutor(Datos.usuario(8, "TUTOR"));
         inscripcion.getAsignatura().setChatbotHabilitado(true);
-        for (UsuarioAutenticado sinChat : new UsuarioAutenticado[] {actor(4, "PROFESOR_CURSO"), actor(8, "TUTOR"),
-                actor(1, "COORDINADOR")}) {
+        for (UsuarioAutenticado sinChat : new UsuarioAutenticado[] {actor(4, "PROFESOR_CURSO"), actor(8, "TUTOR")}) {
             assertThat(acceso.puedeVerInscripcion(inscripcion, sinChat)).isTrue();
             assertThat(acceso.puedeVerChat(inscripcion, sinChat)).isFalse();
         }
@@ -172,7 +171,19 @@ class AccesoServiceTest {
         assertThat(acceso.puedeVerChat(inscripcion, jefe)).isFalse();     // asignatura sin chatbot
         inscripcion.getAsignatura().setChatbotHabilitado(true);
         assertThat(acceso.puedeVerChat(inscripcion, jefe)).isTrue();      // sin ser su guía
-        assertThat(acceso.leeChatComoJefe(inscripcion, jefe)).isTrue();
-        assertThat(acceso.leeChatComoJefe(inscripcion, actor(1, "COORDINADOR"))).isFalse();
+        assertThat(acceso.leeChatSinParticipar(inscripcion, jefe)).isTrue();
+        assertThat(AccesoService.rolLectorDeChats(jefe)).isEqualTo("JEFE_CARRERA");
+    }
+
+    @Test
+    void elCoordinadorTambienLeeLosChatsDeLasPracticasConChatbot() {   // HU-20, decisión del usuario 2026-11-22
+        UsuarioAutenticado coordinador = actor(1, "COORDINADOR");
+        assertThat(acceso.puedeVerChat(inscripcion, coordinador)).isFalse();    // asignatura sin chatbot
+        inscripcion.getAsignatura().setChatbotHabilitado(true);
+        assertThat(acceso.puedeVerChat(inscripcion, coordinador)).isTrue();
+        assertThat(acceso.leeChatSinParticipar(inscripcion, coordinador)).isTrue();
+        assertThat(AccesoService.rolLectorDeChats(coordinador)).isEqualTo("COORDINADOR");
+        assertThat(AccesoService.rolLectorDeChats(actor(4, "PROFESOR_CURSO"))).isNull();
+        assertThat(acceso.leeChatSinParticipar(inscripcion, actor(4, "PROFESOR_CURSO"))).isFalse();
     }
 }

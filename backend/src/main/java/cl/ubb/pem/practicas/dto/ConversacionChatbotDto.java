@@ -10,11 +10,14 @@ import java.util.List;
  * @param motivoNoDisponible por qué no, en palabras para el usuario (nulo si está disponible)
  * @param puedeEscribir      quien consulta puede enviar mensajes: solo el estudiante dueño y con el chatbot disponible
  * @param profesorGuia       quién más puede leer el chat (HU-16, criterio 2: el estudiante sabe que su guía lo ve)
- * @param avisoJefeCarrera   HU-20, criterio 3: el estudiante sabe que el jefe de carrera también puede leerlo
+ * @param avisoLectores      HU-20, criterio 3: el estudiante sabe que el jefe de carrera y el coordinador también
+ *                           pueden leerlo (el coordinador desde el 2026-11-22)
  * @param ultimaLecturaJefeCarrera cuándo lo leyó el jefe de carrera por última vez (nulo si nunca; criterio 4)
+ * @param ultimaLecturaCoordinador cuándo lo leyó el coordinador por última vez (nulo si nunca)
  */
 public record ConversacionChatbotDto(Long inscripcionId, String estudiante, String asignatura, String periodo,
                                      boolean disponible, String motivoNoDisponible, boolean puedeEscribir,
-                                     UsuarioResumenDto profesorGuia, String avisoJefeCarrera,
-                                     LocalDateTime ultimaLecturaJefeCarrera, List<MensajeChatbotDto> mensajes) {
+                                     UsuarioResumenDto profesorGuia, String avisoLectores,
+                                     LocalDateTime ultimaLecturaJefeCarrera, LocalDateTime ultimaLecturaCoordinador,
+                                     List<MensajeChatbotDto> mensajes) {
 }

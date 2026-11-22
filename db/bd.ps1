@@ -206,7 +206,8 @@ function Test-Bd {
         @('Escala SUS con un ítem fuera de 1 a 5 (HU-30)',       3819, 'ck_respuesta_sus_items',  "INSERT INTO respuesta_sus (validador_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10) VALUES (3,6,1,1,1,1,1,1,1,1,1)"),
         @('Segunda Escala SUS del mismo validador (HU-30)',       1062, 'uq_respuesta_sus_validador', "INSERT INTO respuesta_sus (validador_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10) VALUES (3,5,1,5,1,5,1,5,1,5,1); INSERT INTO respuesta_sus (validador_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10) VALUES (3,4,2,4,2,4,2,4,2,4,2)"),
         @('Criterio 10 en la rúbrica de 9 criterios (HU-30)',     3819, 'ck_rubrica_criterio_numero', "INSERT INTO respuesta_rubrica_experto (validador_id) VALUES (3); SET @ru = LAST_INSERT_ID(); INSERT INTO respuesta_rubrica_criterio (respuesta_id,numero,puntaje) VALUES (@ru,10,4)"),
-        @('Lectura del jefe en una inscripción inexistente (HU-20)', 1452, 'fk_lectura_chat_inscripcion', "INSERT INTO lectura_chat_jefe_carrera (inscripcion_id,usuario_id) VALUES (99999,32)"),
+        @('Lectura del jefe en una inscripción inexistente (HU-20)', 1452, 'fk_lectura_chat_inscripcion', "INSERT INTO lectura_chat (inscripcion_id,usuario_id,rol) VALUES (99999,32,'JEFE_CARRERA')"),
+        @('Lectura de un chat con un rol que no lee chats (HU-20)', 3819, 'ck_lectura_chat_rol',  "INSERT INTO lectura_chat (inscripcion_id,usuario_id,rol) VALUES (11,4,'PROFESOR_CURSO')"),
         @('Borrar un usuario que tiene inscripciones (FK)',       1451, 'foreign key constraint fails', "DELETE FROM usuario WHERE id = 4"),
         @('La app no puede cambiar la estructura (DROP TABLE)',   1142, 'DROP command denied',     "DROP TABLE usuario")
     )

@@ -10,7 +10,7 @@ import cl.ubb.pem.practicas.entity.AutorMensaje;
 import cl.ubb.pem.practicas.entity.DocumentoPlanificacion;
 import cl.ubb.pem.practicas.entity.EstadoInscripcion;
 import cl.ubb.pem.practicas.entity.Inscripcion;
-import cl.ubb.pem.practicas.entity.LecturaChatJefeCarrera;
+import cl.ubb.pem.practicas.entity.LecturaChat;
 import cl.ubb.pem.practicas.entity.MensajeChatbot;
 import cl.ubb.pem.practicas.entity.Planificacion;
 import cl.ubb.pem.practicas.exception.AccesoDenegadoException;
@@ -19,7 +19,7 @@ import cl.ubb.pem.practicas.exception.RecursoNoEncontradoException;
 import cl.ubb.pem.practicas.exception.ReglaNegocioException;
 import cl.ubb.pem.practicas.repository.DocumentoPlanificacionRepository;
 import cl.ubb.pem.practicas.repository.InscripcionRepository;
-import cl.ubb.pem.practicas.repository.LecturaChatJefeCarreraRepository;
+import cl.ubb.pem.practicas.repository.LecturaChatRepository;
 import cl.ubb.pem.practicas.repository.MensajeChatbotRepository;
 import cl.ubb.pem.practicas.repository.PlanificacionRepository;
 import cl.ubb.pem.practicas.repository.UsuarioRepository;
@@ -47,14 +47,15 @@ import org.springframework.transaction.support.TransactionTemplate;
  * Reglas del sistema (las del flujo dialógico las sigue el modelo, ver {@link InstruccionesChatbot}):
  * - Solo en las asignaturas con chatbot habilitado (las dos prácticas finales) y con la inscripción EN_CURSO; cerrada,
  *   la conversación queda para consulta (SUPUESTO S-63).
- * - Escribe solo el estudiante dueño. Leen el estudiante, su profesor guía (S-60) y el jefe de carrera (HU-20, S-66),
- *   ver {@link AccesoService#puedeVerChat}.
+ * - Escribe solo el estudiante dueño. Leen el estudiante, su profesor guía (S-60), el jefe de carrera (HU-20, S-66) y,
+ *   desde el 2026-11-22 (decisión del usuario), el coordinador; ver {@link AccesoService#puedeVerChat}.
  * - Las reglas y el estilo los calibra el coordinador (HU-17, {@link CalibracionChatbotService}); en cada mensaje
  *   viajan además los fragmentos pertinentes de la base de conocimiento que él cargó (HU-29, {@link BaseConocimientoService}).
  * - Con la validación abierta (HU-30, {@link ValidacionChatbotService}) solo escriben los estudiantes validadores (409).
  * - Sin planificación adjunta en la conversación, un mensaje que parece una planificación pegada como texto recibe
  *   una respuesta fija que pide elegirla, sin llamar al modelo (HU-15, criterio 2; {@link PlanificacionPegada}, S-72).
- * - Cada lectura del jefe de carrera queda en la base y el estudiante ve la última (HU-20, criterios 3 y 4; S-66).
+ * - Cada lectura del jefe de carrera o del coordinador queda en la base (lectura_chat, con el rol) y el estudiante ve la
+ *   última de cada uno (HU-20, criterios 3 y 4; S-66).
  * - El estudiante "adjunta" su planificación eligiéndola: el chatbot lee su formulario y sus documentos (HU-21); los
  *   Word y PDF se convierten a texto, porque el proveedor solo recibe texto (SUPUESTO S-61).
  * - Si el proveedor del modelo falla, responde 503 y NO se guarda nada: el estudiante reintenta sin dejar un mensaje
@@ -83,8 +84,8 @@ public class ChatbotService {
             + "mensaje, y vuelve a enviarme tu consulta. Así leo su formulario y los documentos Word o PDF que le "
             + "adjuntaste. Si aún no la registras, créala en «Planificaciones» y adjúntale el documento.";
     /** HU-20, criterio 3 (S-66): lo que el estudiante sabe sobre la lectura del jefe de carrera. */
-    static final String AVISO_JEFE_CARRERA = "El jefe de carrera también puede leer esta conversación, en solo "
-            + "lectura; cada vez que la abre queda registrado.";
+    static final String AVISO_LECTORES = "El jefe de carrera y el coordinador también pueden leer esta conversación, "
+            + "en solo lectura; cada vez que la abren queda registrado.";
     static final String EN_VALIDACION = "El asistente de planificación aún no está disponible para ti: se está "
             + "validando con un grupo de estudiantes y se habilitará para todos al terminar esa etapa.";
 
@@ -92,7 +93,7 @@ public class ChatbotService {
     private final PlanificacionRepository planificaciones;
     private final DocumentoPlanificacionRepository documentos;
     private final MensajeChatbotRepository mensajes;
-    private final LecturaChatJefeCarreraRepository lecturasJefe;
+    private final LecturaChatRepository lecturas;
     private final UsuarioRepository usuarios;
     private final HistorialService historial;
     private final AccesoService acceso;
@@ -106,7 +107,7 @@ public class ChatbotService {
 
     public ChatbotService(InscripcionRepository inscripciones, PlanificacionRepository planificaciones,
                           DocumentoPlanificacionRepository documentos, MensajeChatbotRepository mensajes,
-                          LecturaChatJefeCarreraRepository lecturasJefe, UsuarioRepository usuarios,
+                          LecturaChatRepository lecturas, UsuarioRepository usuarios,
                           HistorialService historial, AccesoService acceso,
                           AlmacenamientoArchivosService almacenamiento, ModeloLenguaje modelo,
                           CalibracionChatbotService calibracion, BaseConocimientoService baseConocimiento,
@@ -116,7 +117,7 @@ public class ChatbotService {
         this.planificaciones = planificaciones;
         this.documentos = documentos;
         this.mensajes = mensajes;
-        this.lecturasJefe = lecturasJefe;
+        this.lecturas = lecturas;
         this.usuarios = usuarios;
         this.historial = historial;
         this.acceso = acceso;
@@ -132,19 +133,20 @@ public class ChatbotService {
 
     /**
      * La conversación de una inscripción (HU-15 para el estudiante, HU-16 para su profesor guía, HU-20 para el jefe de
-     * carrera). Cada lectura del jefe queda en la base (HU-20, criterio 4; S-66): no la del jefe que lee como guía de
-     * esa inscripción (por su segundo rol), que es una lectura de HU-16.
+     * carrera y el coordinador). Cada lectura del jefe o del coordinador queda en la base con su rol (HU-20, criterio 4;
+     * S-66): no la de quien lee como guía de esa inscripción (por su segundo rol), que es una lectura de HU-16.
      */
     @Transactional
     public ConversacionChatbotDto conversacion(Long inscripcionId, UsuarioAutenticado actor) {
         Inscripcion i = buscarInscripcion(inscripcionId);
         acceso.exigirVerChat(i, actor);
-        if (acceso.leeChatComoJefe(i, actor) && !esElGuia(i, actor)) {
-            LecturaChatJefeCarrera lectura = new LecturaChatJefeCarrera();
+        if (acceso.leeChatSinParticipar(i, actor) && !esElGuia(i, actor)) {
+            LecturaChat lectura = new LecturaChat();
             lectura.setInscripcion(i);
             lectura.setUsuario(usuarios.getReferenceById(actor.id()));
-            lecturasJefe.save(lectura);
-            log.info("Jefe de carrera {} leyó el chat de la inscripción {}", actor.id(), i.getId());
+            lectura.setRol(AccesoService.rolLectorDeChats(actor));
+            lecturas.save(lectura);
+            log.info("{} {} leyó el chat de la inscripción {}", lectura.getRol(), actor.id(), i.getId());
         }
         String motivo = motivoNoDisponible(i);
         boolean conChatbot = Boolean.TRUE.equals(i.getAsignatura().getChatbotHabilitado());
@@ -152,9 +154,14 @@ public class ChatbotService {
                 i.getEstudiante().getUsuario().getNombre() + " " + i.getEstudiante().getUsuario().getApellidos(),
                 i.getAsignatura().getNombre(), i.getPeriodo(), motivo == null, motivo,
                 motivo == null && esElEstudiante(i, actor), UsuarioResumenDto.desde(i.getProfesorGuia()),
-                conChatbot ? AVISO_JEFE_CARRERA : null,
-                lecturasJefe.findFirstByInscripcionIdOrderByFechaDescIdDesc(i.getId()).map(LecturaChatJefeCarrera::getFecha).orElse(null),
+                conChatbot ? AVISO_LECTORES : null,
+                ultimaLectura(i, Roles.JEFE_CARRERA), ultimaLectura(i, Roles.COORDINADOR),
                 mensajes.findConversacion(i.getId()).stream().map(MensajeChatbotDto::desde).toList());
+    }
+
+    private LocalDateTime ultimaLectura(Inscripcion i, String rol) {
+        return lecturas.findFirstByInscripcionIdAndRolOrderByFechaDescIdDesc(i.getId(), rol)
+                .map(LecturaChat::getFecha).orElse(null);
     }
 
     /**
