@@ -1604,3 +1604,17 @@ Nadie había corrido sus migraciones 012 y 013 sobre una base real (no hay servi
 - **Front-end:** «Conversaciones del asistente» en el menú del coordinador (la misma lista con filtro del jefe); al leer ve «como coordinador puedes leer… el estudiante lo sabe»; el estudiante ve «Última lectura del jefe de carrera: …; del coordinador: …».
 - **Pruebas: 360, 0 fallos** (2 nuevas: el coordinador lee con el mismo registro y el estudiante lo ve; `AccesoServiceTest`). Ajustadas `HU16` y `HU20` (el coordinador ya no recibe 403 al leer). `bd.ps1` **41/41** (1 nueva: `ck_lectura_chat_rol`); el control 28 de `verificacion.sql` comprueba que quien leyó tenga el rol registrado.
 - **Navegador** (Chrome): el coordinador ve «Conversaciones del asistente», abre el chat de Valentina sin poder escribir; Valentina ve «del coordinador: 22-11-2026 17:48». Sin errores de JavaScript.
+
+
+## Sprint 2: HU-18 informes y productos de la práctica (2026-11-22, rama `feature/hu18-productos`)
+
+- **Qué hace:** el estudiante sube a cada inscripción EN_CURSO su **informe final, diario de reflexión, proyecto de intervención u otro producto** (Word o PDF, con el tamaño máximo vigente de HU-27) y quedan en su recorrido. El backlog no traía criterios: los fija el equipo como supuestos.
+- **SUPUESTO S-93:** solo el estudiante dueño sube, reemplaza o borra (403 para cualquier otro, incluido el coordinador) y solo con la inscripción EN_CURSO (409 si está cerrada: lo cerrado es el recorrido que quedó).
+- **SUPUESTO S-94:** varios archivos por tipo y todos los tipos en las 6 prácticas (no se restringe el proyecto de intervención a Práctica Profesional).
+- **Quién lo ve:** quien ya puede ver la inscripción (`AccesoService.exigirVerInscripcion`): el estudiante, el guía, el profesor del curso, el tutor, el coordinador y el jefe de carrera.
+- **Reutiliza HU-21:** `AlmacenamientoArchivosService` (carpeta `productos/`, validación de extensión y tamaño, `borrarAlConfirmar` y `reemplazarAlConfirmar`: el archivo se borra del disco solo después del commit).
+- **Migración `019`:** tabla `producto_practica` (FK a `inscripcion` y `usuario`, `ck_producto_practica_tipo`, `ck_producto_practica_tamano`). **27 tablas, 19 migraciones.** `verificacion.sql`: el conteo esperado de CHECK ya estaba desfasado (decía 56 y eran 57 desde la 018); quedó en 59.
+- **Backend:** `TipoProducto`, `ProductoPractica`, `ProductoPracticaRepository`, `ProductoDto`, `ProductoPracticaService` y `ProductoPracticaController`. Endpoints: `GET/POST /api/inscripciones/{id}/productos`, `GET/PUT/DELETE /api/inscripciones/{id}/productos/{productoId}` (en el `PUT` el `tipo` es opcional). El historial (`HistorialDto.InscripcionHistorialDto.productos`) los trae en una sola consulta más; el PDF del historial agrega «Informes y productos» en cada práctica que tenga alguno y el Excel una hoja «Productos».
+- **Front-end:** en «Mi historial», cada práctica en curso tiene la sección «Informes y productos» con el tipo, el archivo, «Subir», «Descargar», «Reemplazar» y «Borrar» (con confirmación). Los demás roles ven la lista y «Descargar» en el historial del estudiante.
+- **Pruebas: 367, 0 fallos** (7 nuevas en `HU18ProductosIntegracionTest`; `HistorialServiceTest` recibe el repositorio nuevo). `bd.ps1` **43/43** (2 nuevas: tipo inventado y FK de la inscripción).
+- **Navegador** (Chrome): Camila sube un proyecto de intervención desde su historial, lo borra con la confirmación, sube un informe final; el guía Marcos lo ve en el historial de Camila solo con «Descargar». Sin errores de JavaScript.

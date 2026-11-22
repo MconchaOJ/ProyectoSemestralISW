@@ -49,6 +49,8 @@ class HistorialServiceTest {
     @Mock
     private PlanificacionRepository planificaciones;
     @Mock
+    private cl.ubb.pem.practicas.repository.ProductoPracticaRepository productos;
+    @Mock
     private AccesoService acceso;
 
     private HistorialService servicio;
@@ -61,7 +63,7 @@ class HistorialServiceTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new HistorialService(estudiantes, inscripciones, evaluaciones, planificaciones, acceso,
+        servicio = new HistorialService(estudiantes, inscripciones, evaluaciones, planificaciones, productos, acceso,
                 new HistorialPdfGenerador(java.time.Clock.systemDefaultZone()));
     }
 
@@ -152,6 +154,7 @@ class HistorialServiceTest {
         assertThat(h.asignaturasAprobadas()).isEmpty();
         verify(evaluaciones, never()).findPorInscripciones(any(), any());
         verify(planificaciones, never()).findPorInscripciones(any());
+        verify(productos, never()).findPorInscripciones(any());
     }
 
     @Test

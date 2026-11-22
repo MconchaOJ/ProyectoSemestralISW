@@ -1,12 +1,12 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 26 tablas con claves, restricciones e
+-- Implementa el MER de Sprint1/mer.md: 27 tablas con claves, restricciones e
 -- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
 -- la Fase E, instrucciones_chatbot de HU-17, documento_base_conocimiento de
 -- HU-29, lectura_chat de HU-20 y respuesta_sus,
 -- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30, grupo_practica de HU-10, parametro_sistema de HU-27 y componente_evaluativo y
--- nota_componente_externo de HU-09). No
+-- nota_componente_externo de HU-09 y producto_practica de HU-18). No
 -- contiene contraseñas (el
 -- usuario de la aplicación lo crea db/bd.ps1 con su clave tomada de una
 -- variable de entorno).
@@ -50,6 +50,7 @@ DROP TABLE IF EXISTS parametro_sistema;
 DROP TABLE IF EXISTS mensaje_chatbot;
 DROP TABLE IF EXISTS nota_voz;
 DROP TABLE IF EXISTS documento_evaluacion;
+DROP TABLE IF EXISTS producto_practica;
 DROP TABLE IF EXISTS documento_planificacion;
 DROP TABLE IF EXISTS respuesta_indicador;
 DROP TABLE IF EXISTS revision_planificacion;
@@ -488,6 +489,25 @@ CREATE TABLE documento_evaluacion (
     CONSTRAINT ck_documento_evaluacion_tamano CHECK (tamano_bytes > 0 AND tamano_bytes <= 10485760),
     INDEX ix_documento_evaluacion_evaluacion (evaluacion_id)
 ) ENGINE = InnoDB COMMENT = 'Documentos (Word, Excel o PDF, máximo 10 MB) con la pauta y evaluación formal del guía';
+
+-- HU-18 (migración 019): informes y productos de la práctica que el estudiante sube a su inscripción (S-93, S-94).
+CREATE TABLE producto_practica (
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    inscripcion_id  BIGINT       NOT NULL,
+    tipo            VARCHAR(30)  NOT NULL COMMENT 'INFORME_FINAL, DIARIO_REFLEXION, PROYECTO_INTERVENCION u OTRO',
+    nombre_archivo  VARCHAR(255) NOT NULL,
+    ruta_archivo    VARCHAR(500) NOT NULL COMMENT 'Ruta relativa en disco, fuera del control de versiones',
+    tipo_mime       VARCHAR(150) NOT NULL,
+    tamano_bytes    BIGINT       NOT NULL,
+    subido_por      BIGINT       NOT NULL,
+    fecha_subida    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_producto_practica PRIMARY KEY (id),
+    CONSTRAINT fk_producto_practica_inscripcion FOREIGN KEY (inscripcion_id) REFERENCES inscripcion (id),
+    CONSTRAINT fk_producto_practica_usuario FOREIGN KEY (subido_por) REFERENCES usuario (id),
+    CONSTRAINT ck_producto_practica_tipo CHECK (tipo IN ('INFORME_FINAL', 'DIARIO_REFLEXION', 'PROYECTO_INTERVENCION', 'OTRO')),
+    CONSTRAINT ck_producto_practica_tamano CHECK (tamano_bytes > 0 AND tamano_bytes <= 10485760),
+    INDEX ix_producto_practica_inscripcion (inscripcion_id)
+) ENGINE = InnoDB COMMENT = 'Informes y productos (Word o PDF, máximo 10 MB) que el estudiante sube a su inscripción (HU-18)';
 
 -- =============================================================================
 -- 7. Tablas de sprints posteriores (existen para que el modelo esté completo)

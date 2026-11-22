@@ -7,6 +7,7 @@ import cl.ubb.pem.practicas.dto.HistorialDto;
 import cl.ubb.pem.practicas.dto.HistorialDto.AsignaturaAprobadaDto;
 import cl.ubb.pem.practicas.dto.HistorialDto.InscripcionHistorialDto;
 import cl.ubb.pem.practicas.dto.PlanificacionResumenDto;
+import cl.ubb.pem.practicas.dto.ProductoDto;
 import cl.ubb.pem.practicas.dto.UsuarioResumenDto;
 import cl.ubb.pem.practicas.entity.EstadoEvaluacion;
 import cl.ubb.pem.practicas.entity.EstadoInscripcion;
@@ -20,6 +21,7 @@ import cl.ubb.pem.practicas.repository.EstudianteRepository;
 import cl.ubb.pem.practicas.repository.EvaluacionRepository;
 import cl.ubb.pem.practicas.repository.InscripcionRepository;
 import cl.ubb.pem.practicas.repository.PlanificacionRepository;
+import cl.ubb.pem.practicas.repository.ProductoPracticaRepository;
 import cl.ubb.pem.practicas.security.UsuarioAutenticado;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +30,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * HU-05: historial (recorrido) del estudiante. Solo lectura: junta lo que ya existe en 4 consultas
- * (inscripciones, evaluaciones finalizadas, planificaciones) sin repetir consultas por cada inscripción.
+ * HU-05: historial (recorrido) del estudiante. Solo lectura: junta lo que ya existe en 5 consultas
+ * (inscripciones, evaluaciones finalizadas, planificaciones y, desde HU-18, informes y productos) sin repetir consultas por cada inscripción.
  */
 @Service
 @Transactional(readOnly = true)
@@ -39,16 +41,18 @@ public class HistorialService {
     private final InscripcionRepository inscripciones;
     private final EvaluacionRepository evaluaciones;
     private final PlanificacionRepository planificaciones;
+    private final ProductoPracticaRepository productos;
     private final AccesoService acceso;
     private final HistorialPdfGenerador pdf;
 
     public HistorialService(EstudianteRepository estudiantes, InscripcionRepository inscripciones,
                             EvaluacionRepository evaluaciones, PlanificacionRepository planificaciones,
-                            AccesoService acceso, HistorialPdfGenerador pdf) {
+                            ProductoPracticaRepository productos, AccesoService acceso, HistorialPdfGenerador pdf) {
         this.estudiantes = estudiantes;
         this.inscripciones = inscripciones;
         this.evaluaciones = evaluaciones;
         this.planificaciones = planificaciones;
+        this.productos = productos;
         this.acceso = acceso;
         this.pdf = pdf;
     }
@@ -90,6 +94,9 @@ public class HistorialService {
         Map<Long, List<Planificacion>> planificacionesPorInscripcion = ids.isEmpty() ? Map.of()
                 : planificaciones.findPorInscripciones(ids).stream()
                         .collect(Collectors.groupingBy(p -> p.getInscripcion().getId()));
+        Map<Long, List<ProductoDto>> productosPorInscripcion = ids.isEmpty() ? Map.of()   // HU-18
+                : productos.findPorInscripciones(ids).stream().map(ProductoDto::desde)
+                        .collect(Collectors.groupingBy(ProductoDto::inscripcionId));
 
         List<InscripcionHistorialDto> detalle = recorrido.stream()
                 .map(i -> new InscripcionHistorialDto(i.getId(), AsignaturaDto.desde(i.getAsignatura()), i.getPeriodo(),
@@ -99,7 +106,8 @@ public class HistorialService {
                                 .map(EvaluacionResumenDto::desde).toList(),
                         planificacionesPorInscripcion.getOrDefault(i.getId(), List.of()).stream()
                                 .map(PlanificacionResumenDto::desde).toList(),
-                        i.companeros().stream().map(c -> c.getEstudiante().getUsuario().getNombreCompleto()).toList()))
+                        i.companeros().stream().map(c -> c.getEstudiante().getUsuario().getNombreCompleto()).toList(),
+                        productosPorInscripcion.getOrDefault(i.getId(), List.of())))
                 .toList();
 
         // Criterio 4: lo que el chatbot necesitará como contexto (S-14)
