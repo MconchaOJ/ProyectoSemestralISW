@@ -37,10 +37,11 @@ public class ChatbotController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ESTUDIANTE', 'PROFESOR_GUIA', 'JEFE_CARRERA')")
+    @PreAuthorize("hasAnyRole('ESTUDIANTE', 'PROFESOR_GUIA', 'JEFE_CARRERA', 'COORDINADOR')")
     @Operation(summary = "Ver la conversación con el chatbot",
-            description = "El estudiante de la inscripción, su profesor guía (HU-16, S-60) y el jefe de carrera en "
-                    + "cualquier inscripción de Práctica Pedagógica o Profesional (HU-20, S-66); los demás, 403. La "
+            description = "El estudiante de la inscripción, su profesor guía (HU-16, S-60) y el jefe de carrera y el "
+                    + "coordinador (desde el 2026-11-22) en cualquier inscripción de Práctica Pedagógica o Profesional "
+                    + "(HU-20, S-66; cada lectura de ellos queda registrada con su rol); los demás, 403. La "
                     + "privacidad de los chats sigue abierta (S-38). Indica si el chatbot está disponible y quién "
                     + "puede leer el chat. Funciona también con la práctica cerrada (solo lectura).")
     public ConversacionChatbotDto conversacion(@PathVariable Long inscripcionId,

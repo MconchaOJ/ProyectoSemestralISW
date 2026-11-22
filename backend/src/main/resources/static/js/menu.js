@@ -36,10 +36,11 @@ export const FUNCIONES = [
   { ruta: 'evaluaciones', icono: 'check', nombre: 'Evaluaciones con pauta digital', roles: LECTURA },
   { ruta: 'planificaciones', icono: 'file', nombre: 'Planificación de clases', roles: LECTURA },
   { ruta: 'historial', icono: 'clock', nombre: 'Historial del estudiante', roles: LECTURA },
-  // HU-20: el jefe de carrera lee los chats (S-66). Antes que el del guía: con dos roles (jefe + guía) gana este nombre
-  { ruta: 'chatbot', icono: 'chat', nombre: 'Conversaciones del asistente', roles: [JEFE] },
-  // HU-15 (el estudiante conversa) y HU-16 (su profesor guía lee). SUPUESTO S-60: ni el coordinador, ni el profesor
-  // del curso, ni el tutor ven los chats.
+  // HU-20: el jefe de carrera y, desde el 2026-11-22, el coordinador leen los chats (S-66). Antes que el del guía: con
+  // dos roles (jefe + guía) gana este nombre
+  { ruta: 'chatbot', icono: 'chat', nombre: 'Conversaciones del asistente', roles: [JEFE, 'COORDINADOR'] },
+  // HU-15 (el estudiante conversa) y HU-16 (su profesor guía lee). SUPUESTO S-60: ni el profesor del curso ni el tutor
+  // ven los chats.
   { ruta: 'chatbot', icono: 'chat', nombre: 'Asistente de planificación', roles: ['ESTUDIANTE', 'PROFESOR_GUIA'] },
   // HU-17: el coordinador calibra el estilo del asistente
   { ruta: 'estilo-asistente', icono: 'sliders', nombre: 'Configuración del asistente', roles: COORD },

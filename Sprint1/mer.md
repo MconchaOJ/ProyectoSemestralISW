@@ -207,8 +207,8 @@ erDiagram
     PLANIFICACION |o--o{ MENSAJE_CHATBOT : "se revisa en"
     USUARIO |o--o| INSTRUCCIONES_CHATBOT : "calibra"
     USUARIO ||--o{ DOCUMENTO_BASE_CONOCIMIENTO : "carga"
-    INSCRIPCION ||--o{ LECTURA_CHAT_JEFE_CARRERA : "su chat es leido"
-    USUARIO ||--o{ LECTURA_CHAT_JEFE_CARRERA : "lee como jefe"
+    INSCRIPCION ||--o{ LECTURA_CHAT : "su chat es leido"
+    USUARIO ||--o{ LECTURA_CHAT : "lee como jefe o coordinador"
     ESTUDIANTE ||--o| RESPUESTA_SUS : "valida con"
     ESTUDIANTE ||--o| RESPUESTA_RUBRICA_EXPERTO : "valida con"
     RESPUESTA_RUBRICA_EXPERTO ||--|{ RESPUESTA_RUBRICA_CRITERIO : "tiene 9"
@@ -421,10 +421,11 @@ erDiagram
         bigint subido_por_id FK
         datetime fecha_subida
     }
-    LECTURA_CHAT_JEFE_CARRERA {
+    LECTURA_CHAT {
         bigint id PK
         bigint inscripcion_id FK
-        bigint usuario_id FK "el jefe de carrera"
+        bigint usuario_id FK "el jefe de carrera o el coordinador"
+        varchar rol "JEFE_CARRERA o COORDINADOR (migracion 018)"
         datetime fecha "HU-20, migracion 010"
     }
     RESPUESTA_SUS {
@@ -499,7 +500,7 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 | `MENSAJE_CHATBOT` | Cada mensaje entre el estudiante y el chatbot, y la planificación que el estudiante adjuntó (si adjuntó una) | Se guarda por inscripción: lo leen el profesor guía de esa inscripción (HU-16, SUPUESTO S-60) y el jefe de carrera (HU-20, S-66) | HU-15, HU-16, HU-20 |
 | `INSTRUCCIONES_CHATBOT` | Las instrucciones del chatbot que calibra el coordinador: reglas, tono, expresiones y respuestas modelo (una sola fila) | Sin fila, el chatbot usa el texto base de RetroPlani Mate que trae la aplicación; el contexto de cada estudiante no se guarda aquí (migración 008). Desde la migración 009 también guarda si la validación del chatbot está abierta | HU-17, HU-30 |
 | `DOCUMENTO_BASE_CONOCIMIENTO` | Un documento de referencia del chatbot (rúbrica, bases curriculares, acciones DUA...), uno vigente por tipo, con el texto ya extraído | El archivo queda en disco; el chatbot recibe en cada mensaje solo los fragmentos pertinentes (migración 009) | HU-29 |
-| `LECTURA_CHAT_JEFE_CARRERA` | Una lectura del chat de un estudiante hecha por el jefe de carrera | El estudiante ve la última; las del guía no se registran (migración 010) | HU-20 |
+| `LECTURA_CHAT` | Una lectura del chat de un estudiante hecha por el jefe de carrera o el coordinador, con el rol | El estudiante ve la última de cada uno; las del guía no se registran (migración 010; renombrada y con `rol` en la 018) | HU-20 |
 | `RESPUESTA_SUS` | La Escala SUS adaptada al chatbot de un validador: 10 ítems de 1 a 5 | El puntaje SUS (0 a 100) es una columna generada por la base (migración 011) | HU-30 |
 | `RESPUESTA_RUBRICA_EXPERTO` | La rúbrica de juicio experto de un validador, con sus 4 preguntas abiertas | Instrumento de la propuesta RetroPlani Mate V3 (migración 011) | HU-30 |
 | `RESPUESTA_RUBRICA_CRITERIO` | Un criterio (1 a 9) de esa rúbrica: puntaje de 1 a 4 y comentario | (migración 011) | HU-30 |
@@ -537,8 +538,8 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 | `PLANIFICACION` — `MENSAJE_CHATBOT` | 0..1 a N | Un mensaje del estudiante puede adjuntar una planificación de su misma inscripción (migración 007) |
 | `USUARIO` — `INSTRUCCIONES_CHATBOT` | 0..1 a 0..1 | El coordinador que editó por última vez las instrucciones del chatbot (migración 008) |
 | `USUARIO` — `DOCUMENTO_BASE_CONOCIMIENTO` | 1 a N | El coordinador que subió cada documento de la base de conocimiento (migración 009) |
-| `INSCRIPCION` — `LECTURA_CHAT_JEFE_CARRERA` | 1 a N | Cada vez que el jefe de carrera abre el chat de esa inscripción queda una fila (HU-20, migración 010) |
-| `USUARIO` — `LECTURA_CHAT_JEFE_CARRERA` | 1 a N | El jefe de carrera que leyó |
+| `INSCRIPCION` — `LECTURA_CHAT` | 1 a N | Cada vez que el jefe de carrera o el coordinador abre el chat de esa inscripción queda una fila (HU-20, migraciones 010 y 018) |
+| `USUARIO` — `LECTURA_CHAT` | 1 a N | El jefe de carrera o el coordinador que leyó |
 | `ESTUDIANTE` — `RESPUESTA_SUS` | 1 a 0..1 | Un validador responde la Escala SUS una sola vez (HU-30, migración 011) |
 | `ESTUDIANTE` — `RESPUESTA_RUBRICA_EXPERTO` | 1 a 0..1 | Un validador responde la rúbrica de juicio experto una sola vez |
 | `RESPUESTA_RUBRICA_EXPERTO` — `RESPUESTA_RUBRICA_CRITERIO` | 1 a 9 | Cada rúbrica tiene sus 9 criterios, con puntaje y comentario opcional |

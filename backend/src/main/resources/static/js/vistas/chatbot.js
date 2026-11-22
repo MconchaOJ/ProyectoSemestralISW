@@ -1,8 +1,8 @@
 // HU-15 · Asistente de planificación (chatbot), HU-16 · el profesor guía lee la conversación y HU-20 · el jefe de
-// carrera la lee también.
+// carrera y (desde el 2026-11-22) el coordinador la leen también.
 //   Estudiante: #/chatbot (sus prácticas con asistente) y #/chatbot/{inscripcionId} (conversa)
 //   Profesor guía: #/chatbot (sus estudiantes de Práctica Pedagógica y Profesional) y #/chatbot/{inscripcionId} (lee)
-//   Jefe de carrera: #/chatbot (todos los estudiantes de esas prácticas, con filtro) y #/chatbot/{inscripcionId} (lee)
+//   Jefe de carrera y coordinador: #/chatbot (todos los estudiantes de esas prácticas, con filtro) y #/chatbot/{id} (lee)
 // HU-30 · Estudiante validador: #/chatbot/validacion (responde la Escala SUS y la rúbrica de juicio experto)
 import { api } from '../api.js';
 import {
@@ -11,16 +11,19 @@ import {
 
 export async function render(cont, ctx) {
   const [id] = ctx.args;
-  ctx.titulo(ctx.tiene('JEFE_CARRERA') ? 'Conversaciones del asistente' : 'Asistente de planificación');
+  ctx.titulo(lectorGlobal(ctx) ? 'Conversaciones del asistente' : 'Asistente de planificación');
   if (id === 'validacion' && ctx.tiene('ESTUDIANTE')) return formularioValidacion(cont, ctx);
   if (id) return conversacion(cont, ctx, id);
   return selector(cont, ctx);
 }
 
-/** Las inscripciones con asistente: el estudiante ve las suyas; el guía, las de sus estudiantes; el jefe, todas. */
+/** HU-20: el jefe de carrera y el coordinador leen todos los chats sin participar en la inscripción. */
+const lectorGlobal = (ctx) => ctx.tiene('JEFE_CARRERA') || ctx.tiene('COORDINADOR');
+
+/** Las inscripciones con asistente: el estudiante ve las suyas; el guía, las de sus estudiantes; jefe y coordinador, todas. */
 async function selector(cont, ctx) {
   const todas = await api.get('/api/inscripciones');
-  const jefe = ctx.tiene('JEFE_CARRERA');
+  const jefe = lectorGlobal(ctx);
   const conAsistente = todas.filter((i) => i.asignatura.chatbotHabilitado
     && (jefe || ctx.tiene('ESTUDIANTE') || ctx.actuaComo('PROFESOR_GUIA', i)));
   const estudiante = ctx.tiene('ESTUDIANTE');
@@ -60,7 +63,7 @@ const tarjetaEstudiante = (i) => html`
     ${icono('chat')}
   </a>`;
 
-/** HU-20: el jefe de carrera ve todas las prácticas con asistente y filtra por estudiante, asignatura o período. */
+/** HU-20: el jefe de carrera y el coordinador ven todas las prácticas con asistente y filtran por estudiante, asignatura o período. */
 function listaJefe(cont, inscripciones) {
   const orden = [...inscripciones].sort((a, b) => b.periodo.localeCompare(a.periodo)
     || a.estudiante.nombreCompleto.localeCompare(b.estudiante.nombreCompleto));
@@ -119,16 +122,18 @@ async function conversacion(cont, ctx, inscripcionId) {
     const guia = c.profesorGuia
       ? html`Tu profesor guía, <strong>${c.profesorGuia.nombreCompleto}</strong>, puede leer esta conversación.`
       : 'Tu profesor guía puede leer esta conversación.';
-    // HU-20, criterios 3 y 4 (SUPUESTO S-66): el estudiante sabe que el jefe de carrera lee y cuándo lo hizo
-    const jefe = c.avisoJefeCarrera
-      ? html`<br>${c.avisoJefeCarrera} ${c.ultimaLecturaJefeCarrera ? `Última lectura: ${fechaHora(c.ultimaLecturaJefeCarrera)}.` : 'Aún no la ha leído.'}`
+    // HU-20, criterios 3 y 4 (SUPUESTO S-66): el estudiante sabe que el jefe de carrera y el coordinador leen, y cuándo
+    const cuando = (fecha) => (fecha ? fechaHora(fecha) : 'aún no la lee');
+    const jefe = c.avisoLectores
+      ? html`<br>${c.avisoLectores} Última lectura del jefe de carrera: ${cuando(c.ultimaLecturaJefeCarrera)}; del coordinador: ${cuando(c.ultimaLecturaCoordinador)}.`
       : '';
     aviso = html`${alerta('info', html`${guia}${jefe}`)}${await avisoValidador()}`;
   } else if (esGuia) {
     aviso = alerta('info', html`Solo lectura: eres el profesor guía de ${c.estudiante} en esta práctica. El estudiante sabe que puedes leer la conversación.`);
   } else {
-    // HU-20 (SUPUESTO S-66): el jefe de carrera lee en solo lectura
-    aviso = alerta('info', html`Solo lectura: como jefe de carrera puedes leer esta conversación.${c.profesorGuia ? html` Profesor guía: ${c.profesorGuia.nombreCompleto}.` : ''}`);
+    // HU-20 (SUPUESTO S-66): el jefe de carrera y el coordinador leen en solo lectura; el estudiante lo sabe
+    const comoQuien = ctx.tiene('JEFE_CARRERA') ? 'jefe de carrera' : 'coordinador';
+    aviso = alerta('info', html`Solo lectura: como ${comoQuien} puedes leer esta conversación. El estudiante lo sabe y ve cuándo la leíste por última vez.${c.profesorGuia ? html` Profesor guía: ${c.profesorGuia.nombreCompleto}.` : ''}`);
   }
 
   cont.innerHTML = html`

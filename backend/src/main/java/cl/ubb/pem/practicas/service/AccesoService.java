@@ -87,20 +87,32 @@ public class AccesoService {
      * de ESA inscripción (HU-16, criterio 1: "de sus estudiantes asignados y de nadie más"). No lo leen el
      * coordinador, el profesor del curso ni el tutor. Usa la misma regla de pertenencia que
      * {@link #puedeVerInscripcion}, solo con esos dos roles.
-     * HU-20: además, el jefe de carrera (ver {@link #leeChatComoJefe}).
+     * HU-20: además, el jefe de carrera y (desde el 2026-11-22) el coordinador (ver {@link #leeChatSinParticipar}).
      */
     public boolean puedeVerChat(Inscripcion i, UsuarioAutenticado actor) {
         return actor.roles().stream().filter(LEEN_EL_CHAT::contains).anyMatch(r -> participaComo(r, i, actor.id()))
-                || leeChatComoJefe(i, actor);
+                || leeChatSinParticipar(i, actor);
     }
 
     /**
-     * HU-20: el jefe de carrera lee, en solo lectura, la conversación de cualquier inscripción de una asignatura con
-     * chatbot (las dos prácticas finales), aunque no sea el guía. SUPUESTO S-66: sin aviso al estudiante, igual que el
-     * resto de su lectura global; la privacidad de los chats sigue abierta con el cliente (S-38).
+     * HU-20: el jefe de carrera y, desde el 2026-11-22 (decisión del usuario), el coordinador leen, en solo lectura, la
+     * conversación de cualquier inscripción de una asignatura con chatbot (las dos prácticas finales), aunque no sean
+     * el guía. SUPUESTO S-66: el estudiante lo sabe (aviso) y cada lectura queda registrada con el rol (lectura_chat).
+     * La privacidad de los chats sigue abierta con el cliente (S-38).
      */
-    public boolean leeChatComoJefe(Inscripcion i, UsuarioAutenticado actor) {
-        return actor.tieneRol(Roles.JEFE_CARRERA) && Boolean.TRUE.equals(i.getAsignatura().getChatbotHabilitado());
+    public boolean leeChatSinParticipar(Inscripcion i, UsuarioAutenticado actor) {
+        return rolLectorDeChats(actor) != null && Boolean.TRUE.equals(i.getAsignatura().getChatbotHabilitado());
+    }
+
+    /**
+     * El rol con el que alguien lee los chats sin participar en la inscripción: JEFE_CARRERA (HU-20) o, desde el
+     * 2026-11-22 (decisión del usuario), COORDINADOR; nulo si no tiene ninguno. Si tuviera los dos, cuenta como jefe.
+     */
+    public static String rolLectorDeChats(UsuarioAutenticado actor) {
+        if (actor.tieneRol(Roles.JEFE_CARRERA)) {
+            return Roles.JEFE_CARRERA;
+        }
+        return actor.tieneRol(Roles.COORDINADOR) ? Roles.COORDINADOR : null;
     }
 
     public void exigirVerChat(Inscripcion i, UsuarioAutenticado actor) {
