@@ -65,7 +65,9 @@ class ModeloLenguajeGroqTest {
 
     private ModeloLenguajeGroq modelo(String clave, int reintentos) {
         String url = "http://127.0.0.1:" + servidor.getAddress().getPort() + "/openai/v1";
-        return new ModeloLenguajeGroq(new ChatbotProperties(clave, "openai/gpt-oss-120b", 1500, 0.3, 5, reintentos, url), JSON);
+        // 30 s de espera: con toda la batería corriendo, el servidor falso llegó a tardar 7,5 s y la prueba fallaba por
+        // tiempo (2026-11-21). Ninguna prueba depende de este valor: la de "sin conexión" usa un puerto cerrado.
+        return new ModeloLenguajeGroq(new ChatbotProperties(clave, "openai/gpt-oss-120b", 1500, 0.3, 30, reintentos, url), JSON);
     }
 
     @Test

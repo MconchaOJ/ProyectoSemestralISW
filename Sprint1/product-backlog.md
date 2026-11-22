@@ -50,7 +50,7 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-11 | Nota de voz del profesor evaluador | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** Desde el 21-nov, «Volver a grabar» reemplaza el audio (criterio 2 completo) |
 | HU-12 | Pasar la nota de voz a texto | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** |
 | HU-13 | Exportar notas finales para Adecca | Integración | Media | por estimar | 3 | Pendiente |
-| HU-14 | Panel de monitoreo del coordinador | Monitoreo | Media | por estimar | 3 | Pendiente |
+| HU-14 | Panel de monitoreo del coordinador | Monitoreo | Media | por estimar | 3 | **Construida y probada (21-nov, adelantada al Sprint 2):** pantalla "Panel de monitoreo" (coordinador y jefe de carrera) con planificaciones atrasadas (más de 3 días, S-79), estudiantes sin evaluar y avance por práctica y período, con filtros |
 | HU-19 | Avisos por correo de cambios de estado | Planificación | Media (subió desde Baja) | por estimar | 3 (tentativo) | Pendiente |
 | HU-15 | Chatbot de retroalimentación según el contexto del estudiante | Chatbot | Alta | por estimar | **2** (adelantada) | **Completa (26-oct):** probada con el modelo real de Groq (`openai/gpt-oss-120b`). Criterios 3 a 8 los cumple el modelo por instrucciones; el criterio 2 (no aceptar la planificación pegada como texto) ahora es una regla del código que responde sin llamar al modelo (S-72). Capa gratuita de Groq: 1-2 mensajes/min para todo el sistema, a decidir con el cliente (S-59) |
 | HU-16 | El profesor guía ve el chat y la actividad del estudiante | Chatbot | Alta | por estimar | **2** (adelantada) | **Completa (26-oct)**; solo el guía de esa inscripción lee el chat (S-60) |
