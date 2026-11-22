@@ -1482,3 +1482,27 @@ Decisiones del usuario: tabla `grupo_practica`; **cada integrante sigue con su p
   que Trabajo Colaborativo pide establecimiento y curso, deshace la dupla de Catalina y Tomás, y ve "Trabajó en grupo con"
   en el historial de Javiera. Javiera ve su grupo sin botón para cambiarlo; el guía no tiene el botón. La prueba de HU-08
   se repitió sobre el mismo `.jar`: 12/12.
+
+## Sprint 2: HU-11 completa, volver a grabar la nota de voz (2026-11-21, rama `feature/hu11-reemplazar-audio`)
+
+El criterio 2 dice "graba **o reemplaza** la nota", pero hasta ahora solo se podía corregir el texto. Decisión del usuario:
+al reemplazar, **borrar el audio viejo**. Sin cambios de esquema.
+
+- **Endpoint nuevo:** `PUT /api/evaluaciones/{id}/nota-voz/audio` (multipart: `audio`, `transcripcion`,
+  `duracionSegundos`), solo el evaluador (403 para otro guía), 404 si no hay nota previa (se usa POST), 400 con duración
+  0. Reemplaza audio, duración y texto (queda sin corregir) y actualiza `fecha_grabacion` (el mapeo JPA dejó de ser
+  `updatable = false`; la columna no cambia).
+- **Borrado seguro:** `AlmacenamientoArchivosService.borrar` (no sale de la carpeta de adjuntos, no falla si el archivo
+  ya no existe). `NotaVozService.reemplazar` registra una `TransactionSynchronization`: después del commit borra el audio
+  **viejo**; si la transacción se revierte, borra el **nuevo**. Nunca queda una nota de voz sin su audio.
+- **Front-end** (`notaVoz.js`): botón «Volver a grabar» para el evaluador, con aviso de que reemplaza y borra el audio
+  anterior, «Cancelar» y «Reemplazar nota de voz». `api.subir` acepta el método (POST por defecto).
+- **Pruebas:** **298, 0 fallos** (antes 295): 1 de integración (reemplazo, contenido nuevo del audio, 403, 404, 400) y
+  `NotaVozServiceTest` (2: qué archivo se borra si la transacción se confirma o se revierte; las de integración no lo
+  pueden ver porque se revierten). `bd.ps1` 35/35.
+- **Navegador** (Chrome headless con micrófono simulado): el guía graba la nota de la evaluación 1 (aparece 1 archivo en
+  `adjuntos/notas-voz`), «Cancelar» no cambia nada, vuelve a grabar y se ve la transcripción nueva; **en el disco el
+  archivo viejo desaparece y queda solo el nuevo**; el reproductor carga el audio nuevo; Sebastián lo ve sin botones. Sin
+  errores de JavaScript.
+- **Observación:** `adjuntos/notas-voz` tenía 332 audios huérfanos de pruebas anteriores (`bd.ps1` limpia la base pero no
+  el disco). No se borraron; las pruebas de reemplazo ya no dejan huérfanos nuevos.

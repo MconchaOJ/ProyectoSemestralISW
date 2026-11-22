@@ -10,9 +10,12 @@ import cl.ubb.pem.practicas.exception.ReglaNegocioException;
 import cl.ubb.pem.practicas.repository.EvaluacionRepository;
 import cl.ubb.pem.practicas.repository.NotaVozRepository;
 import cl.ubb.pem.practicas.security.UsuarioAutenticado;
+import java.time.LocalDateTime;
 import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -47,7 +50,7 @@ public class NotaVozService {
         Evaluacion e = exigirEvaluador(evaluacionId, actor);
         if (notasVoz.findByEvaluacionId(evaluacionId).isPresent()) {
             throw new ConflictoException("Esta evaluación ya tiene una nota de voz. Usa PUT para corregir el texto "
-                    + "o vuelve a grabar reemplazando el archivo.");
+                    + "o PUT .../nota-voz/audio para volver a grabarla (reemplaza el audio).");
         }
         if (duracionSegundos == null || duracionSegundos <= 0) {
             throw new ReglaNegocioException("La duración de la nota de voz debe ser mayor que 0 segundos.");
@@ -60,6 +63,36 @@ public class NotaVozService {
         n.setDuracionSegundos(duracionSegundos);
         n.setTranscripcion(limpiar(transcripcion));
         n.setTranscripcionCorregida(false);
+        return NotaVozDto.desde(notasVoz.save(n));
+    }
+
+    /**
+     * HU-11, criterio 2: volver a grabar. Reemplaza el audio, la duración y el texto transcrito (que vuelve a ser el
+     * del navegador, sin corregir). El audio viejo se borra del disco solo cuando la base confirmó el cambio; si la
+     * transacción falla, se borra el nuevo: nunca queda una nota de voz sin su audio.
+     */
+    @Transactional
+    public NotaVozDto reemplazar(Long evaluacionId, MultipartFile audio, String transcripcion, Integer duracionSegundos,
+                                 UsuarioAutenticado actor) {
+        exigirEvaluador(evaluacionId, actor);
+        NotaVoz n = buscarPorEvaluacion(evaluacionId);
+        if (duracionSegundos == null || duracionSegundos <= 0) {
+            throw new ReglaNegocioException("La duración de la nota de voz debe ser mayor que 0 segundos.");
+        }
+        String nueva = almacenamiento.guardar("notas-voz", audio, EXTENSIONES_PERMITIDAS,
+                AlmacenamientoArchivosService.TAMANO_MAXIMO_AUDIO);
+        String vieja = n.getArchivoRuta();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int estado) {
+                almacenamiento.borrar(estado == STATUS_COMMITTED ? vieja : nueva);
+            }
+        });
+        n.setArchivoRuta(nueva);
+        n.setDuracionSegundos(duracionSegundos);
+        n.setTranscripcion(limpiar(transcripcion));
+        n.setTranscripcionCorregida(false);
+        n.setFechaGrabacion(LocalDateTime.now());
         return NotaVozDto.desde(notasVoz.save(n));
     }
 

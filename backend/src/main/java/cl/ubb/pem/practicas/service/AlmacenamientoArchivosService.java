@@ -72,6 +72,22 @@ public class AlmacenamientoArchivosService {
         }
     }
 
+    /**
+     * Borra un archivo ya guardado (HU-11: el audio viejo al reemplazar la nota de voz). No falla si ya no existe;
+     * devuelve si lo borró. Nunca sale de la carpeta de adjuntos.
+     */
+    public boolean borrar(String rutaRelativa) {
+        Path ruta = base.resolve(rutaRelativa).normalize();
+        if (!ruta.startsWith(base) || ruta.equals(base)) {
+            throw new AccesoDenegadoException("Ruta de archivo inválida.");
+        }
+        try {
+            return Files.deleteIfExists(ruta);
+        } catch (IOException e) {
+            return false;   // queda un archivo huérfano en disco; la base ya no lo referencia
+        }
+    }
+
     private void validar(MultipartFile archivo, Set<String> extensionesPermitidas, long tamanoMaximo) {
         if (archivo == null || archivo.isEmpty()) {
             throw new ReglaNegocioException("Debes adjuntar un archivo.");

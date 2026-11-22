@@ -38,7 +38,8 @@ public class NotaVoz {
     @Column(name = "transcripcion_corregida", nullable = false)
     private Boolean transcripcionCorregida = false;
 
-    @Column(name = "fecha_grabacion", nullable = false, updatable = false)
+    // Actualizable desde HU-11: volver a grabar (reemplazar el audio) cambia la fecha de grabación
+    @Column(name = "fecha_grabacion", nullable = false)
     private LocalDateTime fechaGrabacion;
 
     @PrePersist

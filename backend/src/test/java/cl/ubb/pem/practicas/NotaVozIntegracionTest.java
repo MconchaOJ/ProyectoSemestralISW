@@ -57,6 +57,42 @@ class NotaVozIntegracionTest extends IntegracionBase {
                 .andExpect(status().isConflict());
     }
 
+    /** PUT multipart/form-data, ya autenticado (volver a grabar, HU-11). */
+    private org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder multipartPut(String url, String email) {
+        var req = org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(org.springframework.http.HttpMethod.PUT, url);
+        req.header("Authorization", "Bearer " + token(email));
+        return req;
+    }
+
+    @Test
+    void elEvaluadorVuelveAGrabarYElAudioSeReemplaza() throws Exception {   // HU-11, criterio 2
+        mvc.perform(multipart("/api/evaluaciones/1/nota-voz", GUIA1).file(audio())
+                        .param("transcripcion", "Primer intento.").param("duracionSegundos", "20"))
+                .andExpect(status().isCreated());
+        mvc.perform(multipartPut("/api/evaluaciones/1/nota-voz/audio", GUIA1)
+                        .file(archivo("audio", "otra.webm", "audio/webm", "otro audio".getBytes()))
+                        .param("transcripcion", "Segundo intento, mas claro.").param("duracionSegundos", "31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.duracionSegundos").value(31))
+                .andExpect(jsonPath("$.transcripcion").value("Segundo intento, mas claro."))
+                .andExpect(jsonPath("$.transcripcionCorregida").value(false));
+        byte[] escuchado = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .get("/api/evaluaciones/1/nota-voz/audio").header("Authorization", "Bearer " + token(SEBASTIAN)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+        assertThat(new String(escuchado)).isEqualTo("otro audio");
+
+        // solo el evaluador vuelve a grabar; sin nota de voz previa, 404 (se usa POST)
+        mvc.perform(multipartPut("/api/evaluaciones/1/nota-voz/audio", GUIA2).file(audio())
+                        .param("transcripcion", "x").param("duracionSegundos", "5"))
+                .andExpect(status().isForbidden());
+        mvc.perform(multipartPut("/api/evaluaciones/2/nota-voz/audio", GUIA1).file(audio())
+                        .param("transcripcion", "x").param("duracionSegundos", "5"))
+                .andExpect(status().isNotFound());
+        mvc.perform(multipartPut("/api/evaluaciones/1/nota-voz/audio", GUIA1).file(audio())
+                        .param("transcripcion", "x").param("duracionSegundos", "0"))
+                .andExpect(status().isBadRequest());
+    }
+
     @Test
     void elEvaluadorCorrigeLaTranscripcion() throws Exception {
         mvc.perform(multipart("/api/evaluaciones/1/nota-voz", GUIA1).file(audio())

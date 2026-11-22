@@ -47,7 +47,7 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-08 | Informes por asignatura y por estudiante | Monitoreo | Alta | por estimar | 2 | **Construida y probada (21-nov):** pantalla "Informes por asignatura" (coordinador y jefe de carrera) con notas finales, evaluaciones por pauta con su distribución, planificaciones y una fila por estudiante, y el mismo informe en PDF; el informe por estudiante es el historial en PDF (HU-28). Solo PDF (criterio 3: "PDF o Excel") |
 | HU-09 | Nota final ponderada de la asignatura | Evaluación | Media | por estimar | 2 | Pendiente |
 | HU-10 | Prácticas en dupla y en grupo | Gestión académica | Media | por estimar | 2 | **Construida y probada (21-nov):** el coordinador forma, cambia o deshace duplas y grupos (migración 013, tabla `grupo_practica`); comparten guía y, en el colegio, establecimiento y curso; cada integrante conserva su inscripción, pauta y planificaciones (S-77); el historial muestra con quién trabajó |
-| HU-11 | Nota de voz del profesor evaluador | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** |
+| HU-11 | Nota de voz del profesor evaluador | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** Desde el 21-nov, «Volver a grabar» reemplaza el audio (criterio 2 completo) |
 | HU-12 | Pasar la nota de voz a texto | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** |
 | HU-13 | Exportar notas finales para Adecca | Integración | Media | por estimar | 3 | Pendiente |
 | HU-14 | Panel de monitoreo del coordinador | Monitoreo | Media | por estimar | 3 | Pendiente |

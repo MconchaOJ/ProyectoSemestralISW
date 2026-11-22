@@ -65,6 +65,20 @@ public class NotaVozController {
         return notasVoz.corregirTranscripcion(evaluacionId, request.transcripcion(), actor);
     }
 
+    @PutMapping(path = "/audio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('PROFESOR_GUIA', 'TUTOR')")
+    @Operation(summary = "Volver a grabar la nota de voz (reemplaza el audio, HU-11)",
+            description = "Solo el evaluador (guía o tutor; 403 para cualquier otro). Reemplaza el audio, la duración y el "
+                    + "texto transcrito (queda sin corregir). El audio anterior se borra del servidor cuando el cambio queda "
+                    + "guardado. 404 si todavía no hay nota de voz (usa POST). Igual que al grabar, sirve con la evaluación "
+                    + "en BORRADOR o FINALIZADA (S-42).")
+    public NotaVozDto reemplazar(@PathVariable Long evaluacionId, @RequestParam("audio") MultipartFile audio,
+                                 @RequestParam("transcripcion") String transcripcion,
+                                 @RequestParam("duracionSegundos") Integer duracionSegundos,
+                                 @AuthenticationPrincipal UsuarioAutenticado actor) {
+        return notasVoz.reemplazar(evaluacionId, audio, transcripcion, duracionSegundos, actor);
+    }
+
     @GetMapping
     @Operation(summary = "Consultar la nota de voz (duración, transcripción y enlace al audio)",
             description = "El evaluador, el estudiante evaluado, su profesor del curso y el coordinador (mismas "

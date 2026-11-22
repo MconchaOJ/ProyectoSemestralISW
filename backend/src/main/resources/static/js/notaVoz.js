@@ -38,7 +38,8 @@ function pintarExistente(cont, { evaluacionId, esEvaluador, nota }) {
       <h3>Transcripción a texto</h3>
       ${esEvaluador
         ? html`<textarea id="texto-transcripcion" rows="4" maxlength="8000">${nota.transcripcion ?? ''}</textarea>
-            <div class="acciones-panel"><button type="button" class="btn btn-primario" id="guardar-transcripcion" data-cargando="Guardando…">Guardar transcripción corregida</button></div>`
+            <div class="acciones-panel"><button type="button" class="btn btn-primario" id="guardar-transcripcion" data-cargando="Guardando…">Guardar transcripción corregida</button>
+              <button type="button" class="btn" id="volver-a-grabar">${icono('mic')} Volver a grabar</button></div>`
         : html`<p class="transcripcion-lectura">${nota.transcripcion || 'Sin transcripción.'}</p>`}
       <p class="subtitulo">${nota.transcripcionCorregida ? 'Transcripción corregida por el evaluador después de grabar.' : 'Transcripción guardada junto con la grabación.'}
         · grabada el ${fechaHora(nota.fechaGrabacion)} (${nota.duracionSegundos}s)</p>
@@ -53,6 +54,8 @@ function pintarExistente(cont, { evaluacionId, esEvaluador, nota }) {
   }).catch(() => { estadoAudio.textContent = 'No se pudo cargar el audio.'; });
 
   if (!esEvaluador) return;
+  // HU-11: volver a grabar reemplaza el audio (el anterior se borra del servidor al guardar)
+  cont.querySelector('#volver-a-grabar').addEventListener('click', () => pintarGrabador(cont, { evaluacionId, reemplazo: true }));
   const avisos = cont.querySelector('#avisos-nota-voz');
   const boton = cont.querySelector('#guardar-transcripcion');
   boton.addEventListener('click', async () => {
@@ -69,14 +72,15 @@ function pintarExistente(cont, { evaluacionId, esEvaluador, nota }) {
   });
 }
 
-// ---------- Todavía no hay nota de voz y eres el evaluador: grabarla ----------
-function pintarGrabador(cont, { evaluacionId }) {
+// ---------- Todavía no hay nota de voz y eres el evaluador: grabarla (o volver a grabarla, HU-11) ----------
+function pintarGrabador(cont, { evaluacionId, reemplazo = false }) {
   const puedeGrabar = soportaGrabacion();
   const puedeTranscribir = soportaReconocimiento();
 
   cont.innerHTML = html`
     <div class="tarjeta nota-voz">
       <h2>${icono('mic')} Retroalimentación en voz</h2>
+      ${reemplazo ? alerta('aviso', 'Vas a volver a grabar: al guardar, la nueva grabación y su transcripción reemplazan a las anteriores, y el audio anterior se borra.') : ''}
       ${!puedeGrabar
         ? alerta('aviso', 'Tu navegador no permite grabar audio desde esta página (prueba con Chrome de escritorio). El resto de la evaluación sigue funcionando con normalidad.')
         : html`<div class="grabador">
@@ -90,7 +94,8 @@ function pintarGrabador(cont, { evaluacionId }) {
       <textarea id="texto-transcripcion" rows="4" maxlength="8000"
         placeholder="${puedeTranscribir ? 'Aparece aquí mientras grabas; puedes corregirla antes de guardar.' : 'Escribe aquí la retroalimentación de la nota de voz.'}"></textarea>
       <div class="acciones-panel">
-        <button type="button" class="btn btn-ok" id="guardar-nota-voz" data-cargando="Guardando…" disabled>${icono('check-circle')} Guardar nota de voz</button>
+        ${reemplazo ? html`<button type="button" class="btn" id="cancelar-reemplazo">Cancelar</button>` : ''}
+        <button type="button" class="btn btn-ok" id="guardar-nota-voz" data-cargando="Guardando…" disabled>${icono('check-circle')} ${reemplazo ? 'Reemplazar nota de voz' : 'Guardar nota de voz'}</button>
       </div>
       ${puedeGrabar ? html`<p class="subtitulo" id="ayuda-guardar-nota">El botón se activa cuando detienes la grabación.</p>` : ''}
       <div id="avisos-nota-voz"></div>
@@ -101,6 +106,7 @@ function pintarGrabador(cont, { evaluacionId }) {
   const btnGuardar = cont.querySelector('#guardar-nota-voz');
   let blobFinal = null;
   let segundos = 0;
+  cont.querySelector('#cancelar-reemplazo')?.addEventListener('click', () => montarNotaVoz(cont, { evaluacionId, esEvaluador: true }));
 
   if (puedeGrabar) {
     const btnGrabar = cont.querySelector('#grabar');
@@ -183,8 +189,9 @@ function pintarGrabador(cont, { evaluacionId }) {
     const original = btnGuardar.innerHTML;
     btnGuardar.innerHTML = `<span class="cargando"></span> ${btnGuardar.dataset.cargando}`;
     try {
-      await api.subir(`/api/evaluaciones/${evaluacionId}/nota-voz`, datos);
-      toast('Nota de voz guardada.');
+      if (reemplazo) await api.subir(`/api/evaluaciones/${evaluacionId}/nota-voz/audio`, datos, 'PUT');
+      else await api.subir(`/api/evaluaciones/${evaluacionId}/nota-voz`, datos);
+      toast(reemplazo ? 'Nota de voz reemplazada.' : 'Nota de voz guardada.');
       await montarNotaVoz(cont, { evaluacionId, esEvaluador: true });
     } catch (e) {
       if (e.status !== 401) avisos.innerHTML = alertaError(e).toString();

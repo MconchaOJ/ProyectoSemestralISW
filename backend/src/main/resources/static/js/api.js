@@ -97,12 +97,12 @@ async function pedir(metodo, ruta, { cuerpo, params, publico = false } = {}) {
 }
 
 /** POST multipart/form-data (subir un archivo): sin Content-Type, el navegador pone el boundary solo. */
-async function subirFormData(ruta, formData) {
+async function subirFormData(ruta, formData, metodo = 'POST') {
   const cabeceras = {};
   if (sesion.token()) cabeceras.Authorization = 'Bearer ' + sesion.token();
   let respuesta;
   try {
-    respuesta = await fetch(ruta, { method: 'POST', headers: cabeceras, body: formData });
+    respuesta = await fetch(ruta, { method: metodo, headers: cabeceras, body: formData });
   } catch {
     throw new ApiError(0, 'No se pudo conectar con el servidor. Revisa que la aplicación esté encendida.');
   }
@@ -144,7 +144,7 @@ export const api = {
   put: (ruta, cuerpo) => pedir('PUT', ruta, { cuerpo: cuerpo ?? {} }),
   del: (ruta) => pedir('DELETE', ruta),
   login: (email, password) => pedir('POST', '/api/auth/login', { cuerpo: { email, password }, publico: true }),
-  subir: (ruta, formData) => subirFormData(ruta, formData),
+  subir: (ruta, formData, metodo) => subirFormData(ruta, formData, metodo),
   archivo: (ruta) => obtenerArchivo(ruta),
 };
 
