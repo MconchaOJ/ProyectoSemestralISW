@@ -44,7 +44,7 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-05 | Ver el historial (recorrido) del estudiante | Monitoreo | Alta | 3 | **1** | Construida y probada (20-sep) |
 | HU-06 | Configurar pautas de evaluación | Evaluación | Alta | por estimar | 2 | Pendiente |
 | HU-07 | Pautas de Práctica Pedagógica y Profesional (con tutor) | Evaluación | Alta | por estimar | 2 | Pendiente |
-| HU-08 | Informes por asignatura y por estudiante | Monitoreo | Alta | por estimar | 2 | Pendiente |
+| HU-08 | Informes por asignatura y por estudiante | Monitoreo | Alta | por estimar | 2 | **Construida y probada (21-nov):** pantalla "Informes por asignatura" (coordinador y jefe de carrera) con notas finales, evaluaciones por pauta con su distribución, planificaciones y una fila por estudiante, y el mismo informe en PDF; el informe por estudiante es el historial en PDF (HU-28). Solo PDF (criterio 3: "PDF o Excel") |
 | HU-09 | Nota final ponderada de la asignatura | Evaluación | Media | por estimar | 2 | Pendiente |
 | HU-10 | Prácticas en dupla y en grupo | Gestión académica | Media | por estimar | 2 | Pendiente |
 | HU-11 | Nota de voz del profesor evaluador | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** |
@@ -64,7 +64,7 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-25 | Gestión de archivos de pautas formales | Evaluación | Baja | por estimar | 2 o más | Pendiente |
 | HU-26 | Cambiar la contraseña | Acceso | Media | por estimar | 2 | Pendiente |
 | HU-27 | Configurar los parámetros del sistema | Administración | Baja | por estimar | 2 o más | Pendiente |
-| HU-28 | Exportar el historial del estudiante en PDF | Monitoreo | Media | por estimar | 2 o más | Pendiente |
+| HU-28 | Exportar el historial del estudiante en PDF | Monitoreo | Media | por estimar | 2 o más | **Construida y probada (21-nov, junto con HU-08):** botón «Descargar PDF» en el historial, mismas reglas de acceso, con fecha de generación |
 | HU-29 | Cargar la base de conocimiento del chatbot | Chatbot | Media | por estimar | **2** (adelantada) | **Completa (26-oct):** el coordinador sube o reemplaza los 10 documentos de la propuesta (Word/PDF, migración 009) y el chatbot recibe solo los fragmentos pertinentes, ordenados por TF-IDF (S-74; sin embeddings, S-70). Probada con el modelo real y documentos reales. **Limitación conocida, no pendiente de código:** que "responda solo con esos documentos" (criterio 2) lo cumple el modelo por instrucciones; garantizarlo exigiría otra arquitectura |
 | HU-30 | Validar el chatbot con jueces expertos y estudiantes | Chatbot | Baja | por estimar | **2** | **Completa (26-oct):** validadores marcados y validación abierta/cerrada por el coordinador (con ella abierta, los demás reciben 409); los validadores responden en el sistema la Escala SUS y la rúbrica de 9 criterios de la propuesta RetroPlani Mate (migración 011) y el coordinador ve los resultados (S-75, a confirmar con el cliente) |
 | HU-31 | Cartola de prácticas en PDF para el jefe de carrera | Monitoreo | Alta | por estimar | **2** | **Construida y probada (10-oct)** |

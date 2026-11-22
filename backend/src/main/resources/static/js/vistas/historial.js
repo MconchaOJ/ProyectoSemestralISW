@@ -1,8 +1,8 @@
 // HU-05 · Ver el historial del estudiante: recorrido por las prácticas con evaluaciones y planificaciones.
 //   Estudiante: #/historial (el suyo)   ·   Guía, profesor del curso, coordinador, jefe de carrera: #/historial/{estudianteId}
-import { api } from '../api.js';
+import { api, descargarArchivo } from '../api.js';
 import {
-  MODALIDADES, alerta, alertaError, badge, cabecera, debounce, fecha, html, icono, iniciales, nota, promedio, vacio,
+  MODALIDADES, alerta, alertaError, badge, cabecera, conCarga, debounce, fecha, html, icono, iniciales, nota, promedio, toast, vacio,
 } from '../ui.js';
 
 /** Sin distinguir mayúsculas ni tildes, para buscar como lo hace la base de datos. */
@@ -89,7 +89,9 @@ function pintar(cont, ctx, h, { propio }) {
     ${cabecera({
       hu: 'HU-05', titulo: propio ? 'Mi historial de prácticas' : `Historial de ${e.nombre} ${e.apellidos}`,
       subtitulo: 'Recorrido completo por las prácticas: cómo evoluciona a lo largo del tiempo y no solo una nota final.',
-      acciones: propio ? '' : html`<a class="btn btn-fantasma" href="#/historial">${icono('back')} Cambiar estudiante</a>`,
+      // HU-28 (y criterio 1 de HU-08): el mismo historial en PDF, con las mismas reglas de acceso
+      acciones: html`<button type="button" class="btn" id="btn-historial-pdf" data-cargando="Generando…">${icono('download')} Descargar PDF</button>
+        ${propio ? '' : html`<a class="btn btn-fantasma" href="#/historial">${icono('back')} Cambiar estudiante</a>`}`,
     })}
 
     <div class="tarjeta perfil-historial">
@@ -113,6 +115,17 @@ function pintar(cont, ctx, h, { propio }) {
 
     <h2 class="titulo-linea">Recorrido por período</h2>
     ${total === 0 ? vacio('Este estudiante aún no tiene inscripciones', '', 'clipboard') : html`<ol class="recorrido">${insc.map((i) => practica(i, propio))}</ol>`}`.toString();
+
+  cont.querySelector('#btn-historial-pdf').addEventListener('click', async (ev) => {
+    try {
+      const archivo = await conCarga(ev.currentTarget, () =>
+        api.archivo(propio ? '/api/estudiantes/me/historial/pdf' : `/api/estudiantes/${e.id}/historial/pdf`));
+      descargarArchivo({ ...archivo, nombre: archivo.nombre === 'archivo' ? 'historial.pdf' : archivo.nombre });
+      toast('Historial descargado.');
+    } catch (err) {
+      if (err.status !== 401) toast(err.message, 'error');
+    }
+  });
 }
 
 function practica(i, propio) {

@@ -18,6 +18,8 @@ export const rolesDe = (usuario) => [usuario.rol, usuario.rolSecundario].filter(
 /** Funciones disponibles: funcionan contra la API real. `alias` = otras rutas que activan el mismo ítem. */
 export const FUNCIONES = [
   { ruta: 'cartola', icono: 'download', nombre: 'Cartola de prácticas', roles: [JEFE] },
+  // HU-08: informe por asignatura y período (el coordinador y el jefe de carrera ven toda la carrera)
+  { ruta: 'informes', icono: 'chart', nombre: 'Informes por asignatura', roles: ['COORDINADOR', JEFE] },
   { ruta: 'cuenta', icono: 'shield', nombre: 'Mi cuenta', roles: LECTURA },
   {
     ruta: 'estudiantes', alias: ['profesores', 'inscripciones'], icono: 'users',
@@ -71,6 +73,7 @@ export const ACCESOS = {
     { icono: 'file', titulo: 'Seguimiento de planificaciones', texto: 'Estado de cada clase planificada.', hash: '#/planificaciones' },
     { icono: 'clipboard', titulo: 'Pautas de evaluación', texto: 'Crear y editar pautas (con versiones).', hash: '#/pautas' },
     { icono: 'sliders', titulo: 'Configuración del asistente', texto: 'Estilo, base de conocimiento y validación.', hash: '#/estilo-asistente' },
+    { icono: 'chart', titulo: 'Informe de una asignatura', texto: 'Promedios y distribución por período, en PDF.', hash: '#/informes' },
   ],
   PROFESOR_GUIA: [
     { icono: 'file', titulo: 'Planificaciones por revisar', texto: 'Aprueba u observa antes de la clase.', hash: '#/planificaciones?estado=EN_REVISION_GUIA', pendiente: { ruta: '/api/planificaciones', params: { estado: 'EN_REVISION_GUIA' } } },
@@ -96,6 +99,7 @@ export const ACCESOS = {
   ],
   JEFE_CARRERA: [
     { icono: 'download', titulo: 'Cartola de prácticas', texto: 'PDF de las prácticas cerradas entre dos fechas.', hash: '#/cartola' },
+    { icono: 'chart', titulo: 'Informe de una asignatura', texto: 'Promedios y distribución por período, en PDF.', hash: '#/informes' },
     { icono: 'clock', titulo: 'Historial de un estudiante', texto: 'Recorrido de cualquier estudiante (solo lectura).', hash: '#/historial' },
     { icono: 'check', titulo: 'Evaluaciones de clases', texto: 'Todas las evaluaciones (solo lectura).', hash: '#/evaluaciones' },
     { icono: 'chat', titulo: 'Conversaciones del asistente', texto: 'Chats de Práctica Pedagógica y Profesional.', hash: '#/chatbot' },

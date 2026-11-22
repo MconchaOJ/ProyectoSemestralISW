@@ -1407,3 +1407,41 @@ documento adjunto obligatorio sin cambios (S-47), "Matemática" como texto fijo 
   se envía a revisión; el detalle muestra "Matemática", colegio, curso, unidad e "Inicio (10 minutos)". El guía la ve, ve la
   planificación 1 del seed en el formato nuevo y, en "Nueva evaluación", al vincular la planificación 3 se completan
   establecimiento, curso y objetivo. Sin errores de JavaScript.
+
+## Sprint 2: HU-08 informes y HU-28 historial en PDF (2026-11-21, rama `feature/hu08-informes`)
+
+Decisiones del usuario: **solo PDF** (el criterio 3 dice "PDF o Excel"), el **informe por estudiante es el historial en
+PDF** (así queda hecha también HU-28, con las mismas reglas de acceso), el informe por asignatura lo ven el **coordinador y
+el jefe de carrera**, y **sin datos de demo nuevos** (solo Trabajo Colaborativo tiene evaluaciones finalizadas). Sin cambios
+de esquema.
+
+**Endpoints nuevos (4):**
+
+| Endpoint | Quién | Qué |
+|---|---|---|
+| `GET /api/reportes/asignatura?asignaturaId=&periodo=` | COORDINADOR, JEFE_CARRERA | Informe en JSON (pantalla) |
+| `GET /api/reportes/asignatura/pdf?asignaturaId=&periodo=` | COORDINADOR, JEFE_CARRERA | El mismo informe en PDF |
+| `GET /api/estudiantes/{id}/historial/pdf` | Mismo acceso que el historial (S-21, S-58) | Historial en PDF (HU-28) |
+| `GET /api/estudiantes/me/historial/pdf` | ESTUDIANTE | Su propio historial en PDF |
+
+- **Informe por asignatura y período** (`InformeAsignaturaService`, solo lectura): inscripciones por estado; notas finales
+  (cantidad, promedio, mínimo, máximo y 4 tramos: menos de 4,0 · 4,0 a menos de 5,0 · 5,0 a menos de 6,0 · 6,0 a 7,0);
+  evaluaciones finalizadas **por pauta y versión** (puntaje promedio sobre el máximo, % de logro, estadística y tramos del
+  promedio de cada evaluación, y puntaje promedio por indicador en cada dimensión); planificaciones por estado y cuántas
+  fueron devueltas con observaciones al menos una vez; una fila por estudiante (ordenada por apellido). 400 si el período no
+  es AAAA-S, 404 si la asignatura no existe; un período sin inscripciones da un informe vacío (también en PDF).
+- **PDF:** `PdfEstilo` (estilo común: azul UBB, títulos de columna repetidos por página, número de página al pie),
+  `InformeAsignaturaPdfGenerador` e `HistorialPdfGenerador`. La cartola de HU-31 no se tocó. Revisados a ojo: se corrigió
+  que la línea anterior a cada tabla quedaba montada sobre ella (`setSpacingBefore`).
+- **Front-end:** pantalla nueva **"Informes por asignatura"** (`vistas/informes.js`; menú y acceso rápido del coordinador y
+  del jefe de carrera): elegir práctica y período (solo los períodos con inscripciones), ver el informe con barras de
+  distribución, enlace al historial de cada estudiante y botón «Descargar PDF». En **Historial**, botón «Descargar PDF»
+  para todos los que ya ven el historial.
+- **Pruebas:** **289, 0 fallos** (antes 283): `HU08InformesIntegracionTest` (6) comprueba los números exactos de Trabajo
+  Colaborativo 2024-2 (notas 6,08 y tramos 0-0-1-3; 4 evaluaciones con 92,50 de 140 = 66,1 %, promedio 4,63, tramos
+  1-2-1-0; dimensiones 4,25 / 4,46 / 5,03; 4 planificaciones, 1 devuelta), los roles (estudiante, guía, profesor del curso y
+  tutor reciben 403), los errores, y el texto de los PDF (leído con OpenPDF). `bd.ps1`: 33/33.
+- **Navegador** (Chrome headless): el coordinador ve el menú y el informe de Trabajo Colaborativo 2024-2 (puntaje, logro,
+  4 estudiantes, barras), descarga el PDF (se intercepta el archivo y es `application/pdf`), cambia de período y descarga el
+  historial de Sebastián; el jefe de carrera ve el menú y el informe de Práctica Profesional 2026-2; el guía no tiene el
+  menú ni puede abrir la pantalla; Camila descarga su propio historial. Sin errores de JavaScript.

@@ -1,6 +1,8 @@
 package cl.ubb.pem.practicas.controller;
 
+import cl.ubb.pem.practicas.dto.InformeAsignaturaDto;
 import cl.ubb.pem.practicas.service.CartolaPracticasService;
+import cl.ubb.pem.practicas.service.InformeAsignaturaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,13 +22,39 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/reportes")
-@Tag(name = "HU-31 Cartola de prácticas")
+@Tag(name = "Informes: HU-08 por asignatura y HU-31 cartola de prácticas")
 public class ReporteController {
 
     private final CartolaPracticasService cartola;
+    private final InformeAsignaturaService informes;
 
-    public ReporteController(CartolaPracticasService cartola) {
+    public ReporteController(CartolaPracticasService cartola, InformeAsignaturaService informes) {
         this.cartola = cartola;
+        this.informes = informes;
+    }
+
+    @GetMapping("/asignatura")
+    @PreAuthorize("hasAnyRole('COORDINADOR', 'JEFE_CARRERA')")
+    @Operation(summary = "Informe de una asignatura en un período (HU-08)",
+            description = "Solo COORDINADOR y JEFE_CARRERA. Inscripciones por estado; notas finales (promedio, mínimo, máximo "
+                    + "y tramos: menos de 4,0, 4,0 a menos de 5,0, 5,0 a menos de 6,0, 6,0 a 7,0); evaluaciones finalizadas "
+                    + "por pauta (puntaje promedio, % de logro, distribución del promedio y puntaje promedio por indicador en "
+                    + "cada dimensión); planificaciones por estado y cuántas fueron devueltas; una fila por estudiante. "
+                    + "400 si el período no tiene el formato AAAA-S; 404 si la asignatura no existe. Solo lectura.")
+    public InformeAsignaturaDto informeAsignatura(
+            @Parameter(description = "Id de la asignatura de práctica (1 a 6)", example = "3") @RequestParam Integer asignaturaId,
+            @Parameter(description = "Período AAAA-S", example = "2024-2") @RequestParam String periodo) {
+        return informes.informe(asignaturaId, periodo);
+    }
+
+    @GetMapping("/asignatura/pdf")
+    @PreAuthorize("hasAnyRole('COORDINADOR', 'JEFE_CARRERA')")
+    @Operation(summary = "Informe de una asignatura en un período, en PDF (HU-08)",
+            description = "Lo mismo que GET /api/reportes/asignatura, como PDF descargable. Mismos roles y errores.",
+            responses = @ApiResponse(responseCode = "200", description = "PDF descargable",
+                    content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)))
+    public ResponseEntity<byte[]> informeAsignaturaPdf(@RequestParam Integer asignaturaId, @RequestParam String periodo) {
+        return Descargas.pdf(informes.pdf(asignaturaId, periodo), "informe-asignatura-" + asignaturaId + "_" + periodo + ".pdf");
     }
 
     // Sin "produces = application/pdf" a propósito: así los errores (400, 403) siguen saliendo en JSON.

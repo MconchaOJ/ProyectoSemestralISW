@@ -4,7 +4,11 @@ import cl.ubb.pem.practicas.dto.HistorialDto;
 import cl.ubb.pem.practicas.security.UsuarioAutenticado;
 import cl.ubb.pem.practicas.service.HistorialService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,5 +44,27 @@ public class HistorialController {
                     + "curso asignados, el coordinador y el jefe de carrera; cualquier otro recibe 403.")
     public HistorialDto historialDe(@PathVariable Long id, @AuthenticationPrincipal UsuarioAutenticado actor) {
         return historial.historialDe(id, actor);
+    }
+
+    // HU-28 (y criterio 1 de HU-08): el mismo historial en PDF. Sin "produces = application/pdf" a propósito:
+    // así los errores (403, 404) siguen saliendo en JSON, igual que la cartola.
+    @GetMapping("/me/historial/pdf")
+    @PreAuthorize("hasRole('ESTUDIANTE')")
+    @Operation(summary = "Mi historial en PDF", description = "Solo ESTUDIANTE: su propio historial como PDF descargable.",
+            responses = @ApiResponse(responseCode = "200", description = "PDF descargable",
+                    content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)))
+    public ResponseEntity<byte[]> miHistorialPdf(@AuthenticationPrincipal UsuarioAutenticado actor) {
+        return Descargas.pdf(historial.pdfPropio(actor), "mi-historial-de-practicas.pdf");
+    }
+
+    @GetMapping("/{id}/historial/pdf")
+    @Operation(summary = "Historial de un estudiante en PDF (HU-28; informe por estudiante de HU-08)",
+            description = "Lo mismo que GET /api/estudiantes/{id}/historial, como PDF, con la fecha de generación. Mismas "
+                    + "reglas de acceso: el propio estudiante, su guía, profesor del curso o tutor asignados, el coordinador "
+                    + "y el jefe de carrera; cualquier otro recibe 403.",
+            responses = @ApiResponse(responseCode = "200", description = "PDF descargable",
+                    content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)))
+    public ResponseEntity<byte[]> historialPdf(@PathVariable Long id, @AuthenticationPrincipal UsuarioAutenticado actor) {
+        return Descargas.pdf(historial.pdfDe(id, actor), "historial-estudiante-" + id + ".pdf");
     }
 }

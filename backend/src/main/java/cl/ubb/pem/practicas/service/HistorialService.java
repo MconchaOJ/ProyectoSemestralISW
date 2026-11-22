@@ -40,15 +40,17 @@ public class HistorialService {
     private final EvaluacionRepository evaluaciones;
     private final PlanificacionRepository planificaciones;
     private final AccesoService acceso;
+    private final HistorialPdfGenerador pdf;
 
     public HistorialService(EstudianteRepository estudiantes, InscripcionRepository inscripciones,
                             EvaluacionRepository evaluaciones, PlanificacionRepository planificaciones,
-                            AccesoService acceso) {
+                            AccesoService acceso, HistorialPdfGenerador pdf) {
         this.estudiantes = estudiantes;
         this.inscripciones = inscripciones;
         this.evaluaciones = evaluaciones;
         this.planificaciones = planificaciones;
         this.acceso = acceso;
+        this.pdf = pdf;
     }
 
     public HistorialDto historialDe(Long estudianteId, UsuarioAutenticado actor) {
@@ -58,6 +60,16 @@ public class HistorialService {
             throw new AccesoDenegadoException("No tienes acceso al historial de este estudiante.");
         }
         return armar(e);
+    }
+
+    /** HU-28: el mismo historial en PDF, con las mismas reglas de acceso (404 si no existe, 403 si no lo puede ver). */
+    public byte[] pdfDe(Long estudianteId, UsuarioAutenticado actor) {
+        return pdf.generar(historialDe(estudianteId, actor));
+    }
+
+    /** HU-28: el historial propio del estudiante en PDF. */
+    public byte[] pdfPropio(UsuarioAutenticado actor) {
+        return pdf.generar(historialPropio(actor));
     }
 
     /** El historial del estudiante que hizo la petición. */

@@ -61,7 +61,8 @@ class HistorialServiceTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new HistorialService(estudiantes, inscripciones, evaluaciones, planificaciones, acceso);
+        servicio = new HistorialService(estudiantes, inscripciones, evaluaciones, planificaciones, acceso,
+                new HistorialPdfGenerador(java.time.Clock.systemDefaultZone()));
     }
 
     private Inscripcion inscripcion(long id, int asignaturaId, String periodo, EstadoInscripcion estado, String nota) {
