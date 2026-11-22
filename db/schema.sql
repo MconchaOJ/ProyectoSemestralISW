@@ -1,11 +1,12 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 24 tablas con claves, restricciones e
+-- Implementa el MER de Sprint1/mer.md: 26 tablas con claves, restricciones e
 -- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
 -- la Fase E, instrucciones_chatbot de HU-17, documento_base_conocimiento de
 -- HU-29, lectura_chat_jefe_carrera de HU-20 y respuesta_sus,
--- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30, grupo_practica de HU-10 y parametro_sistema de HU-27). No
+-- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30, grupo_practica de HU-10, parametro_sistema de HU-27 y componente_evaluativo y
+-- nota_componente_externo de HU-09). No
 -- contiene contraseñas (el
 -- usuario de la aplicación lo crea db/bd.ps1 con su clave tomada de una
 -- variable de entorno).
@@ -36,6 +37,8 @@ SET NAMES utf8mb4;
 -- Limpieza (orden inverso a las dependencias)
 -- -----------------------------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS nota_componente_externo;
+DROP TABLE IF EXISTS componente_evaluativo;
 DROP TABLE IF EXISTS respuesta_rubrica_criterio;
 DROP TABLE IF EXISTS respuesta_rubrica_experto;
 DROP TABLE IF EXISTS respuesta_sus;
@@ -216,6 +219,8 @@ CREATE TABLE pauta (
     -- HU-06: una pauta usada no se edita; se crea otra fila con version + 1 que apunta a la anterior
     CONSTRAINT uq_pauta_asignatura_nombre_version UNIQUE (asignatura_id, nombre, version),
     CONSTRAINT uq_pauta_version_anterior UNIQUE (version_anterior_id),
+    -- HU-09 (migración 015): destino de la clave foránea compuesta de componente_evaluativo
+    CONSTRAINT uq_pauta_id_asignatura UNIQUE (id, asignatura_id),
     CONSTRAINT fk_pauta_asignatura FOREIGN KEY (asignatura_id) REFERENCES asignatura_practica (id),
     CONSTRAINT fk_pauta_version_anterior FOREIGN KEY (version_anterior_id) REFERENCES pauta (id),
     CONSTRAINT ck_pauta_version CHECK (version >= 1 AND ((version = 1) = (version_anterior_id IS NULL))),
@@ -353,6 +358,7 @@ CREATE TABLE evaluacion (
     estado                 VARCHAR(12)  NOT NULL DEFAULT 'BORRADOR' COMMENT 'BORRADOR, FINALIZADA',
     puntaje_total          INT          NULL COMMENT 'Calculado al finalizar',
     promedio               DECIMAL(4,2) NULL COMMENT 'Calculado al finalizar',
+    nota                   DECIMAL(3,1) NULL COMMENT 'Nota 1,0 a 7,0 al 60 % de exigencia, calculada al finalizar (HU-09, migración 015, S-81)',
     fecha_finalizacion     DATETIME     NULL,
     CONSTRAINT pk_evaluacion PRIMARY KEY (id),
     CONSTRAINT fk_evaluacion_inscripcion   FOREIGN KEY (inscripcion_id)   REFERENCES inscripcion (id),
@@ -366,6 +372,10 @@ CREATE TABLE evaluacion (
     CONSTRAINT ck_evaluacion_finalizada CHECK (
         (estado = 'BORRADOR'   AND puntaje_total IS NULL AND promedio IS NULL AND fecha_finalizacion IS NULL)
      OR (estado = 'FINALIZADA' AND puntaje_total IS NOT NULL AND promedio IS NOT NULL AND fecha_finalizacion IS NOT NULL)),
+    -- HU-09: la nota se guarda al finalizar y no cambia aunque la pauta tenga después una versión nueva (S-81)
+    CONSTRAINT ck_evaluacion_nota CHECK (
+        (estado = 'BORRADOR'   AND nota IS NULL)
+     OR (estado = 'FINALIZADA' AND nota IS NOT NULL AND nota BETWEEN 1.0 AND 7.0)),
     -- Historial del estudiante (HU-05) y bandeja del evaluador (borradores propios)
     INDEX ix_evaluacion_inscripcion_fecha (inscripcion_id, fecha_clase),
     INDEX ix_evaluacion_evaluador_estado  (evaluador_id, estado)
@@ -531,6 +541,47 @@ CREATE TABLE parametro_sistema (
     CONSTRAINT fk_parametro_editado_por FOREIGN KEY (editado_por) REFERENCES usuario (id),
     CONSTRAINT ck_parametro_rango CHECK (minimo <= maximo AND valor BETWEEN minimo AND maximo)
 ) ENGINE = InnoDB COMMENT = 'Reglas operativas editables por el coordinador (HU-27)';
+
+-- =============================================================================
+-- Estructura evaluativa y nota final                         (HU-09, migración 015)
+-- =============================================================================
+
+-- Componentes de la nota final de una asignatura. PAUTA: la nota sale de las evaluaciones finalizadas con esa
+-- pauta (y sus versiones anteriores), promediadas. EXTERNO: la escribe el profesor del curso (productos, informe
+-- final, TANEP: los califica otro docente fuera del sistema). Los porcentajes de una asignatura suman 100: lo
+-- comprueba la aplicación, porque una CHECK no mira otras filas.
+CREATE TABLE componente_evaluativo (
+    id             INT          NOT NULL AUTO_INCREMENT,
+    asignatura_id  INT          NOT NULL,
+    tipo           VARCHAR(10)  NOT NULL COMMENT 'PAUTA o EXTERNO',
+    nombre         VARCHAR(150) NOT NULL,
+    pauta_id       INT          NULL     COMMENT 'Solo en los de tipo PAUTA: la versión vigente de la pauta',
+    porcentaje     INT          NOT NULL COMMENT 'Peso en la nota final; los de una asignatura suman 100',
+    orden          INT          NOT NULL,
+    CONSTRAINT pk_componente_evaluativo PRIMARY KEY (id),
+    CONSTRAINT uq_componente_asignatura_pauta UNIQUE (asignatura_id, pauta_id),
+    CONSTRAINT fk_componente_asignatura FOREIGN KEY (asignatura_id) REFERENCES asignatura_practica (id),
+    -- Compuesta: la pauta debe ser de la misma asignatura que el componente
+    CONSTRAINT fk_componente_pauta FOREIGN KEY (pauta_id, asignatura_id) REFERENCES pauta (id, asignatura_id),
+    CONSTRAINT ck_componente_tipo CHECK (tipo IN ('PAUTA', 'EXTERNO')),
+    CONSTRAINT ck_componente_pauta CHECK ((tipo = 'PAUTA') = (pauta_id IS NOT NULL)),
+    CONSTRAINT ck_componente_porcentaje CHECK (porcentaje BETWEEN 1 AND 100)
+) ENGINE = InnoDB COMMENT = 'Estructura evaluativa de una asignatura: componentes y su peso (HU-09)';
+
+CREATE TABLE nota_componente_externo (
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    inscripcion_id  BIGINT       NOT NULL,
+    componente_id   INT          NOT NULL,
+    nota            DECIMAL(3,1) NOT NULL,
+    registrada_por  BIGINT       NOT NULL COMMENT 'Profesor del curso o coordinador que la escribió',
+    fecha_registro  DATETIME     NOT NULL,
+    CONSTRAINT pk_nota_componente_externo PRIMARY KEY (id),
+    CONSTRAINT uq_nota_externa_inscripcion_componente UNIQUE (inscripcion_id, componente_id),
+    CONSTRAINT fk_nota_externa_inscripcion FOREIGN KEY (inscripcion_id) REFERENCES inscripcion (id),
+    CONSTRAINT fk_nota_externa_componente FOREIGN KEY (componente_id) REFERENCES componente_evaluativo (id),
+    CONSTRAINT fk_nota_externa_usuario FOREIGN KEY (registrada_por) REFERENCES usuario (id),
+    CONSTRAINT ck_nota_externa_rango CHECK (nota BETWEEN 1.0 AND 7.0)
+) ENGINE = InnoDB COMMENT = 'Nota de un componente externo para una inscripción (HU-09)';
 
 -- HU-17 (migración 008): una sola fila con las instrucciones que calibra el coordinador. Sin fila, la aplicación usa
 -- el texto base de RetroPlani Mate (backend/src/main/resources/chatbot/instrucciones-base.txt).

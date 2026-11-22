@@ -22,6 +22,7 @@ const VISTAS = {
   informes: () => import('./vistas/informes.js'),
   panel: () => import('./vistas/panel.js'),
   parametros: () => import('./vistas/parametros.js'),
+  notas: () => import('./vistas/notas.js'),
   pautas: () => import('./vistas/pautas.js'),
   chatbot: () => import('./vistas/chatbot.js'),
   'estilo-asistente': () => import('./vistas/estilo-asistente.js'),

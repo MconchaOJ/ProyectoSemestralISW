@@ -92,6 +92,7 @@ class HU03EvaluacionIntegracionTest extends IntegracionBase {
         assertThat(fin.get("puntajeTotal").asInt()).isEqualTo(100);      // 20 indicadores x 5
         assertThat(fin.get("puntajeMaximo").asInt()).isEqualTo(140);     // 20 x 7
         assertThat(fin.get("promedio").asDouble()).isEqualTo(5.0);
+        assertThat(fin.get("nota").asDouble()).isEqualTo(4.9);           // HU-09, S-81: 100 de 140 al 60 %
         sincronizar();   // el CHECK ck_evaluacion_finalizada exige total, promedio y fecha
 
         // congelada: ni puntajes ni cabecera ni volver a finalizar

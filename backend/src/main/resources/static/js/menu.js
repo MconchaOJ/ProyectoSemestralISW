@@ -22,6 +22,8 @@ export const FUNCIONES = [
   { ruta: 'panel', icono: 'layers', nombre: 'Panel de monitoreo', roles: ['COORDINADOR', JEFE] },
   // HU-08: informe por asignatura y período (el coordinador y el jefe de carrera ven toda la carrera)
   { ruta: 'informes', icono: 'chart', nombre: 'Informes por asignatura', roles: ['COORDINADOR', JEFE] },
+  // HU-09: estructura evaluativa y nota final (la edita el profesor del curso o el coordinador; el jefe de carrera lee)
+  { ruta: 'notas', icono: 'award', nombre: 'Notas finales', roles: ['COORDINADOR', JEFE, 'PROFESOR_CURSO'] },
   { ruta: 'cuenta', icono: 'shield', nombre: 'Mi cuenta', roles: LECTURA },
   {
     ruta: 'estudiantes', alias: ['profesores', 'inscripciones'], icono: 'users',
@@ -80,6 +82,7 @@ export const ACCESOS = {
     { icono: 'sliders', titulo: 'Configuración del asistente', texto: 'Estilo, base de conocimiento y validación.', hash: '#/estilo-asistente' },
     { icono: 'key', titulo: 'Parámetros del sistema', texto: 'Anticipación, umbral del panel y tamaños de archivo.', hash: '#/parametros' },
     { icono: 'chart', titulo: 'Informe de una asignatura', texto: 'Promedios y distribución por período, en PDF.', hash: '#/informes' },
+    { icono: 'award', titulo: 'Notas finales', texto: 'Estructura evaluativa y nota de cada estudiante.', hash: '#/notas' },
   ],
   PROFESOR_GUIA: [
     { icono: 'file', titulo: 'Planificaciones por revisar', texto: 'Aprueba u observa antes de la clase.', hash: '#/planificaciones?estado=EN_REVISION_GUIA', pendiente: { ruta: '/api/planificaciones', params: { estado: 'EN_REVISION_GUIA' } } },
@@ -89,6 +92,7 @@ export const ACCESOS = {
   PROFESOR_CURSO: [
     { icono: 'file', titulo: 'Planificaciones por autorizar', texto: 'Segunda etapa del flujo.', hash: '#/planificaciones?estado=EN_AUTORIZACION', pendiente: { ruta: '/api/planificaciones', params: { estado: 'EN_AUTORIZACION' } } },
     { icono: 'users', titulo: 'Mis inscripciones', texto: 'Estudiantes a tu cargo.', hash: '#/inscripciones' },
+    { icono: 'award', titulo: 'Notas finales', texto: 'Estructura evaluativa y notas externas (productos, TANEP).', hash: '#/notas' },
     { icono: 'clock', titulo: 'Historial de mis estudiantes', texto: 'Recorrido completo.', hash: '#/historial' },
   ],
   ESTUDIANTE: [

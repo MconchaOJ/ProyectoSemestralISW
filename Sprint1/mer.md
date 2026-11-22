@@ -184,6 +184,11 @@ erDiagram
     ASIGNATURA_PRACTICA ||--o{ GRUPO_PRACTICA : "agrupa en duplas o grupos"
     GRUPO_PRACTICA |o--o{ INSCRIPCION : "integra (HU-10)"
     USUARIO |o--o{ PARAMETRO_SISTEMA : "edita (HU-27)"
+    ASIGNATURA_PRACTICA ||--o{ COMPONENTE_EVALUATIVO : "estructura evaluativa (HU-09)"
+    PAUTA |o--o| COMPONENTE_EVALUATIVO : "da la nota de (tipo PAUTA)"
+    COMPONENTE_EVALUATIVO ||--o{ NOTA_COMPONENTE_EXTERNO : "nota escrita (tipo EXTERNO)"
+    INSCRIPCION ||--o{ NOTA_COMPONENTE_EXTERNO : "recibe"
+    USUARIO ||--o{ NOTA_COMPONENTE_EXTERNO : "registra"
     ASIGNATURA_PRACTICA ||--o{ PAUTA : "define"
     PAUTA ||--|{ DIMENSION_PAUTA : "se compone de"
     DIMENSION_PAUTA ||--|{ INDICADOR : "agrupa"
@@ -271,6 +276,23 @@ erDiagram
         bigint editado_por FK "nulo = valor inicial"
         datetime fecha_edicion
     }
+    COMPONENTE_EVALUATIVO {
+        int id PK "HU-09, migracion 015"
+        int asignatura_id FK
+        varchar tipo "PAUTA o EXTERNO"
+        varchar nombre
+        int pauta_id FK "solo en PAUTA; FK compuesta con asignatura_id"
+        int porcentaje "1 a 100; los de una asignatura suman 100 (app)"
+        int orden
+    }
+    NOTA_COMPONENTE_EXTERNO {
+        bigint id PK "HU-09, migracion 015"
+        bigint inscripcion_id FK "UNIQUE con componente_id"
+        int componente_id FK
+        decimal nota "1,0 a 7,0"
+        bigint registrada_por FK
+        datetime fecha_registro
+    }
     GRUPO_PRACTICA {
         bigint id PK
         int asignatura_id FK
@@ -321,6 +343,7 @@ erDiagram
         varchar estado "BORRADOR, FINALIZADA"
         int puntaje_total "calculado al finalizar"
         decimal promedio "calculado al finalizar"
+        decimal nota "1,0 a 7,0 al 60 % de exigencia, al finalizar (HU-09, S-81)"
         datetime fecha_finalizacion
     }
     RESPUESTA_INDICADOR {

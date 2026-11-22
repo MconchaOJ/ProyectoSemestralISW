@@ -144,7 +144,10 @@ public class EvaluacionService {
         return EvaluacionDto.desde(evaluaciones.save(e));
     }
 
-    /** Criterio 5: exige los indicadores de la pauta puntuados, calcula total y promedio y congela la evaluación. */
+    /**
+     * Criterio 5: exige los indicadores de la pauta puntuados, calcula total, promedio y nota (HU-09: 1,0 a 7,0 al 60 %
+     * de exigencia sobre el puntaje máximo, S-81) y congela la evaluación.
+     */
     @Transactional
     public EvaluacionDto finalizar(Long id, UsuarioAutenticado actor) {
         Evaluacion e = obtenerPropia(id, actor);
@@ -158,7 +161,8 @@ public class EvaluacionService {
         }
         int total = e.getRespuestas().stream().mapToInt(RespuestaIndicador::getPuntaje).sum();
         BigDecimal promedio = BigDecimal.valueOf(total).divide(BigDecimal.valueOf(indicadores.size()), 2, RoundingMode.HALF_UP);
-        e.finalizar(total, promedio, LocalDateTime.now());
+        BigDecimal nota = EscalaNotas.nota(total, indicadores.size() * e.getPauta().getEscalaMax());   // HU-09, S-81
+        e.finalizar(total, promedio, nota, LocalDateTime.now());
         return EvaluacionDto.desde(evaluaciones.save(e));
     }
 

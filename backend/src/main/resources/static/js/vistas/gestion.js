@@ -390,15 +390,33 @@ async function asignarTutor(inscripcion, alTerminar) {
   });
 }
 
-function cerrarInscripcion(inscripcion, alTerminar) {
+// HU-09: la nota que propone la estructura evaluativa (o la parcial, si faltan componentes); el coordinador la confirma.
+async function cerrarInscripcion(inscripcion, alTerminar) {
   if (!inscripcion) return;
+  let calculada = null;
+  try {
+    calculada = await api.get(`/api/inscripciones/${inscripcion.id}/nota-final`);
+  } catch (e) {
+    if (e.status === 401) return;
+  }
+  let aviso = '';
+  if (calculada?.completa) {
+    aviso = alerta('info', html`Nota propuesta por la estructura evaluativa: <strong>${nota(calculada.notaPropuesta)}</strong>. Confírmala o ajústala.`);
+  } else if (calculada?.tieneEstructura) {
+    aviso = alerta('aviso', calculada.notaParcial == null
+      ? 'Ningún componente de la estructura evaluativa tiene nota todavía: escribe la nota a mano.'
+      : html`Faltan notas: la parcial es <strong>${nota(calculada.notaParcial)}</strong> con el ${calculada.porcentajeEvaluado} % evaluado. Revisa «Notas finales» antes de cerrar.`);
+  } else if (calculada) {
+    aviso = alerta('info', 'Esta práctica no tiene estructura evaluativa: escribe la nota a mano.');
+  }
   modalFormulario({
     titulo: 'Cerrar inscripción', chico: true, textoOk: 'Cerrar inscripción', textoCarga: 'Cerrando…',
-    introduccion: html`<p><strong>${inscripcion.estudiante.nombreCompleto}</strong><br>${inscripcion.asignatura.nombre} · ${inscripcion.periodo}</p>`,
+    introduccion: html`<p><strong>${inscripcion.estudiante.nombreCompleto}</strong><br>${inscripcion.asignatura.nombre} · ${inscripcion.periodo}</p>${aviso}`,
     campos: [
       campo({ nombre: 'estado', etiqueta: 'Resultado', tipo: 'select', requerido: true, completo: true,
         opciones: [{ valor: 'APROBADA', texto: 'Aprobada' }, { valor: 'REPROBADA', texto: 'Reprobada' }] }),
       campo({ nombre: 'notaFinal', etiqueta: 'Nota final', tipo: 'number', requerido: true, completo: true, ayuda: 'Entre 1,0 y 7,0 con un decimal (usa punto: 5.8).',
+        valor: calculada?.notaPropuesta ?? '',
         atributos: { min: 1, max: 7, step: 0.1 } }),
     ],
     alEnviar: (datos) => api.put(`/api/inscripciones/${inscripcion.id}/cierre`, datos),

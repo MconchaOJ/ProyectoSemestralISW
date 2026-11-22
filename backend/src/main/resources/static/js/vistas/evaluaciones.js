@@ -8,7 +8,7 @@ import { montarDocumentos } from '../documentos.js';
 import { montarNotaVoz } from '../notaVoz.js';
 import {
   alerta, alertaError, badge, cabecera, campo, cargando, cajaAlertaForm, confirmar, conCarga, decimal,
-  enlazarFormulario, fecha, fechaHora, hora, html, icono, modalFormulario, promedio, toast, vacio,
+  enlazarFormulario, fecha, fechaHora, hora, html, icono, modalFormulario, nota, promedio, toast, vacio,
 } from '../ui.js';
 
 /** HU-07: evalúa el guía (pautas de COLABORADOR) o el tutor (pautas de TUTOR), cada uno en sus inscripciones. */
@@ -73,7 +73,7 @@ async function lista(cont, ctx) {
       zona.innerHTML = datos.length === 0
         ? vacio('No hay evaluaciones para mostrar', esGuia ? 'Crea la primera con "Nueva evaluación".' : 'Cuando un profesor guía finalice una evaluación, la verás aquí.', 'check').toString()
         : html`<div class="tabla-contenedor"><table class="tabla">
-            <thead><tr><th>Estudiante</th><th>Práctica</th><th>Fecha de la clase</th><th>Establecimiento</th><th>Estado</th><th class="num">Puntaje</th><th class="num">Promedio</th><th></th></tr></thead>
+            <thead><tr><th>Estudiante</th><th>Práctica</th><th>Fecha de la clase</th><th>Establecimiento</th><th>Estado</th><th class="num">Puntaje</th><th class="num">Promedio</th><th class="num">Nota</th><th></th></tr></thead>
             <tbody>${datos.map((e) => {
               const insc = porId.get(e.inscripcionId);
               return html`<tr>
@@ -84,6 +84,7 @@ async function lista(cont, ctx) {
                 <td>${badge(e.estado)}</td>
                 <td class="num">${e.puntajeTotal ?? '—'}</td>
                 <td class="num"><strong>${promedio(e.promedio)}</strong></td>
+                <td class="num">${nota(e.nota)}</td>
                 <td class="acciones"><a class="btn btn-chico" href="#/evaluaciones/${e.id}">${e.estado === 'BORRADOR' && evaluaEn(ctx, insc) ? 'Continuar' : 'Ver'}</a></td>
               </tr>`;
             })}</tbody></table></div>
@@ -271,6 +272,7 @@ async function detalle(cont, ctx, id) {
       <div class="resultado-cifra"><span class="cifra">${promedio(ev.promedio)}</span><span class="cifra-etiqueta">promedio (escala ${pauta.escalaMin} a ${pauta.escalaMax})</span></div>
       <div class="resultado-detalle">
         <p><strong>${ev.puntajeTotal}</strong> de ${ev.puntajeMaximo} puntos posibles · ${ev.indicadoresRespondidos} de ${ev.indicadoresTotales} indicadores</p>
+        <p>Nota <strong>${nota(ev.nota)}</strong> <small>(escala de 1,0 a 7,0 con 60 % de exigencia: el 4,0 está en ${Math.round(ev.puntajeMaximo * 0.6 * 10) / 10} puntos)</small></p>
         <div class="barra-prom" role="img" aria-label="Promedio ${promedio(ev.promedio)} de ${pauta.escalaMax}"><span style="width:${pct}%"></span></div>
         <p class="subtitulo">Finalizada el ${fechaHora(ev.fechaFinalizacion)}. Ya no se puede modificar.</p>
       </div>
@@ -398,7 +400,7 @@ async function detalle(cont, ctx, id) {
           await guardar();
           ev = await api.post(`/api/evaluaciones/${ev.id}/finalizar`);
         });
-        toast(`Evaluación finalizada. Promedio ${promedio(ev.promedio)}.`);
+        toast(`Evaluación finalizada. Promedio ${promedio(ev.promedio)}, nota ${nota(ev.nota)}.`);
         ev.respuestas.forEach((r) => respondidas.set(r.indicadorId, r));
         pintar();
         cont.closest('.principal')?.scrollTo({ top: 0, behavior: 'smooth' });

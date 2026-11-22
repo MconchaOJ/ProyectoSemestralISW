@@ -11,17 +11,19 @@
 SELECT CONCAT('Conectado como ', CURRENT_USER(), ' a la base ', DATABASE(), ' (MySQL ', VERSION(), ')') AS conexion;
 
 -- -----------------------------------------------------------------------------
-SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 24)' AS verificacion;
+SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 26)' AS verificacion;
 SELECT COUNT(*) AS tablas
   FROM information_schema.tables
  WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
-SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, parametro_sistema 4, grupo_practica 2, inscripcion 55 (6 en un grupo), pauta 13, dimension 57, indicador 269, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat_jefe_carrera 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0)' AS verificacion;
+SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, parametro_sistema 4, componente_evaluativo 8, nota_componente_externo 2, grupo_practica 2, inscripcion 55 (6 en un grupo), pauta 13, dimension 57, indicador 269, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat_jefe_carrera 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0)' AS verificacion;
 SELECT 'rol' AS tabla, COUNT(*) AS filas FROM rol
 UNION ALL SELECT 'usuario',                COUNT(*) FROM usuario
 UNION ALL SELECT 'estudiante',             COUNT(*) FROM estudiante
 UNION ALL SELECT 'asignatura_practica',    COUNT(*) FROM asignatura_practica
 UNION ALL SELECT 'parametro_sistema',      COUNT(*) FROM parametro_sistema
+UNION ALL SELECT 'componente_evaluativo',  COUNT(*) FROM componente_evaluativo
+UNION ALL SELECT 'nota_componente_externo', COUNT(*) FROM nota_componente_externo
 UNION ALL SELECT 'grupo_practica',         COUNT(*) FROM grupo_practica
 UNION ALL SELECT 'inscripcion',            COUNT(*) FROM inscripcion
 UNION ALL SELECT 'pauta',                  COUNT(*) FROM pauta
@@ -42,7 +44,7 @@ UNION ALL SELECT 'respuesta_sus',               COUNT(*) FROM respuesta_sus
 UNION ALL SELECT 'respuesta_rubrica_experto',   COUNT(*) FROM respuesta_rubrica_experto
 UNION ALL SELECT 'respuesta_rubrica_criterio',  COUNT(*) FROM respuesta_rubrica_criterio;
 
-SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 22, FOREIGN KEY 35, UNIQUE 18, CHECK 47)' AS verificacion;
+SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 26, FOREIGN KEY 43, UNIQUE 22, CHECK 56)' AS verificacion;
 SELECT constraint_type AS tipo, COUNT(*) AS cantidad
   FROM information_schema.table_constraints
  WHERE table_schema = DATABASE()
@@ -176,7 +178,26 @@ SELECT 'Revisión de un guía o profesor del curso que ya no lo es, salvo la his
   JOIN inscripcion i ON i.id = p.inscripcion_id
  WHERE ((r.etapa = 'GUIA'  AND r.revisor_id <> i.profesor_guia_id)
      OR (r.etapa = 'CURSO' AND r.revisor_id <> i.profesor_curso_id))
-   AND i.id <> 40;
+   AND i.id <> 40
+UNION ALL
+SELECT 'Estructura evaluativa (HU-09) cuyos porcentajes no suman 100', COUNT(*)
+  FROM (SELECT asignatura_id FROM componente_evaluativo GROUP BY asignatura_id HAVING SUM(porcentaje) <> 100) x
+UNION ALL
+SELECT 'Nota externa (HU-09) de un componente de PAUTA o de otra asignatura que la inscripción', COUNT(*)
+  FROM nota_componente_externo n
+  JOIN componente_evaluativo c ON c.id = n.componente_id
+  JOIN inscripcion i ON i.id = n.inscripcion_id
+ WHERE c.tipo <> 'EXTERNO' OR c.asignatura_id <> i.asignatura_id
+UNION ALL
+SELECT 'Evaluación FINALIZADA (HU-09) cuya nota no es la del 60 % de exigencia', COUNT(*)
+  FROM evaluacion e
+  JOIN pauta p ON p.id = e.pauta_id
+  JOIN (SELECT d.pauta_id, COUNT(*) AS n FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id
+         GROUP BY d.pauta_id) c ON c.pauta_id = e.pauta_id
+ WHERE e.estado = 'FINALIZADA'
+   AND ABS(e.nota - IF(e.puntaje_total < 0.6 * c.n * p.escala_max,
+                       1 + 3 * e.puntaje_total / (0.6 * c.n * p.escala_max),
+                       4 + 3 * (e.puntaje_total - 0.6 * c.n * p.escala_max) / (0.4 * c.n * p.escala_max))) > 0.05;
 
 -- -----------------------------------------------------------------------------
 SELECT '8. HU-05 HISTORIAL: recorrido de Sebastián Vargas (RUT 44444444-4). Esperado: 6 inscripciones en orden cronológico, las 5 primeras APROBADA y la última EN_CURSO' AS verificacion;
