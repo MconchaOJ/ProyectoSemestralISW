@@ -261,6 +261,8 @@ async function detalle(cont, ctx, id) {
     montarDocumentos(cont.querySelector('#documentos'), {
       base: `/api/evaluaciones/${ev.id}/documentos`,
       puedeSubir: esAutor(),
+      // HU-22 (S-82): el evaluador reemplaza o borra, también finalizada, mientras la inscripción siga en curso
+      puedeModificar: esAutor() && api.get(`/api/inscripciones/${ev.inscripcionId}`).then((i) => i.estado === 'EN_CURSO'),
       tiposAceptados: '.docx,.xlsx,.pdf',
       ayuda: 'Word (.docx), Excel (.xlsx) o PDF, máximo 10 MB: la pauta y evaluación formal.',
     });

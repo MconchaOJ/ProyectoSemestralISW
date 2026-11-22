@@ -38,7 +38,7 @@ public class DocumentoEvaluacion {
     @JoinColumn(name = "subido_por")
     private Usuario subidoPor;
 
-    @Column(name = "fecha_subida", nullable = false, updatable = false)
+    @Column(name = "fecha_subida", nullable = false)   // cambia al reemplazar el archivo (HU-21/HU-22)
     private LocalDateTime fechaSubida;
 
     @PrePersist

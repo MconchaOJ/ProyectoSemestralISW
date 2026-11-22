@@ -57,8 +57,8 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-17 | Calibrar el estilo del chatbot con el coordinador | Chatbot | Media | por estimar | **2** (adelantada) | **Completa (26-oct):** pantalla "Configuración del asistente" (solo coordinador) que edita un texto único en la base (migración 008), con el texto base de RetroPlani Mate V3 adaptado (S-65); probada con el modelo real de Groq: el chatbot cambia de estilo desde el siguiente mensaje. Rige también en conversaciones en curso y no guarda versiones (S-68) |
 | HU-20 | El jefe de carrera consulta los chats | Chatbot | Media | por estimar | **2** (adelantada) | **Completa (26-oct):** el jefe de carrera lee en solo lectura todos los chats de Práctica Pedagógica y Profesional, con lista filtrable; el estudiante ve en su chat que el jefe puede leer y cuándo lo hizo por última vez (criterio 3), y cada lectura queda en la base (`lectura_chat_jefe_carrera`, migración 010, criterio 4). Sigue siendo SUPUESTO S-66, a confirmar con el cliente |
 | HU-18 | Registrar informes y productos de la práctica | Documentos | Baja | por estimar | 5 o más | Pendiente |
-| HU-21 | Adjuntar documentos a la planificación | Documentos | Media | 3 | **1** | **Construida y probada (22-sep, Fase E)** |
-| HU-22 | Adjuntar el documento formal de la evaluación | Documentos | Media | 3 | **1** | **Construida y probada (22-sep, Fase E)** |
+| HU-21 | Adjuntar documentos a la planificación | Documentos | Media | 3 | **1** | **Construida y probada (22-sep, Fase E); borrar y reemplazar el 22-nov** |
+| HU-22 | Adjuntar el documento formal de la evaluación | Documentos | Media | 3 | **1** | **Construida y probada (22-sep, Fase E); borrar y reemplazar el 22-nov** |
 | HU-23 | Buscar estudiante por nombre, RUT o correo | Monitoreo | Media | 2 | **1** | **Construida y probada (22-sep, Fase E)** |
 | HU-24 | Accesos rápidos dentro del menú | Interfaz | Baja | 1 | **1** | **Construida (22-sep, Fase E)** |
 | HU-25 | Gestión de archivos de pautas formales | Evaluación | Baja | por estimar | 2 o más | Pendiente |
