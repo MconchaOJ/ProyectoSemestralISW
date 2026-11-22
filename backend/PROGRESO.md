@@ -1545,3 +1545,41 @@ Fuente: "Estructura evaluativa de la Práctica Pedagógica" (`Documents/Práctic
 - **Front-end** (`documentos.js`): opción `puedeModificar` con los botones «Reemplazar» (elige el archivo y lo envía con PUT) y «Borrar» (con el modal de confirmación del sistema). En la planificación, el formulario de subida y los botones aparecen solo en borrador o con observaciones; en la evaluación, solo al evaluador y con la inscripción en curso.
 - **Pruebas:** **332, 0 fallos** (11 nuevas: `HU21BorrarDocumentosIntegracionTest` 7 y `AlmacenamientoArchivosServiceTest` 4, que simula el commit y el rollback para comprobar qué archivo queda en el disco). Ajustadas: `DocumentosAdjuntosIntegracionTest` sube a la planificación 4 (con observaciones) en vez de la 3 (autorizada) y `HU15ChatbotIntegracionTest` deja la planificación 8 en borrador antes de subirle documentos.
 - **Navegador** (Chrome): Camila sube un PDF a la planificación 4, lo reemplaza (mismo documento, nombre nuevo, aviso) y lo borra con confirmación; en el disco no queda ninguno de los dos archivos. En la planificación 3 (autorizada) no ve el formulario. El guía ve «Reemplazar» y «Borrar» en la evaluación 4 (inscripción en curso) y no en la 1 (inscripción aprobada). Sin errores de JavaScript.
+
+
+## Sprint 2: integración del trabajo de Alej (`origin/main`, commit 7e9b132, 28-oct) y corrección de la escala (2026-11-22, rama `integracion/origin-main`)
+
+Alej hizo HU-08, HU-09, HU-10, HU-14 y HU-28 en paralelo, desde `0d76e5e` (fusión del chatbot, 26-oct). En `main` esas historias ya estaban hechas de otra forma, sobre 13 commits más (pautas reales de HU-07, S-45, HU-11, HU-27, HU-09 con pautas, borrado de documentos). Decisión del usuario: **`main` queda como base** y se hace una **fusión real** con `origin/main` (sin force-push, para que el trabajo de Alej quede en el historial), resolviendo cada conflicto a mano y trayendo lo mejor de su versión.
+
+**Cómo se resolvió (31 archivos en conflicto):** todos con la versión de `main`; luego se portó a mano lo que se trae. Se integró sin cambios lo que no chocaba: `Dockerfile` y `docker-compose.yml` (imágenes con nombre completo `docker.io/library/...`), `LibroXlsx` y `LibroXlsxTest`, el CSS de las cifras del panel.
+
+| Historia | Qué se trajo de Alej | Qué se descartó (y por qué) |
+|---|---|---|
+| HU-08 | **Excel** con su `LibroXlsx` (sin librerías nuevas): `GET /api/reportes/asignatura/xlsx` y el **informe por estudiante** como `GET /api/estudiantes/{id\|me}/historial/xlsx`, con nuestras rutas y las **reglas de acceso del historial** (no solo coordinador y jefe). Hojas armadas con nuestros DTO en `InformesXlsx`. Botón «Descargar Excel» en «Informes» y en el historial | `InformeService`, `InformeController` y `SintesisInscripcion` (duplicaban `InformeAsignaturaService`); su distribución por % del puntaje (S-87) |
+| HU-28 | Su prueba `HU28HistorialPdfIntegracionTest` (5), con los textos de nuestro PDF | — (mismas rutas que las nuestras) |
+| HU-14 | Dentro de **nuestro** `GET /api/reportes/panel` (con el umbral de HU-27): `pendientes` (todas las que esperan, también las devueltas al estudiante, con a quién y hace cuántos días; `requiereAtencion` si pasa el umbral), `avance` por estudiante, y por fila devueltas, autorizadas, borradores y promedio. Su regla: **las planificaciones de prácticas cerradas no son pendientes** (la 18, de la inscripción 48 aprobada, ya no aparece; se ajustó `HU14PanelIntegracionTest`). 5 pruebas suyas llevadas a `HU14PanelDetalleIntegracionTest` | `PanelController` (`/api/panel`) y su `PanelService`; «sin evaluar solo en asignaturas con pauta» (su S-81): se mantiene «prácticas que van a un colegio» |
+| HU-10 | Sus casos de prueba en `HU10GruposReglasIntegracionTest` (4) sobre `/api/grupos`: modalidad individual, distinta asignatura, tamaño, repetidas, ya en otro grupo, 404 y criterio 2 | `equipo_practica`, `inscripcion.equipo_id`, `/api/equipos` y su migración **013** (nuestra `grupo_practica` tiene clave foránea compuesta) |
+| HU-09 | — | `componente_nota`, `nota_componente`, `inscripcion.nota_calculada`, su migración **012**, `nota-final.js` y `nota-inscripcion.js` (las notas de pauta se escribían a mano) |
+
+Nadie había corrido sus migraciones 012 y 013 sobre una base real (no hay servidor todavía): basta con `bd.ps1`. **Para Alej:** volver a crear su base local con `.\db\bd.ps1`.
+
+**HU-09, decisiones del usuario (2026-11-22), distintas de la versión de Alej:**
+- **Quién define los pesos: el PROFESOR DEL CURSO** (y el coordinador como respaldo), **no solo el coordinador** como en la versión de Alej. El usuario confirmó que así funciona en la realidad (en las orientaciones de Práctica Pedagógica 2026-2, Víctor Parra figura como «Coordinador y Profesor Asignatura»). **Queda como SUPUESTO S-83, a confirmar con el cliente.**
+- **Las notas de pauta se calculan solas** desde las evaluaciones finalizadas (más consistente con el requerimiento «digitalizar la pauta»); en la versión de Alej se escribían a mano.
+- Ambas versiones usan los mismos 8 componentes y porcentajes del documento oficial «Estructura evaluativa de la Práctica Pedagógica».
+
+**Supuestos de Alej renumerados (sus S-76 a S-81 chocaban con los nuestros):**
+
+| Nuevo | Era (Alej) | Qué decía | Estado |
+|---|---|---|---|
+| S-86 | S-76 | El informe por estudiante es el historial (PDF) | **Adoptado**, con las reglas de acceso del historial (no solo coordinador y jefe de carrera) |
+| S-87 | S-77 | Distribución de puntajes por % del puntaje máximo (5 tramos) y notas finales en 4 tramos | No adoptado: nuestro informe usa los tramos de HU-08 |
+| S-88 | S-78 | Escala 1,0 a 7,0; notas de componentes a mano; `nota_calculada` en la inscripción | **Reemplazado** por S-81, S-84 y S-85 |
+| S-89 | S-79 | Dupla = 2, grupo = 2 a 4, solo EN_CURSO y sin otro grupo | Equivale a nuestro S-78 |
+| S-90 | S-80 | El guía compartido sigue en cada inscripción y debe ser el mismo | Equivale a nuestro S-78 |
+| S-91 | S-81 | Panel: pendientes solo en inscripciones EN_CURSO; sin evaluar solo en asignaturas con pauta | **Adoptada la primera parte** (pendientes); la segunda no |
+
+**Corrección de la escala (S-81 ajustado):** la pauta impresa de Práctica Profesional trae su escala (captura de escaladenotas.cl): **nota mínima 2,0**, aprobación 4,0, exigencia 60 %, máximo 133. Antes se partía siempre de 1,0, así que bajo el 4,0 la nota salía más baja (40 de 133: 2,5 en vez de 3,0). Ahora la nota mínima es la **escala mínima de cada pauta** (2,0 en las de Práctica Pedagógica y Profesional, 1,0 en la de observación de clase), acotada entre 1,0 y 3,0 (`EscalaNotas.notaMinima`). Sobre el 4,0 no cambia nada. **Migración `016`** (solo datos): recalcula `evaluacion.nota` de las finalizadas; `seed.sql` y el control de `verificacion.sql` usan la misma fórmula. Las 9 evaluaciones finalizadas del seed usan la pauta 1 (mínimo 1,0): no cambian.
+
+- **Pruebas: 356, 0 fallos** (24 más: `EscalaNotasTest` +2, `HU08InformesExcelIntegracionTest` 4, `HU10GruposReglasIntegracionTest` 4, `HU14PanelDetalleIntegracionTest` 5, `HU28HistorialPdfIntegracionTest` 5 y `LibroXlsxTest` 4, de Alej). `bd.ps1` 40/40; la 016 corrida sobre la base de demo cambia 0 filas. **16 migraciones, 26 tablas.**
+- **Navegador** (Chrome): el panel muestra las pendientes con a quién esperan y los días, el avance por estudiante y las columnas nuevas; «Informes» y el historial tienen «Descargar Excel» (los .xlsx se generan con el tipo correcto); «Notas finales» sigue igual; el tutor evalúa a Sebastián con la pauta 3 (escala 2 a 7) con 2 en todo: 38 de 133 = **nota 3,0**, como la tabla oficial. Sin errores de JavaScript.

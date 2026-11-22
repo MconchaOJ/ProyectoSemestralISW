@@ -343,7 +343,7 @@ erDiagram
         varchar estado "BORRADOR, FINALIZADA"
         int puntaje_total "calculado al finalizar"
         decimal promedio "calculado al finalizar"
-        decimal nota "1,0 a 7,0 al 60 % de exigencia, al finalizar (HU-09, S-81)"
+        decimal nota "60 % de exigencia desde la nota minima de la pauta, al finalizar (HU-09, S-81, migraciones 015 y 016)"
         datetime fecha_finalizacion
     }
     RESPUESTA_INDICADOR {

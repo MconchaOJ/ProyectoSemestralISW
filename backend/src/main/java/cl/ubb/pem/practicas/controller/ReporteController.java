@@ -4,6 +4,7 @@ import cl.ubb.pem.practicas.dto.InformeAsignaturaDto;
 import cl.ubb.pem.practicas.dto.PanelDto;
 import cl.ubb.pem.practicas.service.CartolaPracticasService;
 import cl.ubb.pem.practicas.service.InformeAsignaturaService;
+import cl.ubb.pem.practicas.service.InformesXlsx;
 import cl.ubb.pem.practicas.service.PanelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,7 +32,11 @@ public class ReporteController {
     private final InformeAsignaturaService informes;
     private final PanelService panel;
 
-    public ReporteController(CartolaPracticasService cartola, InformeAsignaturaService informes, PanelService panel) {
+    private final InformesXlsx xlsx;
+
+    public ReporteController(CartolaPracticasService cartola, InformeAsignaturaService informes, PanelService panel,
+                             InformesXlsx xlsx) {
+        this.xlsx = xlsx;
         this.cartola = cartola;
         this.informes = informes;
         this.panel = panel;
@@ -72,6 +77,16 @@ public class ReporteController {
                     content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)))
     public ResponseEntity<byte[]> informeAsignaturaPdf(@RequestParam Integer asignaturaId, @RequestParam String periodo) {
         return Descargas.pdf(informes.pdf(asignaturaId, periodo), "informe-asignatura-" + asignaturaId + "_" + periodo + ".pdf");
+    }
+
+    @GetMapping("/asignatura/xlsx")
+    @PreAuthorize("hasAnyRole('COORDINADOR', 'JEFE_CARRERA')")
+    @Operation(summary = "Informe de una asignatura en un período, en Excel (HU-08)",
+            description = "Lo mismo que GET /api/reportes/asignatura, como libro .xlsx (hojas Resumen, Distribución, Pautas "
+                    + "y Estudiantes). Mismos roles y errores. Integrado del trabajo de Alej (LibroXlsx, sin librerías nuevas).")
+    public ResponseEntity<byte[]> informeAsignaturaXlsx(@RequestParam Integer asignaturaId, @RequestParam String periodo) {
+        return Descargas.xlsx(xlsx.asignatura(informes.informe(asignaturaId, periodo)),
+                "informe-asignatura-" + asignaturaId + "_" + periodo + ".xlsx");
     }
 
     // Sin "produces = application/pdf" a propósito: así los errores (400, 403) siguen saliendo en JSON.

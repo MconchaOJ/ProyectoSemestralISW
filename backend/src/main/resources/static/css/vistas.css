@@ -257,3 +257,10 @@ dl.cifras dd { margin: .1em 0 0; font-size: 1.3rem; font-weight: 800; color: var
 .validacion-detalle { margin: .6rem 0; padding: .5rem .8rem; border: 1px solid var(--borde); border-radius: var(--radio); }
 .validacion-detalle summary { cursor: pointer; font-weight: 600; }
 #form-rubrica label, #form-rubrica textarea { display: block; width: 100%; }
+
+/* HU-14 · Panel de monitoreo: cifras del filtro en mosaico */
+.cifras-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; margin-bottom: 1rem; }
+.cifra-panel { background: var(--blanco); border: 1px solid var(--borde); border-radius: var(--radio-grande); box-shadow: var(--sombra-sm); padding: .9rem 1rem; }
+.cifra-panel dt { font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--texto-suave); }
+.cifra-panel dd { margin: .2em 0 0; font-size: 1.6rem; font-weight: 800; color: var(--azul-900); }
+.cifra-panel.alerta-cifra dd { color: var(--aviso); }

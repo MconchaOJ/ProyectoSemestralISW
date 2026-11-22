@@ -91,6 +91,7 @@ function pintar(cont, ctx, h, { propio }) {
       subtitulo: 'Recorrido completo por las prácticas: cómo evoluciona a lo largo del tiempo y no solo una nota final.',
       // HU-28 (y criterio 1 de HU-08): el mismo historial en PDF, con las mismas reglas de acceso
       acciones: html`<button type="button" class="btn" id="btn-historial-pdf" data-cargando="Generando…">${icono('download')} Descargar PDF</button>
+        <button type="button" class="btn" id="btn-historial-xlsx" data-cargando="Generando…">${icono('download')} Descargar Excel</button>
         ${propio ? '' : html`<a class="btn btn-fantasma" href="#/historial">${icono('back')} Cambiar estudiante</a>`}`,
     })}
 
@@ -115,6 +116,18 @@ function pintar(cont, ctx, h, { propio }) {
 
     <h2 class="titulo-linea">Recorrido por período</h2>
     ${total === 0 ? vacio('Este estudiante aún no tiene inscripciones', '', 'clipboard') : html`<ol class="recorrido">${insc.map((i) => practica(i, propio))}</ol>`}`.toString();
+
+  // HU-08: el mismo informe por estudiante en Excel (integrado del trabajo de Alej), con las mismas reglas de acceso
+  cont.querySelector('#btn-historial-xlsx').addEventListener('click', async (ev) => {
+    try {
+      const archivo = await conCarga(ev.currentTarget, () =>
+        api.archivo(propio ? '/api/estudiantes/me/historial/xlsx' : `/api/estudiantes/${e.id}/historial/xlsx`));
+      descargarArchivo({ ...archivo, nombre: archivo.nombre === 'archivo' ? 'historial.xlsx' : archivo.nombre });
+      toast('Historial descargado en Excel.');
+    } catch (err) {
+      if (err.status !== 401) toast(err.message, 'error');
+    }
+  });
 
   cont.querySelector('#btn-historial-pdf').addEventListener('click', async (ev) => {
     try {

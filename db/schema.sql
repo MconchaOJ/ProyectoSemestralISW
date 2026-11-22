@@ -358,7 +358,7 @@ CREATE TABLE evaluacion (
     estado                 VARCHAR(12)  NOT NULL DEFAULT 'BORRADOR' COMMENT 'BORRADOR, FINALIZADA',
     puntaje_total          INT          NULL COMMENT 'Calculado al finalizar',
     promedio               DECIMAL(4,2) NULL COMMENT 'Calculado al finalizar',
-    nota                   DECIMAL(3,1) NULL COMMENT 'Nota 1,0 a 7,0 al 60 % de exigencia, calculada al finalizar (HU-09, migración 015, S-81)',
+    nota                   DECIMAL(3,1) NULL COMMENT 'Nota al 60 % de exigencia desde la nota mínima de la pauta (su escala mínima) hasta 7,0, calculada al finalizar (HU-09, migraciones 015 y 016, S-81)',
     fecha_finalizacion     DATETIME     NULL,
     CONSTRAINT pk_evaluacion PRIMARY KEY (id),
     CONSTRAINT fk_evaluacion_inscripcion   FOREIGN KEY (inscripcion_id)   REFERENCES inscripcion (id),
