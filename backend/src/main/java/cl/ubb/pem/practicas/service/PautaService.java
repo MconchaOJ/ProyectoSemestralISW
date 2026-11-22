@@ -12,6 +12,7 @@ import cl.ubb.pem.practicas.exception.ConflictoException;
 import cl.ubb.pem.practicas.exception.RecursoNoEncontradoException;
 import cl.ubb.pem.practicas.exception.ReglaNegocioException;
 import cl.ubb.pem.practicas.repository.AsignaturaPracticaRepository;
+import cl.ubb.pem.practicas.repository.ComponenteEvaluativoRepository;
 import cl.ubb.pem.practicas.repository.EvaluacionRepository;
 import cl.ubb.pem.practicas.repository.PautaRepository;
 import java.util.HashSet;
@@ -38,11 +39,14 @@ public class PautaService {
     private final PautaRepository pautas;
     private final AsignaturaPracticaRepository asignaturas;
     private final EvaluacionRepository evaluaciones;
+    private final ComponenteEvaluativoRepository componentes;
 
-    public PautaService(PautaRepository pautas, AsignaturaPracticaRepository asignaturas, EvaluacionRepository evaluaciones) {
+    public PautaService(PautaRepository pautas, AsignaturaPracticaRepository asignaturas, EvaluacionRepository evaluaciones,
+                        ComponenteEvaluativoRepository componentes) {
         this.pautas = pautas;
         this.asignaturas = asignaturas;
         this.evaluaciones = evaluaciones;
+        this.componentes = componentes;
     }
 
     public List<PautaDto> listar(Integer asignaturaId) {
@@ -106,7 +110,11 @@ public class PautaService {
             nueva.setActiva(actual.getActiva());
             actual.setActiva(false);
             llenar(nueva, r);
-            return PautaDto.desde(pautas.save(nueva));
+            Pauta guardada = pautas.save(nueva);
+            // HU-09: el componente de la estructura evaluativa pasa a la versión vigente (las evaluaciones con la
+            // versión anterior siguen contando para su nota)
+            componentes.findByPautaId(actual.getId()).ifPresent(c -> c.setPauta(guardada));
+            return PautaDto.desde(guardada);
         }
         // Sin uso: se reemplazan dimensiones e indicadores. Se vacían y se envían a la base ANTES de agregar los
         // nuevos, porque Hibernate inserta antes de borrar y chocarían las restricciones UNIQUE (pauta, orden).
@@ -139,8 +147,15 @@ public class PautaService {
                     + ": no se borra. Puedes desactivarla, o editarla (se creará una versión nueva).");
         }
         Pauta anterior = p.getVersionAnterior();
+        var componente = componentes.findByPautaId(id);
+        if (componente.isPresent() && anterior == null) {
+            throw new ConflictoException("La pauta es parte de la estructura evaluativa de su asignatura (componente «"
+                    + componente.get().getNombre() + "»): quítala de la estructura antes de borrarla.");
+        }
         if (anterior != null) {
             anterior.setActiva(p.getActiva());
+            componente.ifPresent(c -> c.setPauta(anterior));   // HU-09: vuelve a la versión que queda vigente
+            componentes.flush();
         }
         pautas.delete(p);
     }

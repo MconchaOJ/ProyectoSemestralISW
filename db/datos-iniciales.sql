@@ -488,6 +488,18 @@ INSERT INTO parametro_sistema (clave, valor, minimo, maximo, unidad, descripcion
     ('archivos.audio_mb', 25, 1, 25, 'MB',
         'Tamaño máximo del audio de una nota de voz');
 
+-- Estructura evaluativa de Práctica Pedagógica (HU-09, migración 015), del documento oficial de la carrera:
+-- 26 % sale de las 4 pautas del sistema (ids 10 a 13) y 74 % de componentes externos que escribe el profesor del curso.
+INSERT INTO componente_evaluativo (asignatura_id, tipo, nombre, pauta_id, porcentaje, orden) VALUES
+    (5, 'EXTERNO', 'Producto 1: Texto Expectativas', NULL, 10, 1),
+    (5, 'EXTERNO', 'Producto 2: Informe escrito Contexto', NULL, 17, 2),
+    (5, 'PAUTA', 'Pauta de Evaluación 1 Especialidad', 10, 5, 3),
+    (5, 'PAUTA', 'Pauta de Evaluación 2 Especialidad', 11, 13, 4),
+    (5, 'PAUTA', 'Pauta de Evaluación 1 Orientación', 12, 3, 5),
+    (5, 'PAUTA', 'Pauta de Evaluación 2 Orientación', 13, 5, 6),
+    (5, 'EXTERNO', 'Informe de Análisis de Experiencias Pedagógicas y Pauta del Taller (TANEP)', NULL, 20, 7),
+    (5, 'EXTERNO', 'Producto 3: Informe Final de Prácticas', NULL, 27, 8);
+
 -- Resumen de lo cargado
 SELECT (SELECT COUNT(*) FROM rol)                 AS roles,
        (SELECT COUNT(*) FROM asignatura_practica) AS asignaturas,

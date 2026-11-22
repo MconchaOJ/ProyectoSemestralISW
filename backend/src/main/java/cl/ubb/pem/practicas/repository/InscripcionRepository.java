@@ -15,6 +15,9 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
 
     boolean existsByEstudianteIdAndProfesorCursoId(Long estudianteId, Long profesorCursoId);
 
+    /** HU-09 (S-83): un profesor del curso edita la estructura evaluativa de las asignaturas donde tiene inscripciones. */
+    boolean existsByAsignaturaIdAndProfesorCursoId(Integer asignaturaId, Long profesorCursoId);
+
     /** HU-07: el tutor ve el historial de un estudiante del que es tutor en alguna inscripción (como S-21). */
     boolean existsByEstudianteIdAndTutorId(Long estudianteId, Long tutorId);
 

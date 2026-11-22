@@ -760,9 +760,19 @@ UPDATE evaluacion e
                ROUND(AVG(puntaje), 2) AS prom
           FROM respuesta_indicador
          GROUP BY evaluacion_id) r ON r.evaluacion_id = e.id
+  JOIN pauta p ON p.id = e.pauta_id
+  JOIN (SELECT d.pauta_id, COUNT(*) AS n
+          FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id
+         GROUP BY d.pauta_id) c ON c.pauta_id = e.pauta_id
    SET e.estado             = 'FINALIZADA',
        e.puntaje_total      = r.total,
        e.promedio           = r.prom,
+       -- HU-09 (S-81): nota 1,0 a 7,0 al 60 % de exigencia sobre el máximo (indicadores x escala_max), como la app
+       e.nota               = ROUND(CASE
+                                  WHEN r.total < 0.6 * c.n * p.escala_max
+                                      THEN 1 + 3 * r.total / (0.6 * c.n * p.escala_max)
+                                  ELSE 4 + 3 * (r.total - 0.6 * c.n * p.escala_max) / (0.4 * c.n * p.escala_max)
+                              END, 1),
        e.fecha_finalizacion = TIMESTAMP(e.fecha_clase, '13:00:00')
  WHERE e.id IN (1, 2, 3);
 
@@ -852,9 +862,19 @@ UPDATE evaluacion e
                ROUND(AVG(puntaje), 2) AS prom
           FROM respuesta_indicador
          GROUP BY evaluacion_id) r ON r.evaluacion_id = e.id
+  JOIN pauta p ON p.id = e.pauta_id
+  JOIN (SELECT d.pauta_id, COUNT(*) AS n
+          FROM indicador i JOIN dimension_pauta d ON d.id = i.dimension_id
+         GROUP BY d.pauta_id) c ON c.pauta_id = e.pauta_id
    SET e.estado             = 'FINALIZADA',
        e.puntaje_total      = r.total,
        e.promedio           = r.prom,
+       -- HU-09 (S-81): nota 1,0 a 7,0 al 60 % de exigencia sobre el máximo (indicadores x escala_max), como la app
+       e.nota               = ROUND(CASE
+                                  WHEN r.total < 0.6 * c.n * p.escala_max
+                                      THEN 1 + 3 * r.total / (0.6 * c.n * p.escala_max)
+                                  ELSE 4 + 3 * (r.total - 0.6 * c.n * p.escala_max) / (0.4 * c.n * p.escala_max)
+                              END, 1),
        e.fecha_finalizacion = TIMESTAMP(e.fecha_clase, '13:00:00')
  WHERE e.id IN (5, 7, 8, 9, 10, 11);
 
@@ -914,3 +934,26 @@ INSERT INTO instrucciones_chatbot (id, texto, editado_por_id, fecha_edicion) VAL
 -- la validadora de demostración: si el coordinador abre la validación, solo ella
 -- (y los que él marque) conversa con el chatbot.
 UPDATE estudiante SET validador_chatbot = TRUE WHERE id = 3;
+
+-- =============================================================================
+-- PARTE 5 - ESTRUCTURA EVALUATIVA Y NOTA FINAL (HU-09, migración 015)
+-- =============================================================================
+-- Estructura oficial de Práctica Pedagógica (documento "Estructura evaluativa de
+-- la Práctica Pedagógica" de la carrera): 26 % sale de las 4 pautas del sistema y
+-- 74 % de componentes externos que el profesor del curso escribe a mano.
+INSERT INTO componente_evaluativo (id, asignatura_id, tipo, nombre, pauta_id, porcentaje, orden) VALUES
+    (1, 5, 'EXTERNO', 'Producto 1: Texto Expectativas', NULL, 10, 1),
+    (2, 5, 'EXTERNO', 'Producto 2: Informe escrito Contexto', NULL, 17, 2),
+    (3, 5, 'PAUTA', 'Pauta de Evaluación 1 Especialidad', 10, 5, 3),
+    (4, 5, 'PAUTA', 'Pauta de Evaluación 2 Especialidad', 11, 13, 4),
+    (5, 5, 'PAUTA', 'Pauta de Evaluación 1 Orientación', 12, 3, 5),
+    (6, 5, 'PAUTA', 'Pauta de Evaluación 2 Orientación', 13, 5, 6),
+    (7, 5, 'EXTERNO', 'Informe de Análisis de Experiencias Pedagógicas y Pauta del Taller (TANEP)', NULL, 20, 7),
+    (8, 5, 'EXTERNO', 'Producto 3: Informe Final de Prácticas', NULL, 27, 8);
+
+-- Valentina (inscripción 11, Práctica Pedagógica 2026-2, en curso) ya tiene los
+-- productos 1 y 2, que registró su profesora del curso (Patricia Contreras, id 5):
+-- su nota parcial cuenta el 27 % evaluado.
+INSERT INTO nota_componente_externo (id, inscripcion_id, componente_id, nota, registrada_por, fecha_registro) VALUES
+    (1, 11, 1, 6.2, 5, '2026-11-10 10:00:00'),
+    (2, 11, 2, 5.8, 5, '2026-11-10 10:05:00');

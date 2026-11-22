@@ -70,7 +70,7 @@ class CartolaPracticasServiceTest {
     private static Evaluacion finalizada(Inscripcion i, String promedio) {
         Evaluacion e = new Evaluacion();
         e.setInscripcion(i);
-        e.finalizar(80, new BigDecimal(promedio), null);
+        e.finalizar(80, new BigDecimal(promedio), new BigDecimal("4.0"), null);
         return e;
     }
 

@@ -137,7 +137,7 @@ function Install-Bd {
     }
     Write-Host "  OK  Versión de MySQL compatible ($version >= $VersionMinimaMysql)" -ForegroundColor Green
 
-    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (24 tablas, trigger)'
+    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (26 tablas, trigger)'
     Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'seed.sql'))   'seed.sql (catálogo y datos de demo)'
 
     # Usuario de la aplicación: solo puede leer y escribir datos, no cambiar la estructura.
@@ -190,7 +190,11 @@ function Test-Bd {
         @('Segundo puntaje para el mismo indicador',              1062, 'uq_respuesta_evaluacion_indicador', "$unEvaluacion; INSERT INTO respuesta_indicador (evaluacion_id,indicador_id,puntaje) VALUES (@ev,1,5); INSERT INTO respuesta_indicador (evaluacion_id,indicador_id,puntaje) VALUES (@ev,1,6)"),
         @('Indicador que no pertenece a la pauta de la evaluación', 1644, 'no pertenece a la pauta', "INSERT INTO pauta (asignatura_id,nombre,tipo_evaluador,ambito,escala_min,escala_max) VALUES (4,'Otra pauta','ACADEMICO','OBSERVACION_CLASE',1,7); SET @pa = LAST_INSERT_ID(); INSERT INTO dimension_pauta (pauta_id,nombre,orden) VALUES (@pa,'D',1); SET @di = LAST_INSERT_ID(); INSERT INTO indicador (dimension_id,numero,descripcion) VALUES (@di,1,'I'); SET @in = LAST_INSERT_ID(); $unEvaluacion; INSERT INTO respuesta_indicador (evaluacion_id,indicador_id,puntaje) VALUES (@ev,@in,5)"),
         @('Modificar una evaluación FINALIZADA',                  1644, 'esta FINALIZADA',         "UPDATE respuesta_indicador SET puntaje = 1 WHERE evaluacion_id = 1 AND indicador_id = 1"),
-        @('Evaluación FINALIZADA sin puntaje calculado',          3819, 'ck_evaluacion_finalizada', "INSERT INTO evaluacion (inscripcion_id,pauta_id,evaluador_id,fecha_clase,estado) VALUES (3,1,2,'2026-09-22','FINALIZADA')"),
+        @('Evaluación FINALIZADA sin puntaje calculado',          3819, 'ck_evaluacion_finalizada', "INSERT INTO evaluacion (inscripcion_id,pauta_id,evaluador_id,fecha_clase,estado,nota) VALUES (3,1,2,'2026-09-22','FINALIZADA',5.0)"),
+        @('Evaluación FINALIZADA sin nota (HU-09)',               3819, 'ck_evaluacion_nota',      "UPDATE evaluacion SET nota = NULL WHERE id = 1"),
+        @('Componente de pauta sin pauta (HU-09)',                3819, 'ck_componente_pauta',     "INSERT INTO componente_evaluativo (asignatura_id,tipo,nombre,porcentaje,orden) VALUES (5,'PAUTA','X',10,9)"),
+        @('Componente con una pauta de otra asignatura (HU-09)',  1452, 'fk_componente_pauta',     "INSERT INTO componente_evaluativo (asignatura_id,tipo,nombre,pauta_id,porcentaje,orden) VALUES (5,'PAUTA','X',1,10,9)"),
+        @('Nota de un componente externo sobre 7,0 (HU-09)',      3819, 'ck_nota_externa_rango',   "INSERT INTO nota_componente_externo (inscripcion_id,componente_id,nota,registrada_por,fecha_registro) VALUES (11,7,7.5,5,NOW())"),
         @('Horas de clase invertidas (término antes del inicio)', 3819, 'ck_evaluacion_horas',     "INSERT INTO evaluacion (inscripcion_id,pauta_id,evaluador_id,fecha_clase,hora_inicio,hora_termino) VALUES (3,1,2,'2026-09-22','11:00','10:00')"),
         @('Planificación con estado inventado',                   3819, 'ck_planificacion_estado', "INSERT INTO planificacion (inscripcion_id,titulo,establecimiento,curso,unidad,objetivo_aprendizaje,objetivo_actitudinal,objetivo_clase,fecha_clase,duracion_minutos,recursos,instrumentos_evaluacion,inicio,inicio_minutos,desarrollo,desarrollo_minutos,cierre,cierre_minutos,estado) VALUES (3,'T','e','c','u','oa','act','obj','2026-10-01',90,'r','ins','i',10,'d',60,'c',20,'PUBLICADA')"),
         @('Planificación enviada a revisión con campos vacíos',   3819, 'ck_planificacion_completa', "INSERT INTO planificacion (inscripcion_id,titulo,estado) VALUES (3,'T','EN_REVISION_GUIA')"),

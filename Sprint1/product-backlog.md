@@ -45,7 +45,7 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-06 | Configurar pautas de evaluación | Evaluación | Alta | por estimar | 2 | Pendiente |
 | HU-07 | Pautas de Práctica Pedagógica y Profesional (con tutor) | Evaluación | Alta | por estimar | 2 | Pendiente |
 | HU-08 | Informes por asignatura y por estudiante | Monitoreo | Alta | por estimar | 2 | **Construida y probada (21-nov):** pantalla "Informes por asignatura" (coordinador y jefe de carrera) con notas finales, evaluaciones por pauta con su distribución, planificaciones y una fila por estudiante, y el mismo informe en PDF; el informe por estudiante es el historial en PDF (HU-28). Solo PDF (criterio 3: "PDF o Excel") |
-| HU-09 | Nota final ponderada de la asignatura | Evaluación | Media | por estimar | 2 | Pendiente |
+| HU-09 | Nota final ponderada de la asignatura | Evaluación | Media | por estimar | 2 | Terminada (2026-11-22) |
 | HU-10 | Prácticas en dupla y en grupo | Gestión académica | Media | por estimar | 2 | **Construida y probada (21-nov):** el coordinador forma, cambia o deshace duplas y grupos (migración 013, tabla `grupo_practica`); comparten guía y, en el colegio, establecimiento y curso; cada integrante conserva su inscripción, pauta y planificaciones (S-77); el historial muestra con quién trabajó |
 | HU-11 | Nota de voz del profesor evaluador | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** Desde el 21-nov, «Volver a grabar» reemplaza el audio (criterio 2 completo) |
 | HU-12 | Pasar la nota de voz a texto | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** |
@@ -234,6 +234,7 @@ Estas seis historias iban para sprints futuros en la planificación original, pe
 **Como** profesor del curso, **quiero** que el sistema calcule la nota final con la estructura evaluativa de la asignatura, **para** no sacar el promedio a mano.
 - **Prioridad:** Media · **Sprint:** 2 · **Depende de** que el cliente confirme las fórmulas (en Práctica Pedagógica: 27 %, 18 %, 8 % y 47 %).
 - **Criterios:** (1) los pesos se configuran por asignatura; (2) la nota queda guardada en la inscripción; (3) la escala de notas se confirma con el cliente.
+- **Hecho (2026-11-22):** estructura con componentes de pauta y externos (suman 100 %), nota de cada evaluación al 60 % de exigencia (SUPUESTO S-81, falta confirmarla con el cliente), nota parcial y final propuesta al cerrar. Supuestos S-83 a S-85.
 
 #### HU-10 · Prácticas en dupla y en grupo
 **Como** coordinador, **quiero** agrupar a los estudiantes en duplas (Ambientes de Aprendizaje, Trabajo Colaborativo, Investigación en el Aula) o en grupos de 4 (Aproximación al Sistema Escolar), **para** trabajar y planificar en conjunto como pide el proceso.

@@ -12,12 +12,12 @@ import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 
-/** Detalle completo de una evaluación, con el puntaje de cada indicador respondido. */
+/** Detalle completo de una evaluación, con el puntaje de cada indicador respondido y su nota (HU-09, nula en borrador). */
 public record EvaluacionDto(Long id, Long inscripcionId, EstudianteResumenDto estudiante, PautaRef pauta,
                             UsuarioResumenDto evaluador, Long planificacionId, LocalDate fechaClase,
                             String establecimiento, String curso, LocalTime horaInicio, LocalTime horaTermino,
                             String objetivoClase, String observacionesGenerales, EstadoEvaluacion estado,
-                            Integer puntajeTotal, Integer puntajeMaximo, BigDecimal promedio,
+                            Integer puntajeTotal, Integer puntajeMaximo, BigDecimal promedio, BigDecimal nota,
                             LocalDateTime fechaFinalizacion, int indicadoresRespondidos, int indicadoresTotales,
                             List<RespuestaDto> respuestas) {
 
@@ -51,7 +51,7 @@ public record EvaluacionDto(Long id, Long inscripcionId, EstudianteResumenDto es
                 e.getPlanificacion() == null ? null : e.getPlanificacion().getId(),
                 e.getFechaClase(), e.getEstablecimiento(), e.getCurso(), e.getHoraInicio(), e.getHoraTermino(),
                 e.getObjetivoClase(), e.getObservacionesGenerales(), e.getEstado(),
-                e.getPuntajeTotal(), totalIndicadores * pauta.getEscalaMax(), e.getPromedio(),
+                e.getPuntajeTotal(), totalIndicadores * pauta.getEscalaMax(), e.getPromedio(), e.getNota(),
                 e.getFechaFinalizacion(), respuestas.size(), totalIndicadores, respuestas);
     }
 }

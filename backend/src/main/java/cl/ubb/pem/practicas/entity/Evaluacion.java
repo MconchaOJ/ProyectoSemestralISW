@@ -74,6 +74,13 @@ public class Evaluacion {
     @Column(precision = 4, scale = 2)
     private BigDecimal promedio;
 
+    /**
+     * HU-09 (migración 015): nota de 1,0 a 7,0 al 60 % de exigencia (S-81), calculada al finalizar. Queda guardada
+     * aquí para que no cambie si la pauta tiene después una versión nueva.
+     */
+    @Column(precision = 3, scale = 1)
+    private BigDecimal nota;
+
     @Column(name = "fecha_finalizacion")
     private LocalDateTime fechaFinalizacion;
 
@@ -85,10 +92,11 @@ public class Evaluacion {
     }
 
     /** Congela el resultado: después de esto la base impide modificar los puntajes (trigger). */
-    public void finalizar(int total, BigDecimal promedioCalculado, LocalDateTime cuando) {
+    public void finalizar(int total, BigDecimal promedioCalculado, BigDecimal notaCalculada, LocalDateTime cuando) {
         this.estado = EstadoEvaluacion.FINALIZADA;
         this.puntajeTotal = total;
         this.promedio = promedioCalculado;
+        this.nota = notaCalculada;
         this.fechaFinalizacion = cuando;
     }
 }
