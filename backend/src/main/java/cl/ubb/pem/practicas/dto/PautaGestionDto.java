@@ -13,13 +13,14 @@ import java.time.LocalDateTime;
 public record PautaGestionDto(Integer id, Integer asignaturaId, String asignatura, String nombre, int version,
                               Integer versionAnteriorId, TipoEvaluador tipoEvaluador, AmbitoPauta ambito, Integer numeroObservacion,
                               Integer escalaMin, Integer escalaMax, boolean activa, boolean vigente,
-                              int totalIndicadores, int puntajeMaximo, long evaluaciones, LocalDateTime fechaCreacion) {
+                              int totalIndicadores, int puntajeMaximo, long evaluaciones, LocalDateTime fechaCreacion,
+                              ArchivoOficialDto archivoOficial) {   // HU-25: el archivo oficial vigente (nulo si no tiene)
 
-    public static PautaGestionDto desde(Pauta p, boolean vigente, long evaluaciones) {
+    public static PautaGestionDto desde(Pauta p, boolean vigente, long evaluaciones, ArchivoOficialDto archivoOficial) {
         int indicadores = p.indicadores().size();
         return new PautaGestionDto(p.getId(), p.getAsignatura().getId(), p.getAsignatura().getNombre(), p.getNombre(),
                 p.getVersion(), p.getVersionAnterior() == null ? null : p.getVersionAnterior().getId(),
                 p.getTipoEvaluador(), p.getAmbito(), p.getNumeroObservacion(), p.getEscalaMin(), p.getEscalaMax(), Boolean.TRUE.equals(p.getActiva()),
-                vigente, indicadores, indicadores * p.getEscalaMax(), evaluaciones, p.getFechaCreacion());
+                vigente, indicadores, indicadores * p.getEscalaMax(), evaluaciones, p.getFechaCreacion(), archivoOficial);
     }
 }

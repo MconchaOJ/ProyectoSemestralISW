@@ -8,7 +8,8 @@ import java.util.List;
 /** Una pauta con sus dimensiones e indicadores en el orden de la pauta impresa, y su versión (HU-06). */
 public record PautaDto(Integer id, Integer asignaturaId, String nombre, TipoEvaluador tipoEvaluador, AmbitoPauta ambito,
                        Integer numeroObservacion, Integer escalaMin, Integer escalaMax, boolean activa, int totalIndicadores,
-                       int puntajeMaximo, List<DimensionDto> dimensiones, int version, Integer versionAnteriorId) {
+                       int puntajeMaximo, List<DimensionDto> dimensiones, int version, Integer versionAnteriorId,
+                       ArchivoOficialDto archivoOficial) {   // HU-25: el archivo oficial vigente (nulo si no tiene)
 
     public record DimensionDto(Integer id, String nombre, Integer orden, List<IndicadorDto> indicadores) {
     }
@@ -17,6 +18,11 @@ public record PautaDto(Integer id, Integer asignaturaId, String nombre, TipoEval
     }
 
     public static PautaDto desde(Pauta p) {
+        return desde(p, null);
+    }
+
+    /** HU-25: con el archivo oficial vigente de la pauta (o nulo). */
+    public static PautaDto desde(Pauta p, ArchivoOficialDto archivoOficial) {
         List<DimensionDto> dimensiones = p.getDimensiones().stream()
                 .map(d -> new DimensionDto(d.getId(), d.getNombre(), d.getOrden(),
                         d.getIndicadores().stream()
@@ -27,6 +33,6 @@ public record PautaDto(Integer id, Integer asignaturaId, String nombre, TipoEval
         return new PautaDto(p.getId(), p.getAsignatura().getId(), p.getNombre(), p.getTipoEvaluador(), p.getAmbito(),
                 p.getNumeroObservacion(), p.getEscalaMin(), p.getEscalaMax(), Boolean.TRUE.equals(p.getActiva()), total,
                 total * p.getEscalaMax(), dimensiones,
-                p.getVersion(), p.getVersionAnterior() == null ? null : p.getVersionAnterior().getId());
+                p.getVersion(), p.getVersionAnterior() == null ? null : p.getVersionAnterior().getId(), archivoOficial);
     }
 }

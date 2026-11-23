@@ -61,7 +61,7 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-22 | Adjuntar el documento formal de la evaluación | Documentos | Media | 3 | **1** | **Construida y probada (22-sep, Fase E); borrar y reemplazar el 22-nov** |
 | HU-23 | Buscar estudiante por nombre, RUT o correo | Monitoreo | Media | 2 | **1** | **Construida y probada (22-sep, Fase E)** |
 | HU-24 | Accesos rápidos dentro del menú | Interfaz | Baja | 1 | **1** | **Construida (22-sep, Fase E)** |
-| HU-25 | Gestión de archivos de pautas formales | Evaluación | Baja | por estimar | 2 o más | Pendiente |
+| HU-25 | Gestión de archivos de pautas formales | Evaluación | Baja | por estimar | 2 o más | Hecha (Sprint 2, 22-nov) |
 | HU-26 | Cambiar la contraseña | Acceso | Media | por estimar | 2 | **Construida y probada (11-oct):** `PUT /api/auth/password` y pantalla "Mi cuenta" |
 | HU-27 | Configurar los parámetros del sistema | Administración | Baja | por estimar | 2 o más | **Construida y probada (22-nov):** pantalla "Parámetros del sistema" (solo coordinador): anticipación, umbral del panel y tamaños de archivo, con rango (S-80) y efecto inmediato |
 | HU-28 | Exportar el historial del estudiante en PDF | Monitoreo | Media | por estimar | 2 o más | **Construida y probada (21-nov, junto con HU-08):** botón «Descargar PDF» en el historial, mismas reglas de acceso, con fecha de generación |
@@ -296,8 +296,9 @@ Estas seis historias iban para sprints futuros en la planificación original, pe
 
 #### HU-25 · Gestión de archivos de pautas formales
 **Como** coordinador, **quiero** subir y reemplazar los archivos oficiales de cada pauta de evaluación (PDF o Word firmados y timbrados), **para** tener siempre a mano el documento formal detrás de cada instrumento digitalizado.
-- **Prioridad:** Baja · **Sprint:** 2 o más · **Depende de** HU-06.
+- **Prioridad:** Baja · **Sprint:** 2 o más · **Depende de** HU-06. **Hecha el 2026-11-22** (migración 020).
 - **Criterios:** (1) el coordinador sube un archivo por pauta y puede reemplazarlo; (2) queda un historial de versiones (quién y cuándo); (3) quien puede ver la pauta puede descargar su archivo oficial.
+- **Supuestos:** S-95 (PDF o Word, con el tamaño máximo vigente) y S-96 (el archivo va con cada versión de la pauta: una versión nueva no lo hereda).
 
 #### HU-26 · Cambiar la contraseña
 **Como** cualquier usuario, **quiero** cambiar mi contraseña desde la aplicación, **para** no depender de que el coordinador me asigne una nueva.

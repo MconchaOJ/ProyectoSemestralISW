@@ -11,12 +11,12 @@
 SELECT CONCAT('Conectado como ', CURRENT_USER(), ' a la base ', DATABASE(), ' (MySQL ', VERSION(), ')') AS conexion;
 
 -- -----------------------------------------------------------------------------
-SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 27)' AS verificacion;
+SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 28)' AS verificacion;
 SELECT COUNT(*) AS tablas
   FROM information_schema.tables
  WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
-SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, parametro_sistema 5, componente_evaluativo 8, nota_componente_externo 2, grupo_practica 2, inscripcion 55 (6 en un grupo), pauta 13, dimension 57, indicador 269, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0, producto_practica 0)' AS verificacion;
+SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, parametro_sistema 5, componente_evaluativo 8, nota_componente_externo 2, grupo_practica 2, inscripcion 55 (6 en un grupo), pauta 13, dimension 57, indicador 269, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0, producto_practica 0, archivo_oficial_pauta 0)' AS verificacion;
 SELECT 'rol' AS tabla, COUNT(*) AS filas FROM rol
 UNION ALL SELECT 'usuario',                COUNT(*) FROM usuario
 UNION ALL SELECT 'estudiante',             COUNT(*) FROM estudiante
@@ -43,9 +43,10 @@ UNION ALL SELECT 'lectura_chat',                COUNT(*) FROM lectura_chat
 UNION ALL SELECT 'respuesta_sus',               COUNT(*) FROM respuesta_sus
 UNION ALL SELECT 'respuesta_rubrica_experto',   COUNT(*) FROM respuesta_rubrica_experto
 UNION ALL SELECT 'respuesta_rubrica_criterio',  COUNT(*) FROM respuesta_rubrica_criterio
-UNION ALL SELECT 'producto_practica',           COUNT(*) FROM producto_practica;
+UNION ALL SELECT 'producto_practica',           COUNT(*) FROM producto_practica
+UNION ALL SELECT 'archivo_oficial_pauta',       COUNT(*) FROM archivo_oficial_pauta;
 
-SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 27, FOREIGN KEY 45, UNIQUE 22, CHECK 59)' AS verificacion;
+SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 28, FOREIGN KEY 47, UNIQUE 23, CHECK 61)' AS verificacion;
 SELECT constraint_type AS tipo, COUNT(*) AS cantidad
   FROM information_schema.table_constraints
  WHERE table_schema = DATABASE()
@@ -284,7 +285,8 @@ SELECT '17. DOCUMENTOS ADJUNTOS Y NOTA DE VOZ: tablas nuevas listas para la apli
 SELECT 'documento_planificacion' AS tabla, COUNT(*) AS filas FROM documento_planificacion
 UNION ALL SELECT 'documento_evaluacion', COUNT(*) FROM documento_evaluacion
 UNION ALL SELECT 'nota_voz', COUNT(*) FROM nota_voz
-UNION ALL SELECT 'producto_practica', COUNT(*) FROM producto_practica;
+UNION ALL SELECT 'producto_practica', COUNT(*) FROM producto_practica
+UNION ALL SELECT 'archivo_oficial_pauta', COUNT(*) FROM archivo_oficial_pauta;
 
 -- -----------------------------------------------------------------------------
 SELECT '18. ACTIVIDAD REAL (Fase F, 2026-09-22): nadie queda con cero registros relacionados (esperado: 0 en cada fila)' AS verificacion;
