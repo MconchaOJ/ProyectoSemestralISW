@@ -209,6 +209,14 @@ sudo systemctl start isw-practicas
 
 ## Paso 9. Publicar una versión nueva
 
+> **El servidor de demostración de Alej (Podman)** no usa esta guía: sigue `DESPLIEGUE.md`, **sección 5**.
+> **Si un servidor instalado con esta guía no se actualiza desde antes del 22-nov-2026** (le faltan varias
+> migraciones), no sigas este paso a ciegas: las pautas 4 a 13 no vienen en ninguna migración y sin ellas la 015
+> falla. El diagnóstico y el orden exacto (pautas 4 a 13 y luego de la 012 a la 020) están en `DESPLIEGUE.md`,
+> paso 5.6; ahí cambia `podman exec -i isw-mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" ...'` por
+> `sudo mysql --default-character-set=utf8mb4 isw_practicas`, y respalda antes (paso 8). Este paso 9 es para las
+> actualizaciones siguientes, cuando hay **una** migración nueva.
+
 1. En Windows: `.\db\bd.ps1` y `mvn clean package` (todas las pruebas pasan).
 2. En el servidor: `cd ~/isw && git pull` y copiar el `.jar` nuevo a `~/isw/backend/target/` (paso 2).
 3. **Si cambió la base** (hay un archivo nuevo en `db/migraciones/`): **respaldar primero** (paso 8) y ejecutar
@@ -226,8 +234,8 @@ sudo systemctl restart isw-practicas
 
 (Si la versión nueva traía una migración, volver atrás también la base: restaurar el respaldo hecho en el punto 3.)
 
-> Una base creada con el `schema.sql` actual ya incluye las migraciones 001 a 004: en una instalación nueva no se
-> corre ninguna migración.
+> Una base creada con el `schema.sql` actual ya incluye todas las migraciones (001 a 020): en una instalación nueva
+> no se corre ninguna migración.
 
 ## Problemas frecuentes
 
