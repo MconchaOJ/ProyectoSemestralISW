@@ -1,13 +1,14 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 28 tablas con claves, restricciones e
+-- Implementa el MER de Sprint1/mer.md: 29 tablas con claves, restricciones e
 -- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
 -- la Fase E, instrucciones_chatbot de HU-17, documento_base_conocimiento de
 -- HU-29, lectura_chat de HU-20 y respuesta_sus,
 -- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30, grupo_practica de HU-10, parametro_sistema de HU-27 y componente_evaluativo y
 -- nota_componente_externo de HU-09, producto_practica de HU-18 y
--- archivo_oficial_pauta de HU-25). No
+-- archivo_oficial_pauta de HU-25 y token_recuperacion_clave de la
+-- recuperación de la clave por correo). No
 -- contiene contraseñas (el
 -- usuario de la aplicación lo crea db/bd.ps1 con su clave tomada de una
 -- variable de entorno).
@@ -38,6 +39,7 @@ SET NAMES utf8mb4;
 -- Limpieza (orden inverso a las dependencias)
 -- -----------------------------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS token_recuperacion_clave;
 DROP TABLE IF EXISTS nota_componente_externo;
 DROP TABLE IF EXISTS componente_evaluativo;
 DROP TABLE IF EXISTS respuesta_rubrica_criterio;
@@ -510,6 +512,22 @@ CREATE TABLE archivo_oficial_pauta (
     CONSTRAINT ck_archivo_oficial_pauta_version CHECK (version >= 1),
     CONSTRAINT ck_archivo_oficial_pauta_tamano CHECK (tamano_bytes > 0 AND tamano_bytes <= 10485760)
 ) ENGINE = InnoDB COMMENT = 'Archivos oficiales (PDF o Word firmados) de cada pauta, con su historial (HU-25)';
+
+-- Recuperación de la clave por correo (migración 021): enlace de un solo uso, guardado como SHA-256 (S-97 a S-99).
+CREATE TABLE token_recuperacion_clave (
+    id                BIGINT    NOT NULL AUTO_INCREMENT,
+    usuario_id        BIGINT    NOT NULL,
+    token_hash        CHAR(64)  NOT NULL COMMENT 'SHA-256 en hexadecimal del token enviado por correo (nunca el token)',
+    fecha_creacion    DATETIME  NOT NULL,
+    fecha_expiracion  DATETIME  NOT NULL,
+    usado             BOOLEAN   NOT NULL DEFAULT FALSE COMMENT 'Usado o invalidado: no vuelve a servir',
+    CONSTRAINT pk_token_recuperacion_clave PRIMARY KEY (id),
+    CONSTRAINT uq_token_recuperacion_clave_hash UNIQUE (token_hash),
+    CONSTRAINT fk_token_recuperacion_clave_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id),
+    CONSTRAINT ck_token_recuperacion_clave_hash CHECK (REGEXP_LIKE(token_hash, '^[0-9a-f]{64}$', 'c')),
+    CONSTRAINT ck_token_recuperacion_clave_fechas CHECK (fecha_expiracion > fecha_creacion),
+    INDEX ix_token_recuperacion_clave_usuario (usuario_id, fecha_creacion)
+) ENGINE = InnoDB COMMENT = 'Enlaces de un solo uso para recuperar la clave por correo (S-97 a S-99)';
 
 -- HU-18 (migración 019): informes y productos de la práctica que el estudiante sube a su inscripción (S-93, S-94).
 CREATE TABLE producto_practica (

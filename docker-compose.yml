@@ -67,6 +67,13 @@ services:
       ISW_DB_USER: ${ISW_DB_USER:-isw_app}
       ISW_DB_PASSWORD: ${ISW_DB_PASSWORD:?Falta ISW_DB_PASSWORD - usa --env-file .env.docker}
       ISW_JWT_SECRET: ${ISW_JWT_SECRET:-}
+      # Recuperar la clave por correo (opcional; sin ISW_SMTP_HOST el enlace queda en el registro del contenedor)
+      ISW_URL_PUBLICA: ${ISW_URL_PUBLICA:-http://localhost:8080}
+      ISW_SMTP_HOST: ${ISW_SMTP_HOST:-}
+      ISW_SMTP_PUERTO: ${ISW_SMTP_PUERTO:-587}
+      ISW_SMTP_USUARIO: ${ISW_SMTP_USUARIO:-}
+      ISW_SMTP_CLAVE: ${ISW_SMTP_CLAVE:-}
+      ISW_SMTP_REMITENTE: ${ISW_SMTP_REMITENTE:-}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
     ports:
       - "${ISW_BACKEND_PORT:-8018}:8080"

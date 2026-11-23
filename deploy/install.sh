@@ -145,6 +145,14 @@ ISW_DB_PASSWORD=$CLAVE_DB
 ISW_JWT_SECRET=$(openssl rand -hex 32)
 APP_ADJUNTOS_DIRECTORIO=$ADJUNTOS_DIR
 ISW_LOG_FILE=$LOG_DIR/isw-practicas.log
+# Dirección pública (HTTPS) con la que se arma el enlace para restablecer la clave. Completar con la real.
+#ISW_URL_PUBLICA=https://COMPLETAR_DIRECCION_DEL_SERVIDOR
+# Correo saliente (recuperar la clave; HU-19 usará el mismo). Sin ISW_SMTP_HOST el enlace queda en el registro.
+#ISW_SMTP_HOST=
+#ISW_SMTP_PUERTO=587
+#ISW_SMTP_USUARIO=
+#ISW_SMTP_CLAVE=
+#ISW_SMTP_REMITENTE=
 EOF
     )
     chown root:"$USUARIO" "$ENV_FILE"; chmod 640 "$ENV_FILE"

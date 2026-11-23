@@ -137,7 +137,7 @@ function Install-Bd {
     }
     Write-Host "  OK  Versión de MySQL compatible ($version >= $VersionMinimaMysql)" -ForegroundColor Green
 
-    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (28 tablas, trigger)'
+    Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'schema.sql')) 'schema.sql (29 tablas, trigger)'
     Assert-Ok (Invoke-Mysql $RootUser $claveRoot (Read-ArchivoSql 'seed.sql'))   'seed.sql (catálogo y datos de demo)'
 
     # Usuario de la aplicación: solo puede leer y escribir datos, no cambiar la estructura.
@@ -207,6 +207,9 @@ function Test-Bd {
         @('Producto de la práctica en una inscripción inexistente (HU-18)', 1452, 'fk_producto_practica_inscripcion', "INSERT INTO producto_practica (inscripcion_id,tipo,nombre_archivo,ruta_archivo,tipo_mime,tamano_bytes,subido_por) VALUES (99999,'INFORME_FINAL','x.pdf','productos/x.pdf','application/pdf',100,6)"),
         @('Dos archivos oficiales con la misma versión en una pauta (HU-25)', 1062, 'uq_archivo_oficial_pauta_version', "INSERT INTO archivo_oficial_pauta (pauta_id,version,nombre_archivo,ruta_archivo,tipo_mime,tamano_bytes,subido_por) VALUES (1,1,'a.pdf','pautas/a.pdf','application/pdf',100,1); INSERT INTO archivo_oficial_pauta (pauta_id,version,nombre_archivo,ruta_archivo,tipo_mime,tamano_bytes,subido_por) VALUES (1,1,'b.pdf','pautas/b.pdf','application/pdf',100,1)"),
         @('Archivo oficial de una pauta inexistente (HU-25)', 1452, 'fk_archivo_oficial_pauta_pauta', "INSERT INTO archivo_oficial_pauta (pauta_id,version,nombre_archivo,ruta_archivo,tipo_mime,tamano_bytes,subido_por) VALUES (9999,1,'a.pdf','pautas/a.pdf','application/pdf',100,1)"),
+        @('Enlace de recuperación guardado en texto plano (S-97)', 3819, 'ck_token_recuperacion_clave_hash', "INSERT INTO token_recuperacion_clave (usuario_id,token_hash,fecha_creacion,fecha_expiracion) VALUES (1,'token-en-texto-plano',NOW(),NOW() + INTERVAL 30 MINUTE)"),
+        @('Enlace de recuperación que vence antes de crearse (S-97)', 3819, 'ck_token_recuperacion_clave_fechas', "INSERT INTO token_recuperacion_clave (usuario_id,token_hash,fecha_creacion,fecha_expiracion) VALUES (1,REPEAT('a',64),NOW(),NOW() - INTERVAL 1 MINUTE)"),
+        @('Enlace de recuperación de un usuario inexistente (S-97)', 1452, 'fk_token_recuperacion_clave_usuario', "INSERT INTO token_recuperacion_clave (usuario_id,token_hash,fecha_creacion,fecha_expiracion) VALUES (99999,REPEAT('b',64),NOW(),NOW() + INTERVAL 30 MINUTE)"),
         @('Escala SUS con un ítem fuera de 1 a 5 (HU-30)',       3819, 'ck_respuesta_sus_items',  "INSERT INTO respuesta_sus (validador_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10) VALUES (3,6,1,1,1,1,1,1,1,1,1)"),
         @('Segunda Escala SUS del mismo validador (HU-30)',       1062, 'uq_respuesta_sus_validador', "INSERT INTO respuesta_sus (validador_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10) VALUES (3,5,1,5,1,5,1,5,1,5,1); INSERT INTO respuesta_sus (validador_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10) VALUES (3,4,2,4,2,4,2,4,2,4,2)"),
         @('Criterio 10 en la rúbrica de 9 criterios (HU-30)',     3819, 'ck_rubrica_criterio_numero', "INSERT INTO respuesta_rubrica_experto (validador_id) VALUES (3); SET @ru = LAST_INSERT_ID(); INSERT INTO respuesta_rubrica_criterio (respuesta_id,numero,puntaje) VALUES (@ru,10,4)"),

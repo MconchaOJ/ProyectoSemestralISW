@@ -11,12 +11,12 @@
 SELECT CONCAT('Conectado como ', CURRENT_USER(), ' a la base ', DATABASE(), ' (MySQL ', VERSION(), ')') AS conexion;
 
 -- -----------------------------------------------------------------------------
-SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 28)' AS verificacion;
+SELECT '1. ESTRUCTURA: cantidad de tablas (esperado: 29)' AS verificacion;
 SELECT COUNT(*) AS tablas
   FROM information_schema.tables
  WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
-SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, parametro_sistema 5, componente_evaluativo 8, nota_componente_externo 2, grupo_practica 2, inscripcion 55 (6 en un grupo), pauta 13, dimension 57, indicador 269, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0, producto_practica 0, archivo_oficial_pauta 0)' AS verificacion;
+SELECT '2. FILAS POR TABLA (esperado: rol 6, usuario 33, estudiante 20, asignatura 6, parametro_sistema 5, componente_evaluativo 8, nota_componente_externo 2, grupo_practica 2, inscripcion 55 (6 en un grupo), pauta 13, dimension 57, indicador 269, planificacion 19, revision 23, evaluacion 11, respuesta 192, nota_voz 0, mensaje 0, documento_planificacion 0, documento_evaluacion 0, instrucciones_chatbot 1, documento_base_conocimiento 0, lectura_chat 0, respuesta_sus 0, respuesta_rubrica_experto 0, respuesta_rubrica_criterio 0, producto_practica 0, archivo_oficial_pauta 0, token_recuperacion_clave 0)' AS verificacion;
 SELECT 'rol' AS tabla, COUNT(*) AS filas FROM rol
 UNION ALL SELECT 'usuario',                COUNT(*) FROM usuario
 UNION ALL SELECT 'estudiante',             COUNT(*) FROM estudiante
@@ -44,9 +44,10 @@ UNION ALL SELECT 'respuesta_sus',               COUNT(*) FROM respuesta_sus
 UNION ALL SELECT 'respuesta_rubrica_experto',   COUNT(*) FROM respuesta_rubrica_experto
 UNION ALL SELECT 'respuesta_rubrica_criterio',  COUNT(*) FROM respuesta_rubrica_criterio
 UNION ALL SELECT 'producto_practica',           COUNT(*) FROM producto_practica
-UNION ALL SELECT 'archivo_oficial_pauta',       COUNT(*) FROM archivo_oficial_pauta;
+UNION ALL SELECT 'archivo_oficial_pauta',       COUNT(*) FROM archivo_oficial_pauta
+UNION ALL SELECT 'token_recuperacion_clave',    COUNT(*) FROM token_recuperacion_clave;
 
-SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 28, FOREIGN KEY 47, UNIQUE 23, CHECK 61)' AS verificacion;
+SELECT '3. RESTRICCIONES por tipo (esperado: PRIMARY KEY 29, FOREIGN KEY 48, UNIQUE 24, CHECK 63)' AS verificacion;
 SELECT constraint_type AS tipo, COUNT(*) AS cantidad
   FROM information_schema.table_constraints
  WHERE table_schema = DATABASE()
@@ -464,3 +465,12 @@ SELECT 'Rúbrica que no tiene sus 9 criterios' AS control, COUNT(*) AS violacion
  WHERE (SELECT COUNT(*) FROM respuesta_rubrica_criterio c WHERE c.respuesta_id = r.id) <> 9
 UNION ALL
 SELECT 'Puntaje SUS fuera de 0 a 100', COUNT(*) FROM respuesta_sus WHERE puntaje NOT BETWEEN 0 AND 100;
+
+-- -----------------------------------------------------------------------------
+SELECT '30. RECUPERACIÓN DE LA CLAVE POR CORREO (migración 021, S-97 a S-99; esperado: 0 violaciones en cada fila)' AS verificacion;
+SELECT 'Enlace vigente de un usuario inactivo' AS control, COUNT(*) AS violaciones
+  FROM token_recuperacion_clave t JOIN usuario u ON u.id = t.usuario_id
+ WHERE NOT t.usado AND t.fecha_expiracion > NOW() AND NOT u.activo
+UNION ALL
+SELECT 'Enlace que dura más de 60 minutos', COUNT(*)
+  FROM token_recuperacion_clave WHERE TIMESTAMPDIFF(MINUTE, fecha_creacion, fecha_expiracion) > 60;

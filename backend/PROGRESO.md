@@ -471,7 +471,7 @@ pauta desactivada no se ofrece ni permite crear evaluaciones.
 | S-74 | (2026-10-26, HU-29) El orden de los fragmentos es TF-IDF con coseno (TF = 1 + ln veces, IDF de BM25) y las palabras cuentan desde 3 letras (para "DUA") | HU-29 |
 | S-75 | (2026-10-26, HU-30) La Escala SUS adaptada y la rúbrica de juicio experto (textos de la propuesta RetroPlani Mate V3, no inventados) las responde dentro del sistema cualquier **estudiante validador**, una vez cada una, con la validación abierta o cerrada; un juez experto usaría una cuenta de estudiante validador. En la propuesta son para los jueces; el instrumento de usuarios (formato de Andrés Seguel) no está en el material y no se construyó. No se guarda la identificación del juez (filiación, firma) | HU-30 |
 | S-76 | (2026-11-21, S-45) **SUPUESTO:** inicio + desarrollo + cierre (minutos) debe ser igual a la duración de la clase. El formato oficial pide minutos para la clase y para cada parte, pero no dice que deban calzar. Se comprueba cuando están los cuatro valores (un borrador puede tenerlos a medias): 400 al crear o editar si no calza (`PlanificacionService`, antes de tocar la entidad) y `ck_planificacion_tiempos` en la base | HU-04 |
-| S-77 | (2026-11-21, HU-10) **SUPUESTO, a confirmar con el cliente:** en una dupla o grupo **cada integrante sigue con su propia planificación** (y su propia inscripción y pauta, S-11); el grupo solo agrupa y muestra con quién trabajó. Si el cliente dice que la dupla entrega una sola planificación, hay que rehacer el flujo y los permisos de HU-04 | HU-10 |
+| S-77 | (2026-11-21, HU-10) **SUPUESTO, a confirmar con el cliente:** en una dupla o grupo **cada integrante sigue con su propia planificación** (y su propia inscripción y pauta, S-11); el grupo solo agrupa y muestra con quién trabajó. Si el cliente dice que la dupla entrega una sola planificación, hay que rehacer el flujo y los permisos de HU-04. **Nueva evidencia no confirmada (23-nov):** un segundo estudiante de Pedagogía (no es el cliente) dice que en dupla se entrega **una sola planificación compartida**, no una por integrante — ver "Sprint 2: respuestas de un compañero de Pedagogía..." al final de este documento | HU-10 |
 | S-78 | (2026-11-21, HU-10) Reglas de los grupos que aplica la aplicación: una dupla tiene **exactamente 2** integrantes y un grupo **de 2 a 4**; todos de la misma asignatura y periodo (también lo exige la base con la clave foránea compuesta), **EN_CURSO**, en ningún otro grupo y con el **mismo profesor guía**; el establecimiento y el curso solo se guardan en las prácticas que van a un colegio. Solo el coordinador arma, cambia o deshace grupos; un grupo con algún integrante ya cerrado no se deshace (409) | HU-10 |
 | S-79 | (2026-11-21, HU-14) **SUPUESTO:** en el panel, una planificación "requiere atención" si espera al guía o al profesor del curso más de 3 días (configurable: `app.panel.dias-atencion`), contados desde su última actualización. "Sin evaluar" solo cuenta en prácticas que van a un colegio | HU-14 |
 | S-80 | (2026-11-22, HU-27) **SUPUESTO:** rangos de los parámetros: anticipación 0 a 14 días, umbral del panel 1 a 30 días, documento 1 a 10 MB y audio 1 a 25 MB. Los tamaños solo se pueden bajar: el techo de 10 MB también lo fija la base (`ck_documento_*_tamano`) y el de 25 MB queda bajo el límite de subida de Spring (30 MB). Los intentos de login, el JWT y el chatbot no se exponen | HU-27 |
@@ -1534,7 +1534,7 @@ Fuente: "Estructura evaluativa de la Práctica Pedagógica" (`Documents/Práctic
 - **Supuestos nuevos:** **S-81** escala de 1,0 a 7,0 con 60 % de exigencia sobre el puntaje máximo (aprobado por el usuario, falta el cliente). **S-83** editan la estructura el coordinador y cualquier profesor del curso con al menos una inscripción en la asignatura, en cualquier momento; quitar un externo borra sus notas; las notas finales ya guardadas no cambian. **S-84** la nota de cada componente se redondea a un decimal y la parcial/final se calculan con esas notas; el coordinador confirma o ajusta la propuesta al cerrar. **S-85** las notas externas las escriben el profesor del curso de esa inscripción y el coordinador, solo EN_CURSO (409 cerrada). (S-82 queda reservado para el borrado de documentos.)
 - **Pruebas:** **321, 0 fallos** (14 nuevas: `EscalaNotasTest` 4 y `HU09NotaFinalIntegracionTest` 10; más la nota en `HU03`). `bd.ps1` **40/40** (4 nuevas) y 3 controles de integridad nuevos en `verificacion.sql`.
 - **Navegador** (Chrome): la profesora del curso ve la estructura oficial y la parcial 5,9 (27 %) de Valentina; escribe TANEP 6,0 y la parcial pasa a 6,0 (47 %); el editor rechaza una suma de 105 % con el mensaje del servidor, agrega un externo y reordena (recalcula 5,9 con 42 %); el coordinador al cerrar ve el aviso de la parcial; la evaluación muestra "Nota 5,6" y la columna Nota. Sin errores de JavaScript.
-- **Pendiente con el cliente:** confirmar la escala (S-81); estructura de las otras 5 prácticas (solo está la de Práctica Pedagógica); si en Práctica Profesional las pautas del tutor también cuentan.
+- **Pendiente con el cliente:** confirmar la escala (S-81); estructura de las otras 5 prácticas (solo está la de Práctica Pedagógica); si en Práctica Profesional las pautas del tutor también cuentan. **Dato nuevo, no confirmado (23-nov):** según notas de un compañero de Pedagogía, Investigación en Aula sería Capítulo 1 35 %, Informe de Práctica 35 %, Coloquio 20 %, Autoevaluación 10 % (no distingue pauta/externo); Trabajo Colaborativo solo mostró el promedio final (6,7), sin desglose. Aproximación, Ambientes y Práctica Profesional siguen sin dato, y las pautas del tutor en Práctica Profesional siguen sin respuesta. Ver sección final del documento.
 
 
 ## Sprint 2: borrar o reemplazar documentos adjuntos, HU-21/HU-22 (2026-11-22, rama `feature/hu21-borrar-documentos`)
@@ -1610,7 +1610,7 @@ Nadie había corrido sus migraciones 012 y 013 sobre una base real (no hay servi
 
 - **Qué hace:** el estudiante sube a cada inscripción EN_CURSO su **informe final, diario de reflexión, proyecto de intervención u otro producto** (Word o PDF, con el tamaño máximo vigente de HU-27) y quedan en su recorrido. El backlog no traía criterios: los fija el equipo como supuestos.
 - **SUPUESTO S-93:** solo el estudiante dueño sube, reemplaza o borra (403 para cualquier otro, incluido el coordinador) y solo con la inscripción EN_CURSO (409 si está cerrada: lo cerrado es el recorrido que quedó).
-- **SUPUESTO S-94:** varios archivos por tipo y todos los tipos en las 6 prácticas (no se restringe el proyecto de intervención a Práctica Profesional).
+- **SUPUESTO S-94:** varios archivos por tipo y todos los tipos en las 6 prácticas (no se restringe el proyecto de intervención a Práctica Profesional). **Pendiente (23-nov):** sigue sin respuesta directa; un compañero de Pedagogía solo describió entregas escalonadas (informe de contextualización en la semana de observación, luego informe final), sin aclarar si diario de reflexión/proyecto de intervención aplican a las 6 prácticas. Ver sección final del documento.
 - **Quién lo ve:** quien ya puede ver la inscripción (`AccesoService.exigirVerInscripcion`): el estudiante, el guía, el profesor del curso, el tutor, el coordinador y el jefe de carrera.
 - **Reutiliza HU-21:** `AlmacenamientoArchivosService` (carpeta `productos/`, validación de extensión y tamaño, `borrarAlConfirmar` y `reemplazarAlConfirmar`: el archivo se borra del disco solo después del commit).
 - **Migración `019`:** tabla `producto_practica` (FK a `inscripcion` y `usuario`, `ck_producto_practica_tipo`, `ck_producto_practica_tamano`). **27 tablas, 19 migraciones.** `verificacion.sql`: el conteo esperado de CHECK ya estaba desfasado (decía 56 y eran 57 desde la 018); quedó en 59.
@@ -1638,3 +1638,91 @@ Nadie había corrido sus migraciones 012 y 013 sobre una base real (no hay servi
 - **Navegador (Chrome), los 6 roles:** se abrió cada pantalla del menú y de los accesos rápidos de cada rol, más los detalles principales, sin mensajes de error ni excepciones de JavaScript de la aplicación (en la consola solo aparecen avisos de la extensión del navegador). Estudiante 8 pantallas (sube un diario de reflexión); guía 9 (guarda avance en su borrador); profesor del curso 8; coordinador 14 (sube el archivo oficial de la pauta 3, ve y descarga el informe PDF); jefe de carrera 14 (ve el producto de Camila, descarga la cartola); tutor 7 (crea una evaluación con la pauta 3 y ve «Pauta oficial»).
 - Al terminar se detuvo la aplicación y se volvió a ejecutar `bd.ps1` (la base quedó con los datos de demo exactos).
 
+## Sprint 2: respuestas de un compañero de Pedagogía en Matemáticas sobre supuestos abiertos (2026-11-23, sin cambios de código)
+
+No es el cliente (es un compañero de Pedagogía en Matemáticas, ajeno al proyecto, el mismo tipo de fuente que la
+del 2026-09-20 en `RESUMEN.md` §13): todo lo de aquí es **"reportado por estudiante, pendiente de confirmar"**, no
+reemplaza la confirmación del cliente. Se registra solo como documentación; no se tocó código ni se corrió ninguna
+migración.
+
+| # | Pregunta | Lo que respondió | Efecto en el proyecto |
+|---|---|---|---|
+| 1 | Estructura evaluativa (%) de Aproximación, Ambientes, Trabajo Colaborativo, Investigación y Práctica Profesional | Capturas de la app de notas: **Investigación en Aula** — Capítulo 1 35 %, Informe de Práctica 35 %, Coloquio 20 %, Autoevaluación 10 % (no distingue pauta/externo). **Trabajo Colaborativo en Aula** — solo el promedio final (6,7), sin desglose. Aproximación, Ambientes y Práctica Profesional: sin dato | Dato parcial para Investigación en Aula (pendiente desde HU-09); Trabajo Colaborativo, Aproximación, Ambientes y Práctica Profesional **siguen sin estructura** |
+| 2 | En Práctica Profesional, ¿las pautas del tutor cuentan en el mismo % de "pautas" o aparte? | No la pudo responder: no ha cursado Práctica Profesional | Sigue abierta, igual que antes de esta ronda |
+| 3 | ¿La revisión de planificación siempre es en secuencia (guía → profesor del curso) o hay casos en paralelo? | Siempre en secuencia: "primero mandar la planificación al profe del ramo y luego al profesor colaborador" | Segundo dato a favor de la secuencia ya construida (S-37); sigue sin ser confirmación del cliente |
+| 4 | En dupla, ¿cada estudiante entrega su propia planificación o una compartida? ¿Dupla siempre 2, grupo 2 a 4, mismo guía? | "Si se hace en duplas, solo se entrega una planificación" (compartida). No respondió el resto | **Contradice S-77** (hoy el sistema asume una planificación por integrante). Es el segundo estudiante que apunta en esta dirección — la fila 7 de `RESUMEN.md` §13 solo confirmaba la pauta individual (S-11), no la planificación. Si se confirma con el cliente, hay que rehacer el flujo y los permisos de HU-04, como ya advertía S-77 |
+| 5 | La transcripción de la nota de voz solo funciona en Chrome hoy, ¿es aceptable o debe funcionar en cualquier navegador? | No la entendió el compañero; el equipo decidió que sí sería mejor que funcionara en cualquier navegador | No cambia nada todavía: sigue siendo la limitación conocida de S-40 (Web Speech API de Chrome); queda como mejora deseable, no implementada |
+| 6 | ¿El 60 % de exigencia y la nota mínima por escala de pauta aplican igual a todas las prácticas? | El equipo concluyó que la exigencia la decide el jefe de carrera y debería ser un parámetro modificable | **Ya está así:** `evaluacion.exigencia_pct` (HU-27, S-92) ya es un parámetro que edita el jefe de carrera, 50 a 70 %. Nada que cambiar |
+| 7 | El informe final, diario de reflexión y proyecto de intervención, ¿se suben igual en las 6 prácticas o solo en algunas? | Describió entregas escalonadas (informe de contextualización en la semana de observación, luego informe final que pregunta cómo cambió la planificación), sin aclarar si cada tipo de documento aplica a las 6 prácticas | No resuelve **S-94** (hoy se asume que los 3 tipos aplican a las 6 prácticas); sigue sin confirmar. Las entregas escalonadas tampoco están modeladas hoy en HU-18 (solo hay una fecha de subida libre, sin exigir una etapa antes que otra) |
+
+**Conclusión:** nada de esto cambia código ni migra nada. Lo más relevante es la fila 4 (S-77): ya son dos
+estudiantes de Pedagogía, en momentos distintos, que apuntan a que la planificación en dupla podría ser compartida
+y no individual — vale la pena preguntárselo directamente al cliente (coordinador/Dr. Panes) antes de dar HU-10 por
+cerrado del todo.
+
+## Sprint 2: recuperación de la clave por correo (2026-11-23, rama `feature/recuperar-clave`)
+
+Reemplaza el aviso «¿Olvidó su clave? Contacte al coordinador de la carrera.» del login por un flujo real: el
+usuario pide un enlace, le llega al correo y elige una clave nueva sin que el coordinador intervenga.
+
+- **Endpoints públicos** (sin token, como `/login`):
+  - `POST /api/auth/recuperar-clave` `{ email }` → **siempre 200** con el mismo mensaje genérico, exista o no el
+    correo, esté la cuenta activa o no y aunque se haya pasado el límite (no revela qué correos están registrados).
+  - `POST /api/auth/restablecer-clave` `{ token, nuevaClave }` → 204. Enlace inexistente, usado o vencido (o cuenta
+    inactiva): **400 con el mismo mensaje**. Se usa 400 y no 401 porque el front-end trata el 401 como "sesión
+    vencida". La clave nueva sigue la regla de HU-26 (8 a 72 caracteres, error de campo `nuevaClave`).
+- **Migración `021_recuperacion_clave.sql`:** tabla `token_recuperacion_clave` (`usuario_id` FK, `token_hash`
+  CHAR(64) UNIQUE, `fecha_creacion`, `fecha_expiracion`, `usado`). CHECK: el hash son 64 hexadecimales (el token en
+  texto plano no entra) y la expiración es posterior a la creación. 3 pruebas negativas nuevas en `bd.ps1`
+  (**48**) y la sección 30 de `verificacion.sql`. **29 tablas, 21 migraciones**; PK 29, FK 48, UNIQUE 24, CHECK 63.
+- **Código:** `RecuperacionClaveService`, `EnvioCorreoService`, `CorreoConfig` (crea el `JavaMailSender` con
+  `app.correo.*`, no con `spring.mail.*`), `CorreoProperties`, `RecuperacionProperties`, entidad y repositorio
+  `TokenRecuperacionClave`, DTO `RecuperarClaveRequest`, `RestablecerClaveRequest` y `MensajeDto`. Dependencia
+  nueva: `spring-boot-starter-mail`.
+- **Front-end:** en `index.html` el aviso pasa a ser el botón «¿Olvidó su clave?», que abre un formulario con el
+  correo y muestra el mensaje genérico. Página nueva `restablecer-clave.html` (`js/restablecer-clave.js`): lee el
+  token, lo quita de la barra de direcciones (`history.replaceState`), pide la clave dos veces y, si el enlace no
+  sirve, muestra el aviso y el enlace «Pedir un enlace nuevo» (`index.html?recuperar=1` abre el formulario).
+  `<meta name="referrer" content="no-referrer">` para que el token no salga en la cabecera Referer.
+- **Variables de entorno nuevas** (todas opcionales; sin valores reales por defecto): `ISW_SMTP_HOST`,
+  `ISW_SMTP_PUERTO` (587 STARTTLS por defecto, 465 SSL), `ISW_SMTP_USUARIO`, `ISW_SMTP_CLAVE`, `ISW_SMTP_REMITENTE`
+  (vacío = el usuario) e `ISW_URL_PUBLICA` (por defecto `http://localhost:8080`). Documentadas en `.env.example`,
+  `backend/README.md`, `DESPLIEGUE.md`, `deploy/install.sh` (comentadas en el archivo de claves) y
+  `docker-compose.yml`.
+- **Sin SMTP la aplicación arranca igual** (un WARN al arrancar) y, al pedir un enlace, este se escribe en el
+  registro con nivel WARN en vez de mandarse; la respuesta al usuario es la misma. Con SMTP configurado el enlace
+  **nunca** va al registro (si el envío falla, solo se registra el error).
+
+**Supuestos nuevos (decisiones del equipo, sin confirmar con el cliente):**
+
+- **SUPUESTO S-97:** el enlace vale **30 minutos** (`app.recuperacion.minutos-validez`, de 15 a 60) y sirve **una
+  sola vez**. El token son 32 bytes de `SecureRandom` en Base64url; en la base queda solo su **SHA-256** (no BCrypt:
+  el token es aleatorio y largo, no necesita sal ni lentitud, y así se busca directo por el hash). Pedir un enlace
+  nuevo deja sin efecto los anteriores; restablecer la clave deja sin efecto todos los pendientes y levanta el
+  bloqueo de login de ese correo. Los JWT ya entregados siguen valiendo hasta que vencen (8 horas), igual que en
+  HU-26 (S-50): hoy no hay forma de revocarlos.
+- **SUPUESTO S-98:** como máximo **3 enlaces por usuario cada 15 minutos** (`app.recuperacion.solicitudes-maximas`
+  y `app.recuperacion.ventana-minutos`). Se cuentan en la tabla (no se pierden al reiniciar, a diferencia de S-49).
+  Pasado el límite se responde **200 con el mismo mensaje** (decisión del usuario: un 429 sería una señal distinta
+  para quien prueba correos ajenos), no se crea el enlace y queda un WARN en el registro.
+- **SUPUESTO S-99:** sirve para los **6 roles** (no solo estudiantes), solo con la cuenta activa. El correo usa el
+  **mismo SMTP pendiente de HU-19**; mientras la UBB no lo entregue, el flujo **sí se puede probar de punta a punta
+  en la demo** con una cuenta SMTP de prueba: Gmail (`smtp.gmail.com`, 587, con una *contraseña de aplicación*) o
+  Brevo / Mailjet (capa gratuita); o, sin ninguna cuenta, copiando el enlace del registro del servidor. El correo se
+  manda en un hilo aparte, después de guardar el enlace: el tiempo de respuesta no depende del SMTP (no deja adivinar
+  si el correo existe) y un SMTP caído no es un error para el usuario. El enlace se arma con `ISW_URL_PUBLICA`,
+  nunca con la cabecera `Host` de la petición (si no, alguien podría hacer que el correo apunte a otro sitio).
+
+**Pruebas:** `RecuperacionClaveIntegracionTest` (12; el SMTP es un `@MockitoBean JavaMailSender`, nunca se manda un
+correo real): caso feliz (correo con el enlace, en la base solo el SHA-256, solo la clave nueva entra), enlace de un
+solo uso, vencido, inexistente, correo inexistente o inactivo que responde idéntico y no manda nada, límite de 3 (la
+cuarta no manda y responde igual; pasada la ventana se puede pedir otro), un enlace nuevo invalida el anterior,
+regla de 8 a 72 caracteres, los 6 roles, restablecer levanta el bloqueo de login, SMTP caído sin error para el
+usuario y validación del correo. `EnvioCorreoServiceTest` (4, sin Spring): sin SMTP el enlace va al registro; con
+SMTP caído no hay excepción y ni el enlace ni la clave del SMTP salen en el registro. **389 pruebas, 0 fallos.**
+
+**Verificado a mano** (sin SMTP): por HTTP, un correo registrado y uno inexistente reciben la misma respuesta y el
+enlace aparece en el registro; en Chrome, el formulario del login muestra el mensaje genérico, la página nueva
+rechaza dos claves distintas, guarda la clave (el login con la nueva da 200) y al reabrir el mismo enlace muestra
+«no es válido, ya se usó o venció» con «Pedir un enlace nuevo». Al terminar se detuvo la aplicación y se volvió a
+ejecutar `bd.ps1` (48/48).

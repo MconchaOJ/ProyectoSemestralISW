@@ -33,6 +33,8 @@ Las claves viven solo en variables de entorno de Windows. **No hay ninguna clave
 | `ISW_DB_PASSWORD` | Clave del usuario `isw_app` de MySQL (la aplicación se conecta con él, nunca como `root`) | Sí |
 | `ISW_DB_ROOT_PASSWORD` | Clave de `root`. **Solo** la usa `db\bd.ps1` para crear la base | Solo para crearla |
 | `ISW_JWT_SECRET` | Secreto de firma del token (32 caracteres o más). Si falta, se genera uno al arrancar y los tokens dejan de valer al reiniciar | No |
+| `ISW_SMTP_HOST`, `ISW_SMTP_PUERTO`, `ISW_SMTP_USUARIO`, `ISW_SMTP_CLAVE`, `ISW_SMTP_REMITENTE` | Correo saliente para recuperar la clave (S-97 a S-99; el mismo SMTP que necesitará HU-19). Puerto 587 (STARTTLS, por defecto) o 465 (SSL). Si falta `ISW_SMTP_HOST`, la app arranca igual y el enlace para restablecer la clave se escribe en el registro del servidor (WARN) | No |
+| `ISW_URL_PUBLICA` | Dirección pública del sistema con la que se arma el enlace del correo (por defecto `http://localhost:8080`; en el servidor, la dirección HTTPS real) | En el servidor |
 | `ISW_DB_HOST`, `ISW_DB_PORT` | Servidor y puerto de MySQL (por defecto `127.0.0.1` y `3306`) | No |
 
 Cómo definir una (PowerShell; no deja la clave en el historial):
