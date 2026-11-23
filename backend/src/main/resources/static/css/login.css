@@ -58,6 +58,13 @@ body.login::before {
 .entrada-icono .toggle-clave:hover { background: var(--azul-50); color: var(--azul-700); }
 
 .login-aviso { margin: 1.1rem 0 0; text-align: center; font-size: .88rem; color: var(--texto-suave); }
+.login-enlace {
+  font: inherit; color: var(--azul-500); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline;
+}
+.login-enlace:hover { color: var(--azul-700); }
+.login-recuperar { margin-top: 1.1rem; padding-top: 1.1rem; border-top: 1px solid var(--azul-50); }
+.login-recuperar h3 { font-size: 1.05rem; margin-bottom: .4rem; text-align: center; }
+.login-ayuda { margin: 0 0 .9rem; font-size: .88rem; color: var(--texto-suave); text-align: center; }
 .login-pie { margin-top: auto; padding-top: 1.5rem; text-align: center; font-size: .82rem; color: var(--texto-suave); }
 
 @media (max-width: 480px) {

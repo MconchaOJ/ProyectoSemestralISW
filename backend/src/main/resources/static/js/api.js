@@ -144,6 +144,10 @@ export const api = {
   put: (ruta, cuerpo) => pedir('PUT', ruta, { cuerpo: cuerpo ?? {} }),
   del: (ruta) => pedir('DELETE', ruta),
   login: (email, password) => pedir('POST', '/api/auth/login', { cuerpo: { email, password }, publico: true }),
+  // Recuperación de la clave por correo (S-97 a S-99): públicos, sin token
+  recuperarClave: (email) => pedir('POST', '/api/auth/recuperar-clave', { cuerpo: { email }, publico: true }),
+  restablecerClave: (token, nuevaClave) =>
+    pedir('POST', '/api/auth/restablecer-clave', { cuerpo: { token, nuevaClave }, publico: true }),
   subir: (ruta, formData, metodo) => subirFormData(ruta, formData, metodo),
   archivo: (ruta) => obtenerArchivo(ruta),
 };

@@ -1659,3 +1659,70 @@ migración.
 estudiantes de Pedagogía, en momentos distintos, que apuntan a que la planificación en dupla podría ser compartida
 y no individual — vale la pena preguntárselo directamente al cliente (coordinador/Dr. Panes) antes de dar HU-10 por
 cerrado del todo.
+
+## Sprint 2: recuperación de la clave por correo (2026-11-23, rama `feature/recuperar-clave`)
+
+Reemplaza el aviso «¿Olvidó su clave? Contacte al coordinador de la carrera.» del login por un flujo real: el
+usuario pide un enlace, le llega al correo y elige una clave nueva sin que el coordinador intervenga.
+
+- **Endpoints públicos** (sin token, como `/login`):
+  - `POST /api/auth/recuperar-clave` `{ email }` → **siempre 200** con el mismo mensaje genérico, exista o no el
+    correo, esté la cuenta activa o no y aunque se haya pasado el límite (no revela qué correos están registrados).
+  - `POST /api/auth/restablecer-clave` `{ token, nuevaClave }` → 204. Enlace inexistente, usado o vencido (o cuenta
+    inactiva): **400 con el mismo mensaje**. Se usa 400 y no 401 porque el front-end trata el 401 como "sesión
+    vencida". La clave nueva sigue la regla de HU-26 (8 a 72 caracteres, error de campo `nuevaClave`).
+- **Migración `021_recuperacion_clave.sql`:** tabla `token_recuperacion_clave` (`usuario_id` FK, `token_hash`
+  CHAR(64) UNIQUE, `fecha_creacion`, `fecha_expiracion`, `usado`). CHECK: el hash son 64 hexadecimales (el token en
+  texto plano no entra) y la expiración es posterior a la creación. 3 pruebas negativas nuevas en `bd.ps1`
+  (**48**) y la sección 30 de `verificacion.sql`. **29 tablas, 21 migraciones**; PK 29, FK 48, UNIQUE 24, CHECK 63.
+- **Código:** `RecuperacionClaveService`, `EnvioCorreoService`, `CorreoConfig` (crea el `JavaMailSender` con
+  `app.correo.*`, no con `spring.mail.*`), `CorreoProperties`, `RecuperacionProperties`, entidad y repositorio
+  `TokenRecuperacionClave`, DTO `RecuperarClaveRequest`, `RestablecerClaveRequest` y `MensajeDto`. Dependencia
+  nueva: `spring-boot-starter-mail`.
+- **Front-end:** en `index.html` el aviso pasa a ser el botón «¿Olvidó su clave?», que abre un formulario con el
+  correo y muestra el mensaje genérico. Página nueva `restablecer-clave.html` (`js/restablecer-clave.js`): lee el
+  token, lo quita de la barra de direcciones (`history.replaceState`), pide la clave dos veces y, si el enlace no
+  sirve, muestra el aviso y el enlace «Pedir un enlace nuevo» (`index.html?recuperar=1` abre el formulario).
+  `<meta name="referrer" content="no-referrer">` para que el token no salga en la cabecera Referer.
+- **Variables de entorno nuevas** (todas opcionales; sin valores reales por defecto): `ISW_SMTP_HOST`,
+  `ISW_SMTP_PUERTO` (587 STARTTLS por defecto, 465 SSL), `ISW_SMTP_USUARIO`, `ISW_SMTP_CLAVE`, `ISW_SMTP_REMITENTE`
+  (vacío = el usuario) e `ISW_URL_PUBLICA` (por defecto `http://localhost:8080`). Documentadas en `.env.example`,
+  `backend/README.md`, `DESPLIEGUE.md`, `deploy/install.sh` (comentadas en el archivo de claves) y
+  `docker-compose.yml`.
+- **Sin SMTP la aplicación arranca igual** (un WARN al arrancar) y, al pedir un enlace, este se escribe en el
+  registro con nivel WARN en vez de mandarse; la respuesta al usuario es la misma. Con SMTP configurado el enlace
+  **nunca** va al registro (si el envío falla, solo se registra el error).
+
+**Supuestos nuevos (decisiones del equipo, sin confirmar con el cliente):**
+
+- **SUPUESTO S-97:** el enlace vale **30 minutos** (`app.recuperacion.minutos-validez`, de 15 a 60) y sirve **una
+  sola vez**. El token son 32 bytes de `SecureRandom` en Base64url; en la base queda solo su **SHA-256** (no BCrypt:
+  el token es aleatorio y largo, no necesita sal ni lentitud, y así se busca directo por el hash). Pedir un enlace
+  nuevo deja sin efecto los anteriores; restablecer la clave deja sin efecto todos los pendientes y levanta el
+  bloqueo de login de ese correo. Los JWT ya entregados siguen valiendo hasta que vencen (8 horas), igual que en
+  HU-26 (S-50): hoy no hay forma de revocarlos.
+- **SUPUESTO S-98:** como máximo **3 enlaces por usuario cada 15 minutos** (`app.recuperacion.solicitudes-maximas`
+  y `app.recuperacion.ventana-minutos`). Se cuentan en la tabla (no se pierden al reiniciar, a diferencia de S-49).
+  Pasado el límite se responde **200 con el mismo mensaje** (decisión del usuario: un 429 sería una señal distinta
+  para quien prueba correos ajenos), no se crea el enlace y queda un WARN en el registro.
+- **SUPUESTO S-99:** sirve para los **6 roles** (no solo estudiantes), solo con la cuenta activa. El correo usa el
+  **mismo SMTP pendiente de HU-19**; mientras la UBB no lo entregue, el flujo **sí se puede probar de punta a punta
+  en la demo** con una cuenta SMTP de prueba: Gmail (`smtp.gmail.com`, 587, con una *contraseña de aplicación*) o
+  Brevo / Mailjet (capa gratuita); o, sin ninguna cuenta, copiando el enlace del registro del servidor. El correo se
+  manda en un hilo aparte, después de guardar el enlace: el tiempo de respuesta no depende del SMTP (no deja adivinar
+  si el correo existe) y un SMTP caído no es un error para el usuario. El enlace se arma con `ISW_URL_PUBLICA`,
+  nunca con la cabecera `Host` de la petición (si no, alguien podría hacer que el correo apunte a otro sitio).
+
+**Pruebas:** `RecuperacionClaveIntegracionTest` (12; el SMTP es un `@MockitoBean JavaMailSender`, nunca se manda un
+correo real): caso feliz (correo con el enlace, en la base solo el SHA-256, solo la clave nueva entra), enlace de un
+solo uso, vencido, inexistente, correo inexistente o inactivo que responde idéntico y no manda nada, límite de 3 (la
+cuarta no manda y responde igual; pasada la ventana se puede pedir otro), un enlace nuevo invalida el anterior,
+regla de 8 a 72 caracteres, los 6 roles, restablecer levanta el bloqueo de login, SMTP caído sin error para el
+usuario y validación del correo. `EnvioCorreoServiceTest` (4, sin Spring): sin SMTP el enlace va al registro; con
+SMTP caído no hay excepción y ni el enlace ni la clave del SMTP salen en el registro. **389 pruebas, 0 fallos.**
+
+**Verificado a mano** (sin SMTP): por HTTP, un correo registrado y uno inexistente reciben la misma respuesta y el
+enlace aparece en el registro; en Chrome, el formulario del login muestra el mensaje genérico, la página nueva
+rechaza dos claves distintas, guarda la clave (el login con la nueva da 200) y al reabrir el mismo enlace muestra
+«no es válido, ya se usó o venció» con «Pedir un enlace nuevo». Al terminar se detuvo la aplicación y se volvió a
+ejecutar `bd.ps1` (48/48).

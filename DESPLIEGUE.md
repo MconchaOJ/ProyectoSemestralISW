@@ -52,7 +52,7 @@ usuario isw_app)                       (documentos, audios, productos, archivos 
 | 6 | **Base de datos** | Guardar la información | **MySQL 8.4 LTS** (mínimo técnico 8.0.16; MySQL 5.7 y MariaDB no sirven). Opción A: la instalamos en el mismo servidor. Opción B: la da TI |
 | 7 | **Respaldos** | No perder datos | ¿TI respalda la máquina o lo hacemos nosotros? ¿Dónde se guardan las copias? **[PREGUNTAR A TI]** |
 | 8 | **Salida a internet (HTTPS)** | Chatbot (HU-15) | El modelo se consulta en Groq. Sin salida, el chatbot responde 503 y el resto funciona |
-| 9 | **Correo (SMTP)** | Avisos por correo (HU-19) | Es lo que bloquea HU-19 (ver `objetivosAFUTURO.md`, sección 3) |
+| 9 | **Correo (SMTP)** | Avisos por correo (HU-19) | Es lo que bloquea HU-19 (ver `objetivosAFUTURO.md`, sección 3). Desde el 2026-11-23 también lo usa la recuperación de la clave por correo (S-99), que ya está construida y se configura con `ISW_SMTP_*` |
 
 ### 3.2 Lo que instala `deploy/install.sh`
 
@@ -161,7 +161,10 @@ grep -c '^ISW_JWT_SECRET=.\{32,\}' .env.docker           # 1 recomendado (si da 
 
 Para crear un secreto JWT: `openssl rand -hex 32` y pégalo en `ISW_JWT_SECRET=` editando el archivo. Si quieres el
 chatbot, agrega también una línea `ISW_GROQ_API_KEY=<clave>` (el servidor necesita salida HTTPS a internet; sin la
-clave la app funciona igual y el chatbot responde 503).
+clave la app funciona igual y el chatbot responde 503). Para recuperar la clave por correo (S-97 a S-99), agrega
+`ISW_URL_PUBLICA=<dirección pública>` y, si hay SMTP, `ISW_SMTP_HOST`, `ISW_SMTP_PUERTO`, `ISW_SMTP_USUARIO`,
+`ISW_SMTP_CLAVE` e `ISW_SMTP_REMITENTE`; sin SMTP la app funciona igual y el enlace queda en el registro
+(`podman logs`), solo legible por quien administra el servidor.
 
 *(Opcional)* respaldo de la base de demo actual, por si quieres mirar algo después:
 

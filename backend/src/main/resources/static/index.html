@@ -44,7 +44,26 @@
         <button type="submit" class="btn btn-primario btn-bloque" id="btn-ingresar">Ingresar</button>
       </form>
 
-      <p class="login-aviso">¿Olvidó su clave? Contacte al coordinador de la carrera.</p>
+      <p class="login-aviso">
+        <button type="button" class="login-enlace" id="btn-olvide" aria-expanded="false" aria-controls="panel-recuperar">¿Olvidó su clave?</button>
+      </p>
+
+      <div id="panel-recuperar" class="login-recuperar" hidden>
+        <h3>Recuperar la clave</h3>
+        <p class="login-ayuda">Escriba el correo de su cuenta. Si está registrado, le llegará un enlace para elegir una clave nueva.</p>
+        <div id="alerta-recuperar" hidden></div>
+        <form id="form-recuperar" novalidate>
+          <div class="campo">
+            <label for="email-recuperar">Correo electrónico</label>
+            <span class="entrada-icono">
+              <span class="ico" data-icono="mail"></span>
+              <input id="email-recuperar" name="email" type="email" autocomplete="username" placeholder="nombre@dominio.cl">
+            </span>
+            <span class="error-campo" id="error-email-recuperar" role="alert" hidden></span>
+          </div>
+          <button type="submit" class="btn btn-primario btn-bloque" id="btn-recuperar">Enviar enlace</button>
+        </form>
+      </div>
     </section>
 
     <footer class="login-pie">

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- El token va en la URL: que no se mande a otros sitios en la cabecera Referer -->
+  <meta name="referrer" content="no-referrer">
+  <title>Restablecer clave · Sistema de Prácticas PEM</title>
+  <link rel="icon" type="image/png" href="img/EscudoUBB.png">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="login">
+  <main class="login-pagina">
+    <div class="login-logo-caja">
+      <img class="login-logo" src="img/LogoInstitucionalPNG.png" alt="Universidad del Bío-Bío">
+    </div>
+    <p class="login-sistema">Sistema de Prácticas PEM</p>
+
+    <section class="tarjeta login-tarjeta" aria-labelledby="titulo-restablecer">
+      <h2 id="titulo-restablecer">Elija su clave nueva</h2>
+
+      <div id="alerta" hidden></div>
+
+      <form id="form-restablecer" novalidate>
+        <div class="campo">
+          <label for="nueva">Clave nueva</label>
+          <span class="entrada-icono">
+            <span class="ico" data-icono="lock"></span>
+            <input id="nueva" name="nueva" type="password" autocomplete="new-password" placeholder="Entre 8 y 72 caracteres" autofocus>
+            <button type="button" class="toggle-clave" id="toggle-clave" aria-label="Mostrar contraseña" aria-pressed="false"></button>
+          </span>
+          <span class="error-campo" id="error-nueva" role="alert" hidden></span>
+        </div>
+
+        <div class="campo">
+          <label for="confirmacion">Repita la clave nueva</label>
+          <span class="entrada-icono">
+            <span class="ico" data-icono="lock"></span>
+            <input id="confirmacion" name="confirmacion" type="password" autocomplete="new-password" placeholder="La misma clave">
+          </span>
+          <span class="error-campo" id="error-confirmacion" role="alert" hidden></span>
+        </div>
+
+        <button type="submit" class="btn btn-primario btn-bloque" id="btn-guardar">Guardar clave nueva</button>
+      </form>
+
+      <p class="login-aviso"><a href="index.html">Volver a ingresar</a></p>
+    </section>
+
+    <footer class="login-pie">
+      Pedagogía en Educación Matemática · Facultad de Educación y Humanidades · Universidad del Bío-Bío
+    </footer>
+  </main>
+
+  <script type="module" src="js/restablecer-clave.js"></script>
+</body>
+</html>

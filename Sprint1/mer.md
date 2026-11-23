@@ -25,6 +25,7 @@ El cliente quiere poder responder estas preguntas con el sistema:
 | ¿Qué documentos adjuntó a su planificación o a su evaluación? (Fase E) | `DOCUMENTO_PLANIFICACION`, `DOCUMENTO_EVALUACION` |
 | ¿Qué informe final, diario de reflexión o proyecto de intervención subió el estudiante? (HU-18) | `PRODUCTO_PRACTICA` |
 | ¿Cuál es el documento formal (firmado y timbrado) de una pauta y quién lo cambió? (HU-25) | `ARCHIVO_OFICIAL_PAUTA` |
+| ¿Quién pidió recuperar su clave por correo y si el enlace sigue vigente? (S-97 a S-99) | `TOKEN_RECUPERACION_CLAVE` |
 | ¿Qué dijo el profesor en su nota de voz, y su transcripción? (Fase E) | `NOTA_VOZ` |
 | (Más adelante) ¿Qué le respondió el chatbot? | `MENSAJE_CHATBOT` |
 
@@ -222,6 +223,7 @@ erDiagram
     USUARIO ||--o{ PRODUCTO_PRACTICA : "sube"
     PAUTA ||--o{ ARCHIVO_OFICIAL_PAUTA : "tiene (HU-25)"
     USUARIO ||--o{ ARCHIVO_OFICIAL_PAUTA : "sube"
+    USUARIO ||--o{ TOKEN_RECUPERACION_CLAVE : "pide (recuperar clave)"
 
     ROL {
         int id PK
@@ -489,6 +491,14 @@ erDiagram
         bigint subido_por FK
         datetime fecha_subida
     }
+    TOKEN_RECUPERACION_CLAVE {
+        bigint id PK
+        bigint usuario_id FK
+        char token_hash UK "SHA-256 del token, nunca el token"
+        datetime fecha_creacion
+        datetime fecha_expiracion "30 minutos despues (S-97)"
+        boolean usado "usado o invalidado"
+    }
     PRODUCTO_PRACTICA {
         bigint id PK
         bigint inscripcion_id FK
@@ -525,6 +535,7 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 | `DOCUMENTO_PLANIFICACION` | Un archivo (Word o PDF) que el estudiante adjunta a su planificación | Máximo 10 MB (S-43). El archivo se guarda en disco, fuera de git; la tabla solo guarda la ruta relativa | HU-21 |
 | `DOCUMENTO_EVALUACION` | Un archivo (Word, Excel o PDF) con la pauta y evaluación formal que sube el profesor guía | Máximo 10 MB (S-43). Se puede subir con la evaluación en BORRADOR o FINALIZADA (S-41) | HU-22 |
 | `ARCHIVO_OFICIAL_PAUTA` | Una versión del archivo oficial (PDF o Word firmado) de una pauta | Cada subida es la versión siguiente y la mayor es la vigente; las anteriores quedan como historial. Va con una versión de la pauta: la versión nueva no lo hereda (S-96). Migración 020 | HU-25 |
+| `TOKEN_RECUPERACION_CLAVE` | Un enlace de un solo uso para restablecer la clave por correo | Guarda solo el SHA-256 del token; vale 30 minutos; un enlace nuevo y el restablecimiento dejan sin efecto los pendientes; máximo 3 por usuario cada 15 minutos (S-97 a S-99). Migración 021 | Recuperar la clave |
 | `PRODUCTO_PRACTICA` | Informe final, diario de reflexión, proyecto de intervención u otro producto (Word o PDF) que el estudiante sube a su inscripción | Solo el estudiante y con la inscripción EN_CURSO (S-93); varios por tipo, en las 6 prácticas (S-94). Aparece en el historial (migración 019) | HU-18 |
 | `NOTA_VOZ` | Audio que graba el evaluador al terminar la clase, con su transcripción | Como máximo una por evaluación. La transcripción la genera el navegador (S-40) y la puede corregir el evaluador. Se graba en BORRADOR o FINALIZADA (S-42) | HU-11, HU-12 |
 | `MENSAJE_CHATBOT` | Cada mensaje entre el estudiante y el chatbot, y la planificación que el estudiante adjuntó (si adjuntó una) | Se guarda por inscripción: lo leen el profesor guía de esa inscripción (HU-16, SUPUESTO S-60) y el jefe de carrera (HU-20, S-66) | HU-15, HU-16, HU-20 |
@@ -566,6 +577,7 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 | `USUARIO` — `DOCUMENTO_EVALUACION` | 1 a N | Quien sube el documento (el profesor guía evaluador) queda registrado |
 | `PAUTA` — `ARCHIVO_OFICIAL_PAUTA` | 1 a N | Una pauta (una versión) puede tener varias versiones de su archivo oficial (HU-25, migración 020) |
 | `USUARIO` — `ARCHIVO_OFICIAL_PAUTA` | 1 a N | El coordinador que subió esa versión del archivo |
+| `USUARIO` — `TOKEN_RECUPERACION_CLAVE` | 1 a N | Los enlaces para restablecer la clave que pidió ese usuario (cualquiera de los 6 roles, migración 021) |
 | `INSCRIPCION` — `PRODUCTO_PRACTICA` | 1 a N | Una inscripción puede tener varios informes y productos (HU-18, migración 019) |
 | `USUARIO` — `PRODUCTO_PRACTICA` | 1 a N | Quien sube el producto (el estudiante de la inscripción) queda registrado |
 | `INSCRIPCION` — `MENSAJE_CHATBOT` | 1 a N | El chat de un estudiante en una práctica final tiene muchos mensajes |
