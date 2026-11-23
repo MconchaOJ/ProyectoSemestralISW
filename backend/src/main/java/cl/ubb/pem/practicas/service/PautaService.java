@@ -40,13 +40,15 @@ public class PautaService {
     private final AsignaturaPracticaRepository asignaturas;
     private final EvaluacionRepository evaluaciones;
     private final ComponenteEvaluativoRepository componentes;
+    private final ArchivoOficialPautaService archivosOficiales;   // HU-25
 
     public PautaService(PautaRepository pautas, AsignaturaPracticaRepository asignaturas, EvaluacionRepository evaluaciones,
-                        ComponenteEvaluativoRepository componentes) {
+                        ComponenteEvaluativoRepository componentes, ArchivoOficialPautaService archivosOficiales) {
         this.pautas = pautas;
         this.asignaturas = asignaturas;
         this.evaluaciones = evaluaciones;
         this.componentes = componentes;
+        this.archivosOficiales = archivosOficiales;
     }
 
     public List<PautaDto> listar(Integer asignaturaId) {
@@ -57,7 +59,7 @@ public class PautaService {
     }
 
     public PautaDto obtener(Integer id) {
-        return PautaDto.desde(buscar(id));
+        return PautaDto.desde(buscar(id), archivosOficiales.vigente(id).orElse(null));
     }
 
     // ------------------------------------------------------------------------------------------ HU-06
@@ -67,8 +69,9 @@ public class PautaService {
         var lista = asignaturaId == null
                 ? pautas.findAllByOrderByAsignaturaOrdenAscNombreAscVersionAsc()
                 : pautas.findByAsignaturaIdOrderByNombreAscVersionAsc(asignaturaId);
+        var archivos = archivosOficiales.vigentes();   // HU-25
         return lista.stream()
-                .map(p -> PautaGestionDto.desde(p, esVigente(p), evaluaciones.countByPautaId(p.getId())))
+                .map(p -> PautaGestionDto.desde(p, esVigente(p), evaluaciones.countByPautaId(p.getId()), archivos.get(p.getId())))
                 .toList();
     }
 
@@ -157,6 +160,7 @@ public class PautaService {
             componente.ifPresent(c -> c.setPauta(anterior));   // HU-09: vuelve a la versión que queda vigente
             componentes.flush();
         }
+        archivosOficiales.borrarDePauta(id);   // HU-25: sus archivos oficiales se van con ella
         pautas.delete(p);
     }
 

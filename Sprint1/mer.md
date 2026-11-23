@@ -24,6 +24,7 @@ El cliente quiere poder responder estas preguntas con el sistema:
 | ¿Cuál es su recorrido por las 6 prácticas? | Sus `INSCRIPCION` ordenadas en el tiempo, con lo que cuelga de cada una |
 | ¿Qué documentos adjuntó a su planificación o a su evaluación? (Fase E) | `DOCUMENTO_PLANIFICACION`, `DOCUMENTO_EVALUACION` |
 | ¿Qué informe final, diario de reflexión o proyecto de intervención subió el estudiante? (HU-18) | `PRODUCTO_PRACTICA` |
+| ¿Cuál es el documento formal (firmado y timbrado) de una pauta y quién lo cambió? (HU-25) | `ARCHIVO_OFICIAL_PAUTA` |
 | ¿Qué dijo el profesor en su nota de voz, y su transcripción? (Fase E) | `NOTA_VOZ` |
 | (Más adelante) ¿Qué le respondió el chatbot? | `MENSAJE_CHATBOT` |
 
@@ -219,6 +220,8 @@ erDiagram
     USUARIO ||--o{ DOCUMENTO_EVALUACION : "sube"
     INSCRIPCION ||--o{ PRODUCTO_PRACTICA : "recibe (HU-18)"
     USUARIO ||--o{ PRODUCTO_PRACTICA : "sube"
+    PAUTA ||--o{ ARCHIVO_OFICIAL_PAUTA : "tiene (HU-25)"
+    USUARIO ||--o{ ARCHIVO_OFICIAL_PAUTA : "sube"
 
     ROL {
         int id PK
@@ -475,6 +478,17 @@ erDiagram
         bigint subido_por FK
         datetime fecha_subida
     }
+    ARCHIVO_OFICIAL_PAUTA {
+        bigint id PK
+        int pauta_id FK "UK con version"
+        int version "1, 2, 3: la mayor es la vigente"
+        varchar nombre_archivo
+        varchar ruta_archivo "solo en disco, fuera de git"
+        varchar tipo_mime
+        bigint tamano_bytes "maximo 10 MB"
+        bigint subido_por FK
+        datetime fecha_subida
+    }
     PRODUCTO_PRACTICA {
         bigint id PK
         bigint inscripcion_id FK
@@ -510,6 +524,7 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 | `REVISION_PLANIFICACION` | Cada decisión del guía o del profesor del curso sobre una planificación | Conserva el historial completo: quién decidió, cuándo, en qué etapa y con qué comentario | HU-04 |
 | `DOCUMENTO_PLANIFICACION` | Un archivo (Word o PDF) que el estudiante adjunta a su planificación | Máximo 10 MB (S-43). El archivo se guarda en disco, fuera de git; la tabla solo guarda la ruta relativa | HU-21 |
 | `DOCUMENTO_EVALUACION` | Un archivo (Word, Excel o PDF) con la pauta y evaluación formal que sube el profesor guía | Máximo 10 MB (S-43). Se puede subir con la evaluación en BORRADOR o FINALIZADA (S-41) | HU-22 |
+| `ARCHIVO_OFICIAL_PAUTA` | Una versión del archivo oficial (PDF o Word firmado) de una pauta | Cada subida es la versión siguiente y la mayor es la vigente; las anteriores quedan como historial. Va con una versión de la pauta: la versión nueva no lo hereda (S-96). Migración 020 | HU-25 |
 | `PRODUCTO_PRACTICA` | Informe final, diario de reflexión, proyecto de intervención u otro producto (Word o PDF) que el estudiante sube a su inscripción | Solo el estudiante y con la inscripción EN_CURSO (S-93); varios por tipo, en las 6 prácticas (S-94). Aparece en el historial (migración 019) | HU-18 |
 | `NOTA_VOZ` | Audio que graba el evaluador al terminar la clase, con su transcripción | Como máximo una por evaluación. La transcripción la genera el navegador (S-40) y la puede corregir el evaluador. Se graba en BORRADOR o FINALIZADA (S-42) | HU-11, HU-12 |
 | `MENSAJE_CHATBOT` | Cada mensaje entre el estudiante y el chatbot, y la planificación que el estudiante adjuntó (si adjuntó una) | Se guarda por inscripción: lo leen el profesor guía de esa inscripción (HU-16, SUPUESTO S-60) y el jefe de carrera (HU-20, S-66) | HU-15, HU-16, HU-20 |
@@ -549,6 +564,8 @@ Las 12 primeras se usan desde el Sprint 1. `DOCUMENTO_PLANIFICACION`, `DOCUMENTO
 | `USUARIO` — `DOCUMENTO_PLANIFICACION` | 1 a N | Quien sube el documento (el estudiante dueño) queda registrado |
 | `EVALUACION` — `DOCUMENTO_EVALUACION` | 1 a N | Una evaluación puede tener varios documentos (pauta, evidencias) |
 | `USUARIO` — `DOCUMENTO_EVALUACION` | 1 a N | Quien sube el documento (el profesor guía evaluador) queda registrado |
+| `PAUTA` — `ARCHIVO_OFICIAL_PAUTA` | 1 a N | Una pauta (una versión) puede tener varias versiones de su archivo oficial (HU-25, migración 020) |
+| `USUARIO` — `ARCHIVO_OFICIAL_PAUTA` | 1 a N | El coordinador que subió esa versión del archivo |
 | `INSCRIPCION` — `PRODUCTO_PRACTICA` | 1 a N | Una inscripción puede tener varios informes y productos (HU-18, migración 019) |
 | `USUARIO` — `PRODUCTO_PRACTICA` | 1 a N | Quien sube el producto (el estudiante de la inscripción) queda registrado |
 | `INSCRIPCION` — `MENSAJE_CHATBOT` | 1 a N | El chat de un estudiante en una práctica final tiene muchos mensajes |

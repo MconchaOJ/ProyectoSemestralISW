@@ -3,11 +3,12 @@
 //   #/pautas/nueva           crear una pauta
 //   #/pautas/{id}            ver una pauta (cualquier versión) con sus dimensiones e indicadores
 //   #/pautas/{id}/editar     editar la versión vigente: si ya se usó, al guardar se crea la versión siguiente
-import { api } from '../api.js';
-import { asignaturas } from '../datos.js';
+// HU-25: el detalle de cada versión tiene la tarjeta «Archivo oficial» (subir, reemplazar, historial y descargar).
+import { api, descargarArchivo } from '../api.js';
+import { asignaturas, parametros } from '../datos.js';
 import {
-  alerta, alertaError, cabecera, cajaAlertaForm, campo, cargando, confirmar, enlazarFormulario, fecha, html, icono, toast,
-  vacio,
+  alerta, alertaError, cabecera, cajaAlertaForm, campo, cargando, conCarga, confirmar, enlazarFormulario, fecha, fechaHora, html,
+  icono, toast, toastError, vacio,
 } from '../ui.js';
 
 const EVALUADORES = { COLABORADOR: 'Profesor colaborador (guía)', TUTOR: 'Tutor', ACADEMICO: 'Académico (profesor del curso)' };
@@ -59,7 +60,8 @@ async function lista(cont, ctx) {
       : html`<div class="tabla-contenedor"><table class="tabla tabla-pautas">
           <thead><tr><th>Pauta</th><th>Quién la aplica · ámbito</th><th>Escala e indicadores</th><th class="num">Evaluaciones</th><th>Estado</th><th></th></tr></thead>
           <tbody>${filas.map((p) => html`<tr>
-            <td><strong>${p.nombre}</strong><br><small>${p.asignatura} · versión ${p.version}${p.vigente ? '' : ' (reemplazada)'} · ${fecha(p.fechaCreacion)}</small></td>
+            <td><strong>${p.nombre}</strong><br><small>${p.asignatura} · versión ${p.version}${p.vigente ? '' : ' (reemplazada)'} · ${fecha(p.fechaCreacion)}</small>
+              <br><small class="${p.archivoOficial ? '' : 'subtitulo'}">${icono('file')} ${p.archivoOficial ? `Archivo oficial: ${p.archivoOficial.nombreArchivo}` : 'Sin archivo oficial'}</small></td>
             <td>${EVALUADORES[p.tipoEvaluador] ?? p.tipoEvaluador}<br><small>${AMBITOS[p.ambito] ?? p.ambito}${conObservacion(p)}</small></td>
             <td>Escala ${p.escalaMin} a ${p.escalaMax}<br><small>${p.totalIndicadores} indicadores · máx. ${p.puntajeMaximo} pts</small></td>
             <td class="num">${p.evaluaciones}</td>
@@ -143,7 +145,9 @@ async function detalle(cont, ctx, id) {
           <h3>${d.nombre}</h3>
           <ol start="${d.indicadores[0]?.numero ?? 1}">${d.indicadores.map((i) => html`<li>${i.descripcion}</li>`)}</ol>
         </section>`)}
-    </div>`.toString();
+    </div>
+    <div id="archivo-oficial"></div>`.toString();
+  await montarArchivoOficial(cont.querySelector('#archivo-oficial'), p);
 }
 
 // ============================ FORMULARIO (crear / editar) ============================
@@ -262,4 +266,82 @@ async function formulario(cont, ctx, idEdicion) {
       ctx.ir(`#/pautas/${p.id}`);
     },
   });
+}
+
+// ============================ ARCHIVO OFICIAL (HU-25) ============================
+const tamano = (b) => (b >= 1024 * 1024 ? `${(b / (1024 * 1024)).toFixed(1)} MB` : `${Math.ceil(b / 1024)} KB`);
+
+/** Tarjeta «Archivo oficial»: el vigente, subir o reemplazar (coordinador) y el historial de versiones. */
+async function montarArchivoOficial(zona, p) {
+  const base = `/api/pautas/${p.id}/archivo-oficial`;
+  const mb = (await parametros())['archivos.documento_mb'];   // HU-27: tamaño máximo vigente
+  let historial = [];
+  try {
+    historial = await api.get(`${base}/historial`);
+  } catch (e) {
+    zona.innerHTML = alertaError(e).toString();
+    return;
+  }
+  const vigente = historial[0];
+  zona.innerHTML = html`<div class="tarjeta">
+    <div class="tarjeta-titulo"><h2>Archivo oficial</h2></div>
+    <p class="subtitulo">El documento formal (PDF o Word firmado y timbrado) detrás de esta versión de la pauta. Lo descarga cualquiera que vea la pauta; una versión nueva de la pauta no lo hereda.</p>
+    ${vigente ? html`<ul class="documentos"><li class="documento">
+        <span class="documento-ico">${icono('file')}</span>
+        <span class="documento-datos"><strong>${vigente.nombreArchivo}</strong>
+          <small>vigente · archivo versión ${vigente.version} · ${tamano(vigente.tamanoBytes)} · subido por ${vigente.subidoPor.nombreCompleto} · ${fechaHora(vigente.fechaSubida)}</small></span>
+        <button type="button" class="btn btn-chico" data-bajar="${base}/descargar" data-nombre="${vigente.nombreArchivo}">${icono('download')} Descargar</button>
+      </li></ul>` : html`<p>${vacio('Esta pauta todavía no tiene archivo oficial', 'Súbelo con el formulario de abajo.', 'file')}</p>`}
+    <form id="form-archivo-oficial" class="form-documento" novalidate>
+      <label class="campo-archivo-linea"><input type="file" name="archivo" accept=".pdf,.docx" required aria-label="Archivo oficial de la pauta"></label>
+      <button type="submit" class="btn btn-primario" data-cargando="Subiendo…">${icono('upload')} ${vigente ? 'Reemplazar archivo oficial' : 'Subir archivo oficial'}</button>
+      <p class="ayuda-campo">PDF o Word (.docx), máximo ${mb} MB.${vigente ? ' El archivo actual queda en el historial.' : ''}</p>
+      <span class="error-campo" role="alert" hidden></span>
+    </form>
+    ${historial.length > 1 ? html`<h3>Historial del archivo</h3>
+      <div class="tabla-contenedor"><table class="tabla">
+        <thead><tr><th class="num">Versión</th><th>Archivo</th><th>Subido por</th><th>Fecha</th><th></th></tr></thead>
+        <tbody>${historial.map((a, i) => html`<tr>
+          <td class="num">${a.version}${i === 0 ? ' (vigente)' : ''}</td>
+          <td>${a.nombreArchivo}</td>
+          <td>${a.subidoPor.nombreCompleto}</td>
+          <td>${fechaHora(a.fechaSubida)}</td>
+          <td class="acciones"><button type="button" class="btn btn-chico" data-bajar="${base}/${a.id}" data-nombre="${a.nombreArchivo}">${icono('download')} Descargar</button></td>
+        </tr>`)}</tbody></table></div>` : ''}
+  </div>`.toString();
+
+  // onclick (no addEventListener): la tarjeta se vuelve a montar tras subir y no debe quedar con dos manejadores
+  zona.onclick = async (ev) => {
+    const b = ev.target.closest('[data-bajar]');
+    if (!b) return;
+    try {
+      const archivo = await conCarga(b, () => api.archivo(b.dataset.bajar));
+      descargarArchivo({ ...archivo, nombre: archivo.nombre === 'archivo' ? b.dataset.nombre : archivo.nombre });
+    } catch (e) {
+      toastError(e);
+    }
+  };
+
+  const form = zona.querySelector('#form-archivo-oficial');
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const error = form.querySelector('.error-campo');
+    error.hidden = true;
+    const archivo = form.archivo.files[0];
+    if (!archivo) {
+      error.textContent = 'Selecciona un archivo para subir.';
+      error.hidden = false;
+      return;
+    }
+    const datos = new FormData();
+    datos.append('archivo', archivo);
+    try {
+      await conCarga(form.querySelector('button[type="submit"]'), () => api.subir(base, datos));
+      toast(vigente ? 'Archivo oficial reemplazado: el anterior quedó en el historial.' : 'Archivo oficial subido.');
+      await montarArchivoOficial(zona, p);
+    } catch (e) {
+      error.textContent = e.message || 'No se pudo subir el archivo.';
+      error.hidden = false;
+    }
+  }, { once: true });
 }

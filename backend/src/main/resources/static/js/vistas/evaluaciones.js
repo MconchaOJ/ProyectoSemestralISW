@@ -2,13 +2,13 @@
 //   #/evaluaciones            lista con filtros
 //   #/evaluaciones/nueva      crear la cabecera (solo profesor guía)
 //   #/evaluaciones/{id}       detalle: el guía autor completa, guarda y finaliza; los demás roles solo lo ven
-import { api } from '../api.js';
+import { api, descargarArchivo } from '../api.js';
 import { opcionesInscripcion } from '../datos.js';
 import { montarDocumentos } from '../documentos.js';
 import { montarNotaVoz } from '../notaVoz.js';
 import {
   alerta, alertaError, badge, cabecera, campo, cargando, cajaAlertaForm, confirmar, conCarga, decimal,
-  enlazarFormulario, fecha, fechaHora, hora, html, icono, modalFormulario, nota, promedio, toast, vacio,
+  enlazarFormulario, fecha, fechaHora, hora, html, icono, modalFormulario, nota, promedio, toast, toastError, vacio,
 } from '../ui.js';
 
 /** HU-07: evalúa el guía (pautas de COLABORADOR) o el tutor (pautas de TUTOR), cada uno en sus inscripciones. */
@@ -237,7 +237,8 @@ async function detalle(cont, ctx, id) {
         hu: 'HU-03', titulo: `Evaluación de ${ev.estudiante.nombreCompleto}`,
         subtitulo: `${ev.pauta.nombre}${conObservacion(ev.pauta)}`,
         acciones: html`<a class="btn btn-fantasma" href="#/evaluaciones">${icono('back')} Volver</a>
-          <a class="btn" href="#/historial${ctx.tiene('ESTUDIANTE') ? '' : `/${ev.estudiante.id}`}">${icono('clock')} Historial</a>`,
+          <a class="btn" href="#/historial${ctx.tiene('ESTUDIANTE') ? '' : `/${ev.estudiante.id}`}">${icono('clock')} Historial</a>
+          ${pauta.archivoOficial ? html`<button type="button" class="btn" id="btn-pauta-oficial">${icono('download')} Pauta oficial</button>` : ''}`,
       })}
       <div id="avisos"></div>
       <div id="datos"></div>
@@ -257,6 +258,15 @@ async function detalle(cont, ctx, id) {
     pintarDatos();
     enlazar();
     actualizarContador();
+    // HU-25: el documento formal (firmado y timbrado) de la pauta, si el coordinador lo subió
+    cont.querySelector('#btn-pauta-oficial')?.addEventListener('click', async (e) => {
+      try {
+        const archivo = await conCarga(e.currentTarget, () => api.archivo(`/api/pautas/${pauta.id}/archivo-oficial/descargar`));
+        descargarArchivo({ ...archivo, nombre: archivo.nombre === 'archivo' ? pauta.archivoOficial.nombreArchivo : archivo.nombre });
+      } catch (err) {
+        toastError(err);
+      }
+    });
     montarNotaVoz(cont.querySelector('#nota-voz'), { evaluacionId: ev.id, esEvaluador: esAutor() });
     montarDocumentos(cont.querySelector('#documentos'), {
       base: `/api/evaluaciones/${ev.id}/documentos`,

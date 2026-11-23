@@ -1,12 +1,13 @@
 -- =============================================================================
 -- schema.sql - Sistema de Formación Práctica PEM-UBB (MySQL 8.x)
 --
--- Implementa el MER de Sprint1/mer.md: 27 tablas con claves, restricciones e
+-- Implementa el MER de Sprint1/mer.md: 28 tablas con claves, restricciones e
 -- índices (14 del Sprint 1, documento_planificacion y documento_evaluacion de
 -- la Fase E, instrucciones_chatbot de HU-17, documento_base_conocimiento de
 -- HU-29, lectura_chat de HU-20 y respuesta_sus,
 -- respuesta_rubrica_experto y respuesta_rubrica_criterio de HU-30, grupo_practica de HU-10, parametro_sistema de HU-27 y componente_evaluativo y
--- nota_componente_externo de HU-09 y producto_practica de HU-18). No
+-- nota_componente_externo de HU-09, producto_practica de HU-18 y
+-- archivo_oficial_pauta de HU-25). No
 -- contiene contraseñas (el
 -- usuario de la aplicación lo crea db/bd.ps1 con su clave tomada de una
 -- variable de entorno).
@@ -50,6 +51,7 @@ DROP TABLE IF EXISTS parametro_sistema;
 DROP TABLE IF EXISTS mensaje_chatbot;
 DROP TABLE IF EXISTS nota_voz;
 DROP TABLE IF EXISTS documento_evaluacion;
+DROP TABLE IF EXISTS archivo_oficial_pauta;
 DROP TABLE IF EXISTS producto_practica;
 DROP TABLE IF EXISTS documento_planificacion;
 DROP TABLE IF EXISTS respuesta_indicador;
@@ -489,6 +491,25 @@ CREATE TABLE documento_evaluacion (
     CONSTRAINT ck_documento_evaluacion_tamano CHECK (tamano_bytes > 0 AND tamano_bytes <= 10485760),
     INDEX ix_documento_evaluacion_evaluacion (evaluacion_id)
 ) ENGINE = InnoDB COMMENT = 'Documentos (Word, Excel o PDF, máximo 10 MB) con la pauta y evaluación formal del guía';
+
+-- HU-25 (migración 020): archivo oficial de cada pauta con su historial de versiones (S-95, S-96).
+CREATE TABLE archivo_oficial_pauta (
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    pauta_id        INT          NOT NULL,
+    version         INT          NOT NULL COMMENT '1, 2, 3...: la mayor es la vigente',
+    nombre_archivo  VARCHAR(255) NOT NULL,
+    ruta_archivo    VARCHAR(500) NOT NULL COMMENT 'Ruta relativa en disco, fuera del control de versiones',
+    tipo_mime       VARCHAR(150) NOT NULL,
+    tamano_bytes    BIGINT       NOT NULL,
+    subido_por      BIGINT       NOT NULL,
+    fecha_subida    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_archivo_oficial_pauta PRIMARY KEY (id),
+    CONSTRAINT uq_archivo_oficial_pauta_version UNIQUE (pauta_id, version),
+    CONSTRAINT fk_archivo_oficial_pauta_pauta FOREIGN KEY (pauta_id) REFERENCES pauta (id),
+    CONSTRAINT fk_archivo_oficial_pauta_usuario FOREIGN KEY (subido_por) REFERENCES usuario (id),
+    CONSTRAINT ck_archivo_oficial_pauta_version CHECK (version >= 1),
+    CONSTRAINT ck_archivo_oficial_pauta_tamano CHECK (tamano_bytes > 0 AND tamano_bytes <= 10485760)
+) ENGINE = InnoDB COMMENT = 'Archivos oficiales (PDF o Word firmados) de cada pauta, con su historial (HU-25)';
 
 -- HU-18 (migración 019): informes y productos de la práctica que el estudiante sube a su inscripción (S-93, S-94).
 CREATE TABLE producto_practica (
