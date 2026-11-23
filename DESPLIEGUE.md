@@ -93,16 +93,19 @@ Todos los cambios que pedía la versión de octubre de este documento **están h
 > **Qué se probó (22-nov-2026):** el mismo `docker-compose.yml`, de punta a punta, con **Docker Compose** (Docker
 > Desktop 28.5, Windows): instalación limpia, 28 tablas, 13 pautas, 269 indicadores, login por nginx en el 8017,
 > pantallas en Chrome, subida de un archivo al volumen de adjuntos, y que la base y los adjuntos sobreviven a un
-> `down` + `up`. Los comandos SQL de la alternativa (5.6) se probaron sobre una copia de la base de Alej del 28-oct.
+> `down` + `up`. Ese mismo día se corrigió el `docker-compose.yml` (sin claves por defecto y con un chequeo de salud
+> que espera a que MySQL termine de cargar) y se volvió a probar: con un solo `up` el backend arranca sin reinicios.
+> Los comandos SQL de la alternativa (5.6) se probaron sobre una copia de la base de Alej del 28-oct.
 > **No se probó:** Podman, podman-compose ni SELinux (no se pueden replicar en este equipo). Si algo se comporta
 > distinto en el servidor, anota el mensaje exacto y avisa.
 
 ### 5.1 Tres cosas que hay que saber antes de empezar
 
-1. **Usa siempre `--env-file .env.docker`** en cada comando `podman-compose`. El `docker-compose.yml` arma las
-   claves de MySQL con `${ISW_DB_ROOT_PASSWORD:-rootdev2026}` y `${ISW_DB_PASSWORD:-devpass2026}`: si no se le pasa
-   `--env-file`, **usa esas claves por defecto (que están en git)** e ignora las de tu `.env.docker` (comprobado con
-   Docker Compose; podman-compose tiene la misma opción `--env-file`). Por eso, en este documento:
+1. **Usa siempre `--env-file .env.docker`** en cada comando `podman-compose`. Desde el 22-nov el
+   `docker-compose.yml` **no tiene claves por defecto**: sin `--env-file`, o con `ISW_DB_ROOT_PASSWORD` o
+   `ISW_DB_PASSWORD` vacías, se detiene con `Falta ISW_DB_PASSWORD - usa --env-file .env.docker` (comprobado con
+   Docker Compose; podman-compose tiene la misma opción `--env-file`). Antes usaba en silencio unas claves escritas
+   en git. Por eso, en este documento:
    ```bash
    alias pc='podman-compose --env-file .env.docker'     # válido solo en la terminal donde lo escribas
    ```
@@ -127,16 +130,25 @@ Todos los cambios que pedía la versión de octubre de este documento **están h
 
 Todo desde la carpeta donde está clonado el repositorio:
 
+`docker-compose.yml` y `.env.docker.example` **cambiaron en el repositorio** (22-nov), así que tus ajustes locales
+de esos dos archivos chocarían con el `git pull`. Se descartan, se trae la versión nueva y se vuelve a poner `,Z`
+(la versión del repositorio ya trae los nombres de imagen completos y en Linux git la deja con LF). Tus ajustes de
+`backend/Dockerfile` y `nginx-frontend.conf` no se tocan: esos archivos no cambiaron.
+
 ```bash
 cd ~/isw                     # o como se llame tu carpeta
-git status                   # deben aparecer solo tus ajustes locales (compose, Dockerfile, nginx, LF)
+git status                   # deben aparecer solo tus ajustes locales
+git diff docker-compose.yml > ~/ajustes_compose_28oct.diff     # copia de tus ajustes, por si había algo más que ,Z
+git checkout -- docker-compose.yml .env.docker.example
 git pull
-ls db/migraciones            # deben aparecer de la 001 a la 020
+sed -i 's#:ro$#:ro,Z#' docker-compose.yml
+grep -c ':ro,Z$' docker-compose.yml       # debe decir 4 (schema.sql, seed.sql, static y nginx-frontend.conf)
+ls db/migraciones                         # deben aparecer de la 001 a la 020
 grep -c "^CREATE TABLE" db/schema.sql     # debe decir 28
-git diff --stat              # tus ajustes locales siguen ahí (los archivos de Docker no cambiaron desde el 28-oct)
 ```
 
-Si `git pull` dice `Your local changes ... would be overwritten`, haz `git stash`, `git pull` y `git stash pop`.
+Mira `~/ajustes_compose_28oct.diff`: si además de `,Z` tenías otro cambio, vuelve a hacerlo a mano. Si `git pull`
+aún dice `Your local changes ... would be overwritten`, haz `git stash`, `git pull` y `git stash pop`.
 
 Revisa tu `.env.docker` **sin mostrar las claves**:
 
@@ -174,28 +186,24 @@ porque `seed.sql` no trae archivos: los del 28-oct quedarían huérfanos.
 pc build backend         # compila con Maven dentro del contenedor; la primera vez tarda varios minutos
 ```
 
-### 5.4 Levantar: primero la base, después el resto
-
-Se hace en dos pasos a propósito. Mientras MySQL carga `schema.sql` y `seed.sql` usa un servidor temporal que ya
-responde al chequeo de salud, así que el backend arranca antes de tiempo, falla y se reinicia; con `up` de una vez,
-el front-end puede quedar sin crear (pasó en la prueba con Docker).
-
-```bash
-pc up -d database
-until podman logs isw-mysql 2>&1 | grep -q "port: 3306 "; do sleep 5; done; echo "MySQL listo"
-podman logs isw-mysql 2>&1 | grep -E "running /docker-entrypoint|ERROR"
-```
-
-La última línea debe mostrar `01-schema.sql` y `02-seed.sql` y **ningún `ERROR`**. (Si el `until` no termina en
-3 minutos, córtalo con Ctrl+C y mira `podman logs isw-mysql | tail -40`.)
+### 5.4 Levantar
 
 ```bash
 pc up -d
-podman ps --format '{{.Names}} {{.Status}}'      # isw-mysql (healthy), isw-backend (healthy), isw-frontend Up
 ```
 
-Si `isw-backend` dice `starting`, espera un minuto y vuelve a mirar. Si `isw-frontend` no aparece, ejecuta
-`pc up -d` otra vez.
+La primera vez tarda uno o dos minutos: el chequeo de salud de MySQL solo da «sano» cuando terminó de cargar
+`schema.sql` y `seed.sql` y el usuario `isw_app` ya entra a la base; recién ahí arranca el backend, y después el
+front-end. Luego:
+
+```bash
+podman ps --format '{{.Names}} {{.Status}}'      # isw-mysql (healthy), isw-backend (healthy), isw-frontend Up
+podman logs isw-mysql 2>&1 | grep -E "running /docker-entrypoint|ERROR"
+```
+
+La segunda línea debe mostrar `01-schema.sql` y `02-seed.sql` y **ningún `ERROR`**. Si `isw-backend` dice
+`starting`, espera un minuto y vuelve a mirar. Si `isw-frontend` no aparece, ejecuta `pc up -d` otra vez. Si
+`isw-mysql` sigue sin `healthy` después de 5 minutos, mira `podman logs isw-mysql | tail -40`.
 
 ### 5.5 Comprobar
 
@@ -216,7 +224,7 @@ Debe dar, en orden: **28, 13, 269, 5, 8, 33**.
 podman exec isw-mysql sh -c 'case "$MYSQL_ROOT_PASSWORD" in rootdev2026) echo "MAL: clave por defecto";; *) echo "bien";; esac'
 ```
 
-Si dice `MAL`, faltó el `--env-file`: vuelve al 5.2 (`pc down`, borrar volúmenes, 5.4).
+Si dice `MAL`, tu `.env.docker` tiene las claves antiguas del ejemplo: cámbialas (5.2) y repite `pc down`, borrar los volúmenes y 5.4.
 
 **El log del backend:**
 
@@ -243,7 +251,10 @@ Chrome. Si no, muestra una nota de voz ya grabada.
 
 Solo si decides **no** borrar el volumen. Es más larga, y la base queda con tablas sobrantes de tu código del 28-oct.
 
-1. **Código y `.env.docker`:** como en el 5.2, pero **sin** `pc down` ni `podman volume rm`.
+1. **Código y `.env.docker`:** como en el 5.2, pero **sin** `pc down` ni `podman volume rm`. **Ojo:** las claves de
+   `.env.docker` tienen que ser **las mismas con que se creó esa base** el 28-oct (si entonces no usaste
+   `--env-file`, eran `rootdev2026` y `devpass2026`). Si no calzan, el chequeo de salud nuevo (el usuario `isw_app`
+   entra a la base) falla y el backend no arranca. En ese caso lo más simple es la instalación limpia del 5.2.
 2. **Detén la app** (la base sigue arriba): `pc stop backend frontend`.
 3. **Respaldo obligatorio** (las migraciones no se pueden deshacer):
    ```bash
@@ -311,7 +322,9 @@ Restaurar el respaldo:
 
 | Síntoma | Qué hacer |
 |---|---|
-| `isw-backend` se reinicia una y otra vez | `podman logs --tail 80 isw-backend`. `Communications link failure`: MySQL aún no estaba listo; espera y mira de nuevo. `Access denied for user 'isw_app'`: la base se creó con otras claves (faltó `--env-file`); instalación limpia de nuevo |
+| `required variable ISW_DB_PASSWORD is missing a value` | Faltó `--env-file .env.docker` (usa el alias `pc`) o esa clave está vacía en `.env.docker` |
+| `isw-mysql` no llega a `healthy` | `podman logs --tail 40 isw-mysql`. Si la carga terminó bien, la base se creó con otras claves que las de `.env.docker`: instalación limpia de nuevo (5.2) |
+| `isw-backend` se reinicia una y otra vez | `podman logs --tail 80 isw-backend`. `Access denied for user 'isw_app'`: igual que la fila anterior |
 | El log dice `Schema-validation: missing column/table` | La base no corresponde al código: en la instalación limpia, el volumen no se borró (5.2); en la alternativa, falta una migración |
 | `Permission denied` al leer `schema.sql`, `seed.sql`, `nginx-frontend.conf` o la carpeta `static` | Es SELinux: revisa que esos montajes en tu `docker-compose.yml` sigan con `:ro,Z` (`git diff docker-compose.yml`) |
 | La página en el 8017 carga pero el login falla | `podman logs --tail 30 isw-frontend` y que `isw-backend` esté `healthy` |

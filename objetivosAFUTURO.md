@@ -151,7 +151,9 @@ acotado (se indica dónde). Detalle de cada supuesto en `backend/PROGRESO.md` y 
 
 **Resuelto en el Sprint 2:** límite de intentos de login, Swagger apagado en producción, clave de sesión
 obligatoria en producción, carpeta `deploy/` (instalador, servicio, nginx y respaldos), cambio de contraseña
-(HU-26), parámetros editables (HU-27) y borrar o reemplazar documentos (HU-21, HU-22).
+(HU-26), parámetros editables (HU-27), borrar o reemplazar documentos (HU-21, HU-22) y, el 22-nov,
+`docker-compose.yml` sin claves por defecto (se detiene si faltan) y con un chequeo de salud que espera a que
+MySQL termine de cargar los datos.
 
 **Lo que queda** (ninguno impide usar el sistema):
 
@@ -167,7 +169,6 @@ obligatoria en producción, carpeta `deploy/` (instalador, servicio, nginx y res
 | Sesión | El token dura 8 horas y no se puede revocar | Token de refresco y cierre de sesión en el servidor |
 | Archivos | Se validan por extensión y viven en el disco de un servidor | Revisar el tipo real del archivo; almacenamiento compartido si hay más de un servidor |
 | Migraciones a mano | Cada migración se corre una vez, como root y a mano (`DESPLIEGUE.md`) | Una herramienta de migraciones (Flyway) que registre cuáles se aplicaron |
-| `docker-compose.yml` (encontrado el 22-nov al probarlo) | Sin `--env-file .env.docker`, MySQL se crea con claves por defecto escritas en el propio compose; el chequeo de salud de MySQL da «sano» mientras aún carga `schema.sql`, y el backend falla una vez al arrancar desde cero | Quitar las claves por defecto (que falle si faltan) y un chequeo de salud que espere el servidor definitivo. Mientras tanto, `DESPLIEGUE.md` sección 5 lo evita con `--env-file` y el arranque en dos pasos **[REVISAR CON EL EQUIPO]** |
 
 ---
 
@@ -219,5 +220,4 @@ y una herramienta de migraciones (sección 5).
 **Para decidir entre nosotros:**
 - [ ] ¿Se crea una HU de administración de usuarios?
 - [ ] ¿Adoptamos integración continua, una base de pruebas aislada y Flyway?
-- [ ] ¿Corregimos el `docker-compose.yml` (claves por defecto y chequeo de salud de MySQL)? (sección 5)
 - [ ] Hacer la retrospectiva del Sprint 1 (`Sprint1/retrospectiva.md` sigue como plantilla).

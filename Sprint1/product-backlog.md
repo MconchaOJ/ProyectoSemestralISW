@@ -42,9 +42,9 @@ La tabla va en orden de prioridad y los números de HU siguen ese mismo orden. L
 | HU-03 | Evaluar una clase con la pauta digital (indicadores 1 a 7) | Evaluación | Alta | 5 | **1** | Construida y probada (20-sep) |
 | HU-04 | Planificar una clase y que la aprueben en dos etapas | Planificación | Alta | 8 | **1** | Construida y probada (20-sep) |
 | HU-05 | Ver el historial (recorrido) del estudiante | Monitoreo | Alta | 3 | **1** | Construida y probada (20-sep) |
-| HU-06 | Configurar pautas de evaluación | Evaluación | Alta | por estimar | 2 | Pendiente |
-| HU-07 | Pautas de Práctica Pedagógica y Profesional (con tutor) | Evaluación | Alta | por estimar | 2 | Pendiente |
-| HU-08 | Informes por asignatura y por estudiante | Monitoreo | Alta | por estimar | 2 | **Construida y probada (21-nov):** pantalla "Informes por asignatura" (coordinador y jefe de carrera) con notas finales, evaluaciones por pauta con su distribución, planificaciones y una fila por estudiante, y el mismo informe en PDF; el informe por estudiante es el historial en PDF (HU-28). Solo PDF (criterio 3: "PDF o Excel") |
+| HU-06 | Configurar pautas de evaluación | Evaluación | Alta | por estimar | 2 | **Construida y probada (11-oct):** pantalla "Pautas de evaluación" del coordinador; editar una pauta ya usada crea la versión siguiente y las evaluaciones conservan la suya (migración 005) |
+| HU-07 | Pautas de Práctica Pedagógica y Profesional (con tutor) | Evaluación | Alta | por estimar | 2 | **Construida y probada (16-oct y 21-nov):** rol tutor, 1.ª o 2.ª observación y las 12 pautas de Especialidad y Orientación cargadas (13 pautas en total); el tutor se elige al inscribir |
+| HU-08 | Informes por asignatura y por estudiante | Monitoreo | Alta | por estimar | 2 | **Construida y probada (21-nov):** pantalla "Informes por asignatura" (coordinador y jefe de carrera) con notas finales, evaluaciones por pauta con su distribución, planificaciones y una fila por estudiante, y el mismo informe en PDF; el informe por estudiante es el historial en PDF (HU-28). Desde el 22-nov también en Excel, por asignatura y por estudiante (criterio 3 completo) |
 | HU-09 | Nota final ponderada de la asignatura | Evaluación | Media | por estimar | 2 | Terminada (2026-11-22) |
 | HU-10 | Prácticas en dupla y en grupo | Gestión académica | Media | por estimar | 2 | **Construida y probada (21-nov):** el coordinador forma, cambia o deshace duplas y grupos (migración 013, tabla `grupo_practica`); comparten guía y, en el colegio, establecimiento y curso; cada integrante conserva su inscripción, pauta y planificaciones (S-77); el historial muestra con quién trabajó |
 | HU-11 | Nota de voz del profesor evaluador | Retroalimentación | Alta | 5 | **1** | **Construida y probada (22-sep, Fase E)** Desde el 21-nov, «Volver a grabar» reemplaza el audio (criterio 2 completo) |
@@ -217,17 +217,17 @@ Estas seis historias iban para sprints futuros en la planificación original, pe
 
 #### HU-06 · Configurar pautas de evaluación
 **Como** coordinador, **quiero** crear y editar pautas con sus dimensiones, indicadores, escala y tipo de evaluador, **para** no depender de un programador cada vez que la carrera cambia un instrumento.
-- **Prioridad:** Alta · **Sprint:** 2
+- **Prioridad:** Alta · **Sprint:** 2 · **Estado:** Construida y probada (11-oct)
 - **Criterios:** (1) una pauta define su escala mínima y máxima, quién la aplica (colaborador, tutor o académico) y su ámbito (Especialidad, Orientación u observación de clase); (2) si se modifica una pauta que ya se usó, se crea una versión nueva y las evaluaciones anteriores conservan la suya; (3) solo el coordinador las gestiona.
 
 #### HU-07 · Pautas de Práctica Pedagógica y Profesional (con tutor)
 **Como** profesor guía o tutor, **quiero** completar las pautas de Especialidad y de Orientación (4 por estudiante en Práctica Pedagógica y 8 en Práctica Profesional), **para** eliminar el papel en las dos prácticas finales.
-- **Prioridad:** Alta · **Sprint:** 2
+- **Prioridad:** Alta · **Sprint:** 2 · **Estado:** Construida y probada (16-oct; las 12 pautas restantes, 21-nov)
 - **Criterios:** (1) soporta escala de 2 a 7 y dimensiones de la A a la E; (2) cada evaluación indica si es la primera o la segunda observación; (3) el tutor solo evalúa con pautas de tutor; (4) el puntaje máximo de cada pauta se calcula con sus indicadores.
 
 #### HU-08 · Informes por asignatura y por estudiante
 **Como** coordinador, **quiero** informes por asignatura y por estudiante con una síntesis de sus evaluaciones y planificaciones, **para** no juntar a mano información dispersa y tener evidencia para la acreditación.
-- **Prioridad:** Alta · **Sprint:** 2
+- **Prioridad:** Alta · **Sprint:** 2 · **Estado:** Construida y probada (21-nov en PDF; Excel desde el 22-nov)
 - **Criterios:** (1) informe por estudiante con todas sus prácticas; (2) informe por asignatura y periodo con promedios y distribución de puntajes; (3) descarga en PDF o Excel.
 
 #### HU-09 · Nota final ponderada de la asignatura
