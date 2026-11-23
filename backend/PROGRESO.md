@@ -1631,3 +1631,10 @@ Nadie había corrido sus migraciones 012 y 013 sobre una base real (no hay servi
 - **Pruebas: 373, 0 fallos** (6 nuevas en `HU25ArchivoOficialPautaIntegracionTest`). `bd.ps1` **45/45** (2 nuevas: versión repetida y pauta inexistente).
 - **Navegador** (Chrome): el coordinador sube el archivo de la pauta 1 y lo reemplaza (historial 2 y 1, con su nombre y la hora), descarga la versión 1, y la lista muestra el archivo; el guía Marcos ve «Pauta oficial» en la evaluación 1 y la descarga. Sin errores de JavaScript.
 
+## Sprint 2: repaso de regresión completo tras HU-18 y HU-25 (2026-11-22, sobre `main`)
+
+- **Base:** `bd.ps1` limpio (28 tablas; PK 28, FK 47, UNIQUE 23, CHECK 61) y **45/45 pruebas negativas**; `db/pruebas-version-mysql.ps1` en verde.
+- **Pruebas automáticas:** `mvn clean package` sobre `main` = **373, 0 fallos**.
+- **Navegador (Chrome), los 6 roles:** se abrió cada pantalla del menú y de los accesos rápidos de cada rol, más los detalles principales, sin mensajes de error ni excepciones de JavaScript de la aplicación (en la consola solo aparecen avisos de la extensión del navegador). Estudiante 8 pantallas (sube un diario de reflexión); guía 9 (guarda avance en su borrador); profesor del curso 8; coordinador 14 (sube el archivo oficial de la pauta 3, ve y descarga el informe PDF); jefe de carrera 14 (ve el producto de Camila, descarga la cartola); tutor 7 (crea una evaluación con la pauta 3 y ve «Pauta oficial»).
+- Al terminar se detuvo la aplicación y se volvió a ejecutar `bd.ps1` (la base quedó con los datos de demo exactos).
+

@@ -6,6 +6,7 @@ evaluar y monitorear las 6 prácticas de cada estudiante. El chatbot llega en un
 voz con transcripción ya está construida (Fase E). El detalle completo está en `RESUMEN.md`.
 
 ## Estado (actualizado 2026-11-22)
+- **2026-11-22: repaso de regresión completo sobre `main` tras HU-18 y HU-25:** `bd.ps1` 45/45, control de versión de MySQL en verde, **373 pruebas, 0 fallos**, y los 6 roles recorridos en Chrome (todas las pantallas de cada menú, sin errores; escrituras probadas: producto del estudiante, avance de evaluación del guía, archivo oficial e informe PDF del coordinador, cartola del jefe, evaluación del tutor). Detalle al final de `backend/PROGRESO.md`.
 - **2026-11-22: HU-25 archivos oficiales de las pautas** (rama `feature/hu25-archivo-pauta`). Migración `020`: `archivo_oficial_pauta` (cada subida es la versión siguiente; la mayor es la vigente, las otras son el historial). `/api/pautas/{id}/archivo-oficial`: sube o reemplaza solo el coordinador; descarga el vigente cualquiera que vea la pauta; historial para coordinador y jefe de carrera. PDF o Word (**S-95**); una versión nueva de la pauta no hereda el archivo (**S-96**); borrar una pauta sin uso borra sus archivos. **28 tablas, 20 migraciones, 373 pruebas, 45 negativas.**
 - **2026-11-22: HU-18 informes y productos de la práctica** (rama `feature/hu18-productos`). Migración `019`: `producto_practica` (INFORME_FINAL, DIARIO_REFLEXION, PROYECTO_INTERVENCION u OTRO; Word o PDF). `/api/inscripciones/{id}/productos`. Solo el estudiante dueño sube, reemplaza o borra, y solo EN_CURSO (**S-93**); varios por tipo en las 6 prácticas (**S-94**); lo ve quien ve la inscripción. Aparece en el historial (pantalla, PDF y Excel). **27 tablas, 19 migraciones, 367 pruebas, 43 negativas.**
 - **2026-11-22: el coordinador también lee los chats del chatbot** (rama `feature/coordinador-lee-chats`, decisión del usuario). Mismo mecanismo que el jefe de carrera: migración `018` renombra `lectura_chat_jefe_carrera` a `lectura_chat` y agrega `rol` (JEFE_CARRERA o COORDINADOR); el estudiante ve el aviso y la última lectura de cada uno. **18 migraciones, 360 pruebas, 41 negativas.**
@@ -51,7 +52,7 @@ voz con transcripción ya está construida (Fase E). El detalle completo está e
 
 ## Comandos
 - Base de datos: `.\db\bd.ps1` (borra y recrea las tablas con los datos de demo) o `.\db\bd.ps1 -Accion Verificar`.
-- Compilar y probar: `cd backend` y `mvn clean package` (360 pruebas). Sin pruebas: `-DskipTests`.
+- Compilar y probar: `cd backend` y `mvn clean package` (373 pruebas). Sin pruebas: `-DskipTests`.
 - Arrancar: `java -jar target\practicas-0.1.0-SNAPSHOT.jar`. Swagger en `http://localhost:8080/swagger-ui.html` (login → botón Authorize). Front-end en `http://localhost:8080`.
 
 ## Claves (regla estricta)
